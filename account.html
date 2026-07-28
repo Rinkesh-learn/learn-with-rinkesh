@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html">Formulas</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="setup-box">
+  <h1>My Account</h1>
+  <p class="hint">Update your details anytime.</p>
+
+  <label for="name">Name</label>
+  <input type="text" id="name">
+
+  <label for="email">Email</label>
+  <input type="email" id="email" disabled>
+
+  <label for="age">Age</label>
+  <input type="number" id="age">
+
+  <label for="profession">Which describes you best?</label>
+  <select id="profession">
+    <option value="">Select one</option>
+    <option value="Student">Student</option>
+    <option value="Job Seeker">Job Seeker</option>
+    <option value="Working Professional">Working Professional</option>
+    <option value="Freelancer">Freelancer</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="goal">Main goal</label>
+  <select id="goal">
+    <option value="">Select one</option>
+    <option value="Interview Prep">Preparing for interviews</option>
+    <option value="Job Skill">Getting better at my current job</option>
+    <option value="Career Switch">Switching careers into data</option>
+    <option value="Certification">Getting a certificate</option>
+    <option value="General Learning">Just learning Excel generally</option>
+  </select>
+
+  <button class="btn btn-primary" id="saveBtn">Save Changes</button>
+
+  <div id="message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+<script>
+  async function loadAccount() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    document.getElementById('email').value = session.user.email;
+    if (profile) {
+      document.getElementById('name').value = profile.name || '';
+      document.getElementById('age').value = profile.age || '';
+      document.getElementById('profession').value = profile.profession || '';
+      document.getElementById('goal').value = profile.goal || '';
+    }
+  }
+
+  loadAccount();
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('message');
+    msg.textContent = '';
+    msg.className = '';
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabaseClient.from('profiles').update({
+      name: document.getElementById('name').value,
+      age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
+      profession: document.getElementById('profession').value,
+      goal: document.getElementById('goal').value
+    }).eq('id', session.user.id);
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.className = 'error';
+      return;
+    }
+
+    msg.textContent = 'Saved!';
+    msg.className = 'success';
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete Your Profile — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+  </div>
+</div>
+
+<div class="setup-box">
+  <h1>Just a few quick questions</h1>
+  <p class="hint">This helps us point you to the right formulas and practice tracks. Takes 20 seconds.</p>
+
+  <label for="age">Age</label>
+  <input type="number" id="age" placeholder="e.g. 24">
+
+  <label for="profession">Which describes you best?</label>
+  <select id="profession">
+    <option value="">Select one</option>
+    <option value="Student">Student</option>
+    <option value="Job Seeker">Job Seeker</option>
+    <option value="Working Professional">Working Professional</option>
+    <option value="Freelancer">Freelancer</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="goal">What's your main goal here?</label>
+  <select id="goal">
+    <option value="">Select one</option>
+    <option value="Interview Prep">Preparing for interviews</option>
+    <option value="Job Skill">Getting better at my current job</option>
+    <option value="Career Switch">Switching careers into data</option>
+    <option value="Certification">Getting a certificate</option>
+    <option value="General Learning">Just learning Excel generally</option>
+  </select>
+
+  <button class="btn btn-primary" id="saveBtn">Continue</button>
+
+  <div id="message"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('message');
+    msg.textContent = '';
+    msg.className = '';
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const age = document.getElementById('age').value;
+    const profession = document.getElementById('profession').value;
+    const goal = document.getElementById('goal').value;
+
+    if (!profession || !goal) {
+      msg.textContent = 'Please answer both questions.';
+      msg.className = 'error';
+      return;
+    }
+
+    const user = session.user;
+    const avatarUrl = user.user_metadata?.avatar_url || null;
+    const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+
+    // upsert covers both: Google users who don't have a profiles row yet,
+    // and email/password users who already do
+    const { error } = await supabaseClient.from('profiles').upsert({
+      id: user.id,
+      name: name,
+      email: user.email,
+      age: age ? parseInt(age) : null,
+      profession: profession,
+      goal: goal,
+      avatar_url: avatarUrl,
+      profile_completed: true
+    });
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.className = 'error';
+      return;
+    }
+
+    msg.textContent = 'All set! Taking you in...';
+    msg.className = 'success';
+    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+  });
+</script>
+
+</body>
+</html>

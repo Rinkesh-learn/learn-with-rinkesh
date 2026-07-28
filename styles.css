@@ -335,3 +335,105 @@ footer {
   color: var(--ink-soft);
   text-transform: uppercase;
 }
+
+/* ---------- Logged-in account nav ---------- */
+
+.nav-account { position: relative; }
+
+.nav-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  padding: 4px 6px;
+  border-radius: var(--radius);
+}
+.nav-account-btn:hover { background: #F0F5F1; }
+
+.nav-avatar-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nav-avatar-initial {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--excel-green);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nav-account-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: var(--cell-bg);
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.nav-account-menu.open { display: block; }
+
+.nav-account-menu a {
+  display: block;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-decoration: none;
+  color: var(--ink);
+  border-bottom: 1px solid var(--grid-line);
+}
+.nav-account-menu a:last-child { border-bottom: none; }
+.nav-account-menu a:hover { background: #F0F5F1; }
+
+/* ---------- Profile setup form ---------- */
+
+.setup-box {
+  max-width: 460px;
+  margin: 48px auto 80px;
+  background: var(--cell-bg);
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+.setup-box h1 { font-size: 20px; margin: 0 0 6px; }
+.setup-box p.hint { font-size: 13px; color: var(--ink-soft); margin: 0 0 24px; }
+.setup-box label {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  margin-top: 18px;
+}
+.setup-box input, .setup-box select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  background: #fff;
+}
+.setup-box button { width: 100%; margin-top: 26px; }
+.setup-box #message { margin-top: 14px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
+.setup-box #message.error { color: #B3261E; }
+.setup-box #message.success { color: var(--excel-green-deep); }
