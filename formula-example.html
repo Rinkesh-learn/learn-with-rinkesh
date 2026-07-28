@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLOOKUP — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html" class="active">Formulas</a>
+      <a href="about.html">About</a>
+    </nav>
+  </div>
+</div>
+
+<div class="formula-page">
+
+  <div class="formula-title">=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])</div>
+  <span class="formula-category">Lookup &middot; Beginner</span>
+
+  <section>
+    <h2>What it does</h2>
+    <p>Searches for a value in the first column of a range, and returns a value from another column in the same row. It's the formula every recruiter expects you to know cold — used constantly for pulling one dataset's details into another, like matching an Employee ID to a name and salary.</p>
+  </section>
+
+  <section>
+    <h2>Demo</h2>
+    <div class="video-slot">15-second demo video goes here</div>
+  </section>
+
+  <section>
+    <h2>Parameters</h2>
+    <table class="params-table">
+      <tr><th>Parameter</th><th>Meaning</th></tr>
+      <tr><td>lookup_value</td><td>The value you're searching for</td></tr>
+      <tr><td>table_array</td><td>The range that contains the data</td></tr>
+      <tr><td>col_index_num</td><td>Which column (counting from the left of table_array) to pull the result from</td></tr>
+      <tr><td>range_lookup</td><td>FALSE for an exact match (almost always what you want), TRUE for approximate</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>Corporate use case</h2>
+    <p>A payroll analyst has one sheet with Employee IDs and department codes, and another with Employee IDs and salaries. VLOOKUP pulls the salary into the department sheet without manually cross-referencing hundreds of rows by hand.</p>
+  </section>
+
+  <section>
+    <h2>Try it</h2>
+    <div class="video-slot" style="aspect-ratio:auto; padding:24px 22px; text-align:left; display:block;">
+      Practice grid goes here — a live spreadsheet where you write the formula and get instant feedback.
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+</body>
+</html>

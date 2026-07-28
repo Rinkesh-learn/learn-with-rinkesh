@@ -1,0 +1,337 @@
+/* ===========================================================
+   Learn With Rinkesh — design tokens
+   Concept: the site itself behaves like a spreadsheet —
+   name box, formula bar, and a lettered/numbered cell grid.
+   =========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --paper: #F6F4EC;
+  --ink: #1C2321;
+  --ink-soft: #4B5450;
+  --grid-line: #D9D3C2;
+  --excel-green: #1C6B41;
+  --excel-green-deep: #124D2E;
+  --amber: #C9971E;
+  --cell-bg: #FFFFFF;
+  --radius: 2px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+h1, h2, h3, .mono {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+a { color: inherit; }
+
+/* ---------- Top bar: mimics a spreadsheet name-box + toolbar ---------- */
+
+.topbar {
+  border-bottom: 1px solid var(--grid-line);
+  background: var(--cell-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.brand .namebox {
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: 3px 8px;
+  font-size: 12px;
+  color: var(--excel-green-deep);
+  background: #F0F5F1;
+}
+
+nav.mainnav {
+  display: flex;
+  gap: 28px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+nav.mainnav a {
+  text-decoration: none;
+  color: var(--ink-soft);
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+nav.mainnav a:hover,
+nav.mainnav a.active {
+  color: var(--excel-green-deep);
+  border-color: var(--excel-green);
+}
+
+/* ---------- Hero: literal formula bar ---------- */
+
+.hero {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 64px 24px 40px;
+}
+
+.formula-bar {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--grid-line);
+  background: var(--cell-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.formula-bar .fx {
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: italic;
+  color: var(--excel-green);
+  padding: 10px 14px;
+  border-right: 1px solid var(--grid-line);
+  font-size: 14px;
+  background: #F0F5F1;
+  display: flex;
+  align-items: center;
+}
+
+.formula-bar .content {
+  padding: 10px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 1.15;
+  margin: 0 0 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.hero h1 .cellref {
+  color: var(--excel-green);
+}
+
+.hero p.lede {
+  max-width: 560px;
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin: 0 0 30px;
+}
+
+.cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.btn {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 22px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--excel-green);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--excel-green-deep); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--grid-line);
+}
+.btn-ghost:hover { border-color: var(--ink); }
+
+/* ---------- Grid section: feature "cells" ---------- */
+
+.sheet {
+  max-width: 1080px;
+  margin: 40px auto 80px;
+  padding: 0 24px;
+}
+
+.sheet-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sheet-header .colletter {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--excel-green);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.sheet-header h2 {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.cell-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--grid-line);
+  border-left: 1px solid var(--grid-line);
+}
+
+.cell {
+  background: var(--cell-bg);
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+  padding: 26px 22px;
+  position: relative;
+}
+
+.cell .ref {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--grid-line);
+}
+
+.cell h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+  font-weight: 600;
+}
+
+.cell p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .cell-grid { grid-template-columns: 1fr; }
+  nav.mainnav { gap: 16px; font-size: 13px; }
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+  border-top: 1px solid var(--grid-line);
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ---------- Formula detail page ---------- */
+
+.formula-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.formula-title {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--cell-bg);
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--excel-green-deep);
+  margin-bottom: 8px;
+}
+
+.formula-category {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  border-radius: var(--radius);
+  padding: 3px 8px;
+  margin-bottom: 28px;
+}
+
+.formula-page section { margin-bottom: 32px; }
+
+.formula-page h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.video-slot {
+  background: var(--cell-bg);
+  border: 1px dashed var(--grid-line);
+  border-radius: var(--radius);
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  max-width: 420px;
+}
+
+.params-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.params-table th, .params-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.params-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+}
