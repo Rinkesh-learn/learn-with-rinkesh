@@ -6,6 +6,10 @@
 <title>Practice — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="practice-styles.css">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
 </head>
 <body>
 
@@ -27,7 +31,7 @@
 
 <div class="hero" style="padding-bottom:20px;">
   <h1 style="font-size:32px;">Pick a formula, practice it live.</h1>
-  <p class="lede" style="margin-bottom:0;">Click any formula on the list, read how it works, then solve it in a real spreadsheet grid.</p>
+  <p class="lede" style="margin-bottom:0;">Click any formula on the list, read how it works, then solve it in a real spreadsheet — actual Excel functions, actual formula bar.</p>
 </div>
 
 <div class="sheet" style="margin-top:0;">
@@ -59,7 +63,9 @@
   <div class="modal-box" id="modalBox"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/hyperformula/dist/hyperformula.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+
 <script>
 const CELEBRATIONS = [
   "Hurray! You're a genius!",
@@ -69,14 +75,6 @@ const CELEBRATIONS = [
   "Perfect. On to the next one!",
   "That's the one! Great work."
 ];
-
-const ERROR_EXPLANATIONS = {
-  NA: "#N/A means Excel couldn't find a match. Check that the value you're looking up actually exists, and that FALSE is used for an exact match.",
-  VALUE: "#VALUE! usually means one of the formula's arguments is the wrong type.",
-  REF: "#REF! means the formula points to a cell reference that doesn't exist.",
-  NAME: "#NAME? means Excel doesn't recognize part of the formula — often a typo.",
-  DIV_BY_ZERO: "#DIV/0! means the formula is dividing by zero or an empty cell."
-};
 
 const FORMULAS = [
   {
@@ -142,8 +140,8 @@ const FORMULAS = [
 ];
 
 let currentFormula = null;
+let sheetReady = false;
 
-// ---------- Sidebar list ----------
 function renderList() {
   const list = document.getElementById('formulaList');
   list.innerHTML = '';
@@ -156,11 +154,9 @@ function renderList() {
   });
 }
 
-// ---------- Modal ----------
 function openModal(formula) {
   const overlay = document.getElementById('modalOverlay');
   const box = document.getElementById('modalBox');
-
   const paramsRows = formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('');
 
   box.innerHTML = `
@@ -187,37 +183,21 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'modalOverlay') e.target.classList.remove('open');
 });
 
-// ---------- Practice grid ----------
 function colLetter(i) { return String.fromCharCode(65 + i); }
 
-const VISUAL_ROWS = 14;
-const VISUAL_COLS = 9;
-
-function renderGridHtml(formula) {
-  let html = '<table class="practice-table"><tr><td class="colhead"></td>';
-  for (let c = 0; c < VISUAL_COLS; c++) html += `<td class="colhead">${colLetter(c)}</td>`;
-  html += '</tr>';
-
-  for (let r = 0; r < VISUAL_ROWS; r++) {
-    html += `<tr><td class="colhead">${r + 1}</td>`;
-    for (let c = 0; c < VISUAL_COLS; c++) {
-      const hasData = r < formula.grid.length && c < formula.grid[r].length;
-      const cellValue = hasData ? formula.grid[r][c] : '';
+function buildCelldata(formula) {
+  const cells = [];
+  formula.grid.forEach((row, r) => {
+    row.forEach((val, c) => {
       const isTarget = r === formula.targetRow && c === formula.targetCol;
-      const isHeaderRow = r === 0 && hasData;
-      const tag = isHeaderRow ? 'th' : 'td';
-      const cls = isTarget ? ' class="target-cell" id="resultCell" onclick="selectTargetCell()"' : (!hasData || cellValue === '' ? ' class="blank-cell"' : '');
-      const content = isTarget ? '' : (cellValue === null ? '' : cellValue);
-      html += `<${tag}${cls}>${content}</${tag}>`;
-    }
-    html += '</tr>';
-  }
-  html += '</table>';
-  return html;
-}
-
-function selectTargetCell() {
-  document.getElementById('formulaInput').focus();
+      if (isTarget) {
+        cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
+      } else if (val !== null && val !== '') {
+        cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
+      }
+    });
+  });
+  return cells;
 }
 
 function startPractice(formula) {
@@ -227,87 +207,64 @@ function startPractice(formula) {
   const targetLabel = colLetter(formula.targetCol) + (formula.targetRow + 1);
   const main = document.getElementById('practiceMain');
   main.innerHTML = `
-    <div class="practice-active">
+    <div class="practice-active" style="width:100%;">
       <h2>${formula.name}</h2>
-      <p class="target-label">Click the highlighted cell (${targetLabel}) and write your formula in the bar above it — just like a real spreadsheet.</p>
-      <div class="practice-grid">
-        <div class="formula-toolbar">
-          <span class="cellref-box" id="cellRefBox">${targetLabel}</span>
-          <span class="fx-icon">fx</span>
-          <input type="text" id="formulaInput" class="formula-bar-input" placeholder="Write your ${formula.name} formula, e.g. ${formula.syntax}">
-        </div>
-        <div class="formula-suggest" id="formulaSuggest"></div>
-        <div class="grid-scroll">${renderGridHtml(formula)}</div>
-        <div class="practice-input-row" style="justify-content:flex-end;">
-          <button class="btn btn-primary" id="checkBtn">Check</button>
-        </div>
-        <div class="practice-feedback" id="practiceFeedback"></div>
+      <p class="target-label">The yellow cell (${targetLabel}) is where you write your formula. Click it and use the real formula bar above the sheet.</p>
+      <div id="luckysheetContainer" style="width:100%; height:480px; position:relative; border:1px solid var(--grid-line);"></div>
+      <div class="practice-input-row" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0;">
+        <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
       </div>
+      <div class="practice-feedback" id="practiceFeedback"></div>
     </div>
   `;
 
-  document.getElementById('checkBtn').addEventListener('click', () => checkAnswer(formula));
-  const input = document.getElementById('formulaInput');
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') checkAnswer(formula);
+  if (sheetReady && window.luckysheet && window.luckysheet.destroy) {
+    try { luckysheet.destroy(); } catch (e) {}
+  }
+
+  luckysheet.create({
+    container: 'luckysheetContainer',
+    lang: 'en',
+    showinfobar: false,
+    showsheetbar: false,
+    showstatisticBarConfig: { count: false, view: false, zoom: false },
+    data: [{
+      name: formula.name,
+      celldata: buildCelldata(formula),
+      row: 20,
+      column: 12,
+      status: 1
+    }]
   });
-  input.addEventListener('input', () => updateSuggestion(input.value));
-  input.focus();
-}
+  sheetReady = true;
 
-function updateSuggestion(text) {
-  const suggest = document.getElementById('formulaSuggest');
-  if (!text.startsWith('=')) { suggest.style.display = 'none'; return; }
-
-  const match = text.slice(1).match(/^[A-Za-z]+/);
-  if (!match) { suggest.style.display = 'none'; return; }
-
-  const typed = match[0].toUpperCase();
-  const found = FORMULAS.find(f => f.name.startsWith(typed) && typed.length > 0);
-  if (!found) { suggest.style.display = 'none'; return; }
-
-  const paramsHtml = found.params.map(p => `<div class="suggest-param"><strong>${p[0]}</strong> — ${p[1]}</div>`).join('');
-  suggest.innerHTML = `<div class="suggest-syntax">${found.syntax}</div><div class="suggest-desc">${found.description}</div>${paramsHtml}`;
-  suggest.style.display = 'block';
+  document.getElementById('checkBtn').addEventListener('click', () => checkAnswer(formula));
 }
 
 function checkAnswer(formula) {
   const feedback = document.getElementById('practiceFeedback');
-  const resultCell = document.getElementById('resultCell');
-  let input = document.getElementById('formulaInput').value.trim();
   feedback.className = 'practice-feedback';
-  feedback.innerHTML = '';
-
-  if (!input) {
-    feedback.innerHTML = 'Write a formula in the box above first.';
-    feedback.classList.add('incorrect');
-    return;
-  }
-  if (!input.startsWith('=')) input = '=' + input;
-
-  const sheetData = formula.grid.map((row, r) =>
-    row.map((cell, c) => (r === formula.targetRow && c === formula.targetCol) ? input : cell)
-  );
 
   let value;
   try {
-    const hf = HyperFormula.buildFromArray(sheetData, { licenseKey: 'gpl-v3' });
-    value = hf.getCellValue({ sheet: 0, row: formula.targetRow, col: formula.targetCol });
+    value = luckysheet.getCellValue(formula.targetRow, formula.targetCol);
   } catch (e) {
-    feedback.innerHTML = "That formula couldn't be understood. Double check the syntax.";
+    feedback.innerHTML = "Couldn't read that cell — try clicking outside the cell first, then Check again.";
     feedback.classList.add('incorrect');
     return;
   }
 
-  if (value && typeof value === 'object' && value.type) {
-    const label = { NA:'#N/A', VALUE:'#VALUE!', REF:'#REF!', NAME:'#NAME?', DIV_BY_ZERO:'#DIV/0!' }[value.type] || ('#' + value.type);
-    resultCell.textContent = label;
-    feedback.innerHTML = `Result: <strong>${label}</strong><span class="explain">${ERROR_EXPLANATIONS[value.type] || 'Check your formula syntax and cell references.'}</span>`;
+  if (value === null || value === undefined || value === '') {
+    feedback.innerHTML = 'Write a formula in the highlighted cell first.';
     feedback.classList.add('incorrect');
     return;
   }
 
-  resultCell.textContent = value;
+  if (typeof value === 'string' && value.startsWith('#')) {
+    feedback.innerHTML = `Result: <strong>${value}</strong><span class="explain">Check your formula's cell references and arguments.</span>`;
+    feedback.classList.add('incorrect');
+    return;
+  }
 
   const isCorrect = formula.expectedType === 'number'
     ? Number(value) === formula.expectedValue
@@ -323,9 +280,9 @@ function checkAnswer(formula) {
   }
 }
 
-// ---------- Swap panel side ----------
 document.getElementById('swapBtn').addEventListener('click', () => {
   document.getElementById('practiceLayout').classList.toggle('reversed');
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
 });
 
 renderList();
