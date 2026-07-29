@@ -13,10 +13,10 @@
 
 .sticker-zone {
   position: absolute;
-  top: 4px;
+  top: 78px;
   right: 0;
-  width: 300px;
-  height: 220px;
+  width: 340px;
+  height: 260px;
   pointer-events: none;
 }
 
@@ -32,14 +32,14 @@
   white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
-  transition: top 0.4s ease, left 0.4s ease, transform 0.15s ease;
+  transition: top 0.35s ease, left 0.35s ease, transform 0.15s ease;
   animation: stickerBob 3.5s ease-in-out infinite;
 }
 .sticker:hover { transform: scale(1.08); }
 
-.sticker.s1 { background: var(--coral); top: 0px; left: 40px; }
-.sticker.s2 { background: var(--sky); top: 80px; left: 140px; }
-.sticker.s3 { background: var(--amber); top: 155px; left: 30px; }
+.sticker.s1 { background: var(--coral); top: 10px; left: 60px; }
+.sticker.s2 { background: var(--sky); top: 100px; left: 170px; }
+.sticker.s3 { background: var(--amber); top: 190px; left: 40px; }
 
 @keyframes stickerBob {
   0%, 100% { margin-top: 0; }
@@ -223,7 +223,8 @@
 
 .cell-cta {
   display: inline-block;
-  margin-top: 14px;
+  align-self: flex-start;
+  margin-top: auto;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   font-weight: 700;

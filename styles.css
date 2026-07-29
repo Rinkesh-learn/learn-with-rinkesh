@@ -223,6 +223,8 @@ nav.mainnav a.active {
   border-bottom: 1px solid var(--grid-line);
   padding: 26px 22px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .cell .ref {

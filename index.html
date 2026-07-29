@@ -169,17 +169,29 @@
 
   cycleHero();
 
-  // Floating capsules dodge the cursor
+  // Floating capsules dodge the cursor — the touched one jumps far,
+  // the other two reset back to their starting spot
   const stickerZone = document.getElementById('stickerZone');
-  function dodgeSticker(el) {
+  const allStickers = document.querySelectorAll('.sticker');
+
+  function dodgeSticker(target) {
     const zoneRect = stickerZone.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
+    const elRect = target.getBoundingClientRect();
     const maxLeft = Math.max(0, zoneRect.width - elRect.width);
     const maxTop = Math.max(0, zoneRect.height - elRect.height);
-    el.style.left = Math.round(Math.random() * maxLeft) + 'px';
-    el.style.top = Math.round(Math.random() * maxTop) + 'px';
+
+    allStickers.forEach(el => {
+      if (el === target) {
+        el.style.left = Math.round(Math.random() * maxLeft) + 'px';
+        el.style.top = Math.round(Math.random() * maxTop) + 'px';
+      } else {
+        el.style.left = '';
+        el.style.top = '';
+      }
+    });
   }
-  document.querySelectorAll('.sticker').forEach(el => {
+
+  allStickers.forEach(el => {
     el.addEventListener('mouseenter', () => dodgeSticker(el));
     el.addEventListener('touchstart', (e) => { e.preventDefault(); dodgeSticker(el); });
   });
