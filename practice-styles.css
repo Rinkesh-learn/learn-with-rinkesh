@@ -72,6 +72,26 @@
 
 .formula-list-item:hover { background: #F0F5F1; }
 
+.formula-list-category {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  padding: 14px 12px 4px;
+}
+.formula-list-category:first-child { padding-top: 4px; }
+
+.practice-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .formula-list-item.selected {
   background: var(--excel-green);
   color: #fff;

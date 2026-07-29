@@ -56,9 +56,9 @@
       <div class="formula-card-grid">
         ${categories[cat].map(f => `
           <a class="formula-card" href="practice.html?formula=${f.id}">
-            <div class="formula-card-name">${f.name}</div>
+            <div class="formula-card-name">${f.name}${PRACTICE_ENABLED_IDS.includes(f.id) ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</div>
             <div class="formula-card-desc">${f.description}</div>
-            <div class="formula-card-cta">Practice this &rarr;</div>
+            <div class="formula-card-cta">${PRACTICE_ENABLED_IDS.includes(f.id) ? 'Practice this' : 'Try it freely'} &rarr;</div>
           </a>
         `).join('')}
       </div>

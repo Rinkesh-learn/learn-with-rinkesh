@@ -193,12 +193,27 @@ let sheetReady = false;
 function renderList() {
   const list = document.getElementById('formulaList');
   list.innerHTML = '';
+
+  const byCategory = {};
   FORMULAS.forEach(f => {
-    const li = document.createElement('li');
-    li.className = 'formula-list-item' + (currentFormula && currentFormula.id === f.id ? ' selected' : '');
-    li.innerHTML = `<span class="flname">${f.name}</span><span class="flcat">${f.category}</span>`;
-    li.addEventListener('click', () => openModal(f));
-    list.appendChild(li);
+    if (!byCategory[f.category]) byCategory[f.category] = [];
+    byCategory[f.category].push(f);
+  });
+
+  Object.keys(byCategory).forEach(cat => {
+    const header = document.createElement('li');
+    header.className = 'formula-list-category';
+    header.textContent = `${CATEGORY_ICONS[cat] || ''} ${cat}`;
+    list.appendChild(header);
+
+    byCategory[cat].forEach(f => {
+      const hasPractice = !!(f.questions && f.questions.length);
+      const li = document.createElement('li');
+      li.className = 'formula-list-item' + (currentFormula && currentFormula.id === f.id ? ' selected' : '');
+      li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>`;
+      li.addEventListener('click', () => openModal(f));
+      list.appendChild(li);
+    });
   });
 }
 
@@ -206,23 +221,32 @@ function renderList() {
 function openModal(formula) {
   const overlay = document.getElementById('modalOverlay');
   const box = document.getElementById('modalBox');
-  const paramsRows = formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('');
+  const hasPractice = !!(formula.questions && formula.questions.length);
+
+  const paramsSection = formula.params
+    ? `<h4>Parameters</h4><table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}</table>`
+    : '';
+  const useCaseSection = formula.useCase
+    ? `<h4>Corporate use case</h4><p>${formula.useCase}</p>`
+    : '';
 
   box.innerHTML = `
     <div class="formula-title">${formula.syntax}</div>
     <span class="formula-category">${CATEGORY_ICONS[formula.category] || ''} ${formula.category}</span>
     <h4>What it does</h4>
     <p>${formula.description}</p>
-    <h4>Parameters</h4>
-    <table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${paramsRows}</table>
-    <h4>Corporate use case</h4>
-    <p>${formula.useCase}</p>
-    <button class="btn btn-primary modal-ready-btn" id="readyBtn">Ready — let's practice</button>
+    ${paramsSection}
+    ${useCaseSection}
+    <button class="btn btn-primary modal-ready-btn" id="readyBtn">${hasPractice ? "Ready — let's practice" : "Ready — try it freely"}</button>
   `;
 
   document.getElementById('readyBtn').addEventListener('click', () => {
     overlay.classList.remove('open');
-    startPractice(formula, 0);
+    if (hasPractice) {
+      startPractice(formula, 0);
+    } else {
+      startFreePractice(formula);
+    }
   });
 
   overlay.classList.add('open');
@@ -329,6 +353,14 @@ function startBlankSheet() {
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
   document.getElementById('checkRow').style.display = 'none';
   createSheet('Free Practice', []);
+}
+
+function startFreePractice(formula) {
+  currentFormula = formula;
+  document.getElementById('activeTitle').textContent = formula.name;
+  document.getElementById('activeTask').innerHTML = `Try <strong>${formula.name}</strong> freely below — real Excel engine, no pre-set answer to check against yet. Syntax: <code>${formula.syntax}</code>`;
+  document.getElementById('checkRow').style.display = 'none';
+  createSheet(formula.name, []);
 }
 
 function startPractice(formula, qIndex) {
