@@ -25,14 +25,20 @@
 </div>
 
 <div class="sc-hero">
-  <div class="sc-key-float">
-    <span class="keycap">Ctrl</span>
-    <span class="keycap">Shift</span>
-    <span class="keycap">Alt</span>
-    <span class="keycap">Enter</span>
+  <div class="sc-hero-row">
+    <div class="sc-keys-side left">
+      <span class="keycap">Ctrl</span>
+      <span class="keycap">Shift</span>
+    </div>
+    <div class="sc-hero-text">
+      <h1>Every shortcut, in one place.</h1>
+      <p>Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.</p>
+    </div>
+    <div class="sc-keys-side right">
+      <span class="keycap">Alt</span>
+      <span class="keycap">Enter</span>
+    </div>
   </div>
-  <h1>Every shortcut, in one place.</h1>
-  <p>Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.</p>
 </div>
 
 <div class="sc-search-wrap">
@@ -190,7 +196,7 @@ function render(filterText) {
         <span class="icon">${CATEGORY_ICONS[cat] || ''}</span>
         <h2>${cat}</h2>
       </div>
-      ${rows}
+      <div class="sc-rows-grid">${rows}</div>
     `;
     shell.appendChild(section);
   });
