@@ -95,6 +95,29 @@
   vertical-align: middle;
 }
 
+.about-excel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--excel-green), var(--excel-green-deep));
+  color: #fff;
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 12px rgba(28,107,65,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.about-excel-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(28,107,65,0.35);
+}
+
 .formula-list-item.selected {
   background: var(--excel-green);
   color: #fff;
