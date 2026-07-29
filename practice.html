@@ -53,7 +53,6 @@
         <div class="practice-input-row" id="checkRow" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0; display:none;">
           <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
         </div>
-        <div class="practice-feedback" id="practiceFeedback"></div>
       </div>
     </div>
 
@@ -64,9 +63,14 @@
   Learn With Rinkesh — built one cell at a time.
 </footer>
 
-<!-- Modal -->
+<!-- Explain modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-box" id="modalBox"></div>
+</div>
+
+<!-- Result modal -->
+<div class="modal-overlay" id="resultOverlay">
+  <div class="modal-box" id="resultBox" style="max-width:400px; text-align:center;"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
@@ -82,8 +86,8 @@ const CELEBRATIONS = [
   "That's the one! Great work."
 ];
 
-// Row offset so row 0 can hold the task instruction inside the sheet itself
 const TASK_OFFSET = 2;
+const COLUMN_WIDTHS = { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 };
 
 const FORMULAS = [
   {
@@ -155,6 +159,7 @@ const FORMULAS = [
 let currentFormula = null;
 let sheetReady = false;
 
+// ---------- Sidebar ----------
 function renderList() {
   const list = document.getElementById('formulaList');
   list.innerHTML = '';
@@ -167,6 +172,7 @@ function renderList() {
   });
 }
 
+// ---------- Explain modal ----------
 function openModal(formula) {
   const overlay = document.getElementById('modalOverlay');
   const box = document.getElementById('modalBox');
@@ -196,6 +202,41 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'modalOverlay') e.target.classList.remove('open');
 });
 
+// ---------- Result modal ----------
+function showResultModal({ correct, html }) {
+  const overlay = document.getElementById('resultOverlay');
+  const box = document.getElementById('resultBox');
+
+  const idx = currentFormula ? FORMULAS.findIndex(f => f.id === currentFormula.id) : -1;
+  const nextFormula = idx > -1 ? FORMULAS[(idx + 1) % FORMULAS.length] : null;
+
+  box.innerHTML = `
+    <div style="font-size:16px; margin-bottom:20px;">${html}</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-ghost" id="resultCloseBtn" style="flex:1;">Close</button>
+      ${nextFormula ? `<button class="btn btn-primary" id="resultNextBtn" style="flex:1;">Next: ${nextFormula.name} &rarr;</button>` : ''}
+    </div>
+  `;
+
+  document.getElementById('resultCloseBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
+
+  if (nextFormula) {
+    document.getElementById('resultNextBtn').addEventListener('click', () => {
+      overlay.classList.remove('open');
+      openModal(nextFormula);
+    });
+  }
+
+  overlay.classList.add('open');
+}
+
+document.getElementById('resultOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'resultOverlay') e.target.classList.remove('open');
+});
+
+// ---------- Sheet ----------
 function colLetter(i) { return String.fromCharCode(65 + i); }
 
 function buildCelldata(formula) {
@@ -231,7 +272,11 @@ function createSheet(name, celldata) {
       celldata: celldata,
       row: 60,
       column: 26,
-      status: 1
+      status: 1,
+      config: {
+        merge: { "0_0": { r: 0, c: 0, rs: 1, cs: 12 } },
+        columnlen: COLUMN_WIDTHS
+      }
     }]
   });
   sheetReady = true;
@@ -242,8 +287,6 @@ function startBlankSheet() {
   document.getElementById('activeTitle').textContent = 'Free Practice';
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
   document.getElementById('checkRow').style.display = 'none';
-  document.getElementById('practiceFeedback').innerHTML = '';
-  document.getElementById('practiceFeedback').className = 'practice-feedback';
   createSheet('Free Practice', []);
 }
 
@@ -257,8 +300,6 @@ function startPractice(formula) {
   document.getElementById('activeTitle').textContent = formula.name;
   document.getElementById('activeTask').innerHTML = `<strong>${formula.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
   document.getElementById('checkRow').style.display = 'flex';
-  document.getElementById('practiceFeedback').innerHTML = '';
-  document.getElementById('practiceFeedback').className = 'practice-feedback';
 
   createSheet(formula.name, buildCelldata(formula));
 
@@ -274,9 +315,6 @@ function unwrapValue(raw) {
 }
 
 function checkAnswer(formula, actualTargetRow) {
-  const feedback = document.getElementById('practiceFeedback');
-  feedback.className = 'practice-feedback';
-
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
   let value;
@@ -284,26 +322,22 @@ function checkAnswer(formula, actualTargetRow) {
     value = luckysheet.getCellValue(actualTargetRow, formula.targetCol);
     value = unwrapValue(value);
   } catch (e) {
-    feedback.innerHTML = "Couldn't read that cell — click outside the cell once, then press Check My Answer again.";
-    feedback.classList.add('incorrect');
+    showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again." });
     return;
   }
 
   if (value === null || value === undefined || value === '') {
-    feedback.innerHTML = 'Write a formula in the highlighted cell first, then click outside it before checking.';
-    feedback.classList.add('incorrect');
+    showResultModal({ correct: false, html: 'Write a formula in the highlighted cell first, then click outside it before checking.' });
     return;
   }
 
   if (typeof value === 'string' && value.trim().startsWith('=')) {
-    feedback.innerHTML = "Click outside the cell (or press Enter) to confirm your formula, then check again.";
-    feedback.classList.add('incorrect');
+    showResultModal({ correct: false, html: "Click outside the cell (or press Enter) to confirm your formula, then check again." });
     return;
   }
 
   if (typeof value === 'string' && value.startsWith('#')) {
-    feedback.innerHTML = `Result: <strong>${value}</strong><span class="explain">Check your formula's cell references and arguments.</span>`;
-    feedback.classList.add('incorrect');
+    showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>` });
     return;
   }
 
@@ -313,17 +347,32 @@ function checkAnswer(formula, actualTargetRow) {
 
   if (isCorrect) {
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
-    feedback.innerHTML = `<span class="celebrate">${msg}</span> Result: <strong>${value}</strong>`;
-    feedback.classList.add('correct');
+    showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
-    feedback.innerHTML = `Result: <strong>${value}</strong> — not quite. Expected ${formula.expectedValue}.`;
-    feedback.classList.add('incorrect');
+    showResultModal({ correct: false, html: `Result: <strong>${value}</strong> — not quite.<br>Expected ${formula.expectedValue}. Try again!` });
   }
 }
 
 document.getElementById('swapBtn').addEventListener('click', () => {
   document.getElementById('practiceLayout').classList.toggle('reversed');
   setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+});
+
+// ---------- Scroll-jump fix ----------
+// The embedded sheet's hidden input sometimes triggers the browser to
+// auto-scroll the page when a cell is clicked. This locks the page's
+// scroll position in place immediately after any click inside the sheet.
+let lockedScrollY = null;
+document.addEventListener('mousedown', (e) => {
+  const container = document.getElementById('luckysheetContainer');
+  if (container && container.contains(e.target)) {
+    lockedScrollY = window.scrollY;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (lockedScrollY !== null) window.scrollTo(window.scrollX, lockedScrollY);
+      });
+    });
+  }
 });
 
 renderList();
