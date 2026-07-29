@@ -40,8 +40,8 @@ a { color: inherit; }
 /* ---------- Top bar: mimics a spreadsheet name-box + toolbar ---------- */
 
 .topbar {
-  border-bottom: 1px solid var(--grid-line);
-  background: var(--cell-bg);
+  border-bottom: 1px solid var(--excel-green-deep);
+  background: var(--excel-green);
   position: sticky;
   top: 0;
   z-index: 99999;
@@ -64,16 +64,16 @@ a { color: inherit; }
   font-family: 'IBM Plex Mono', monospace;
   font-weight: 600;
   font-size: 15px;
-  color: var(--ink);
+  color: #fff;
 }
 
 .brand .namebox {
-  border: 1px solid var(--excel-green);
+  border: 1px solid #fff;
   border-radius: var(--radius);
   padding: 3px 8px;
   font-size: 12px;
-  color: #fff;
-  background: var(--excel-green);
+  color: var(--excel-green-deep);
+  background: #fff;
 }
 
 nav.mainnav {
@@ -85,7 +85,7 @@ nav.mainnav {
 
 nav.mainnav a {
   text-decoration: none;
-  color: var(--ink-soft);
+  color: rgba(255,255,255,0.8);
   border-bottom: 2px solid transparent;
   padding-bottom: 2px;
   transition: color 0.15s ease, border-color 0.15s ease;
@@ -93,8 +93,8 @@ nav.mainnav a {
 
 nav.mainnav a:hover,
 nav.mainnav a.active {
-  color: var(--excel-green-deep);
-  border-color: var(--excel-green);
+  color: #fff;
+  border-color: #fff;
 }
 
 /* ---------- Hero: literal formula bar ---------- */
@@ -352,11 +352,11 @@ footer {
   font-family: 'IBM Plex Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: var(--ink);
+  color: #fff;
   padding: 4px 6px;
   border-radius: var(--radius);
 }
-.nav-account-btn:hover { background: #F0F5F1; }
+.nav-account-btn:hover { background: rgba(255,255,255,0.15); }
 
 .nav-avatar-img {
   width: 26px;
@@ -369,8 +369,8 @@ footer {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: var(--excel-green);
-  color: #fff;
+  background: #fff;
+  color: var(--excel-green-deep);
   display: flex;
   align-items: center;
   justify-content: center;
