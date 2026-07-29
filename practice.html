@@ -190,25 +190,34 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 // ---------- Practice grid ----------
 function colLetter(i) { return String.fromCharCode(65 + i); }
 
+const VISUAL_ROWS = 14;
+const VISUAL_COLS = 9;
+
 function renderGridHtml(formula) {
-  const grid = formula.grid;
   let html = '<table class="practice-table"><tr><td class="colhead"></td>';
-  grid[0].forEach((_, c) => html += `<td class="colhead">${colLetter(c)}</td>`);
+  for (let c = 0; c < VISUAL_COLS; c++) html += `<td class="colhead">${colLetter(c)}</td>`;
   html += '</tr>';
 
-  grid.forEach((row, r) => {
+  for (let r = 0; r < VISUAL_ROWS; r++) {
     html += `<tr><td class="colhead">${r + 1}</td>`;
-    row.forEach((cell, c) => {
+    for (let c = 0; c < VISUAL_COLS; c++) {
+      const hasData = r < formula.grid.length && c < formula.grid[r].length;
+      const cellValue = hasData ? formula.grid[r][c] : '';
       const isTarget = r === formula.targetRow && c === formula.targetCol;
-      const tag = r === 0 ? 'th' : 'td';
-      const cls = isTarget ? ' class="target-cell" id="resultCell"' : '';
-      const content = isTarget ? '?' : (cell === null ? '' : cell);
+      const isHeaderRow = r === 0 && hasData;
+      const tag = isHeaderRow ? 'th' : 'td';
+      const cls = isTarget ? ' class="target-cell" id="resultCell" onclick="selectTargetCell()"' : (!hasData || cellValue === '' ? ' class="blank-cell"' : '');
+      const content = isTarget ? '' : (cellValue === null ? '' : cellValue);
       html += `<${tag}${cls}>${content}</${tag}>`;
-    });
+    }
     html += '</tr>';
-  });
+  }
   html += '</table>';
   return html;
+}
+
+function selectTargetCell() {
+  document.getElementById('formulaInput').focus();
 }
 
 function startPractice(formula) {
@@ -220,12 +229,16 @@ function startPractice(formula) {
   main.innerHTML = `
     <div class="practice-active">
       <h2>${formula.name}</h2>
-      <p class="target-label">Fill in cell ${targetLabel} below.</p>
+      <p class="target-label">Click the highlighted cell (${targetLabel}) and write your formula in the bar above it — just like a real spreadsheet.</p>
       <div class="practice-grid">
-        ${renderGridHtml(formula)}
-        <div class="practice-input-row">
-          <label>${targetLabel} =</label>
-          <input type="text" id="formulaInput" placeholder="Write your ${formula.name} formula">
+        <div class="formula-toolbar">
+          <span class="cellref-box" id="cellRefBox">${targetLabel}</span>
+          <span class="fx-icon">fx</span>
+          <input type="text" id="formulaInput" class="formula-bar-input" placeholder="Write your ${formula.name} formula, e.g. ${formula.syntax}">
+        </div>
+        <div class="formula-suggest" id="formulaSuggest"></div>
+        <div class="grid-scroll">${renderGridHtml(formula)}</div>
+        <div class="practice-input-row" style="justify-content:flex-end;">
           <button class="btn btn-primary" id="checkBtn">Check</button>
         </div>
         <div class="practice-feedback" id="practiceFeedback"></div>
@@ -234,9 +247,28 @@ function startPractice(formula) {
   `;
 
   document.getElementById('checkBtn').addEventListener('click', () => checkAnswer(formula));
-  document.getElementById('formulaInput').addEventListener('keydown', (e) => {
+  const input = document.getElementById('formulaInput');
+  input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') checkAnswer(formula);
   });
+  input.addEventListener('input', () => updateSuggestion(input.value));
+  input.focus();
+}
+
+function updateSuggestion(text) {
+  const suggest = document.getElementById('formulaSuggest');
+  if (!text.startsWith('=')) { suggest.style.display = 'none'; return; }
+
+  const match = text.slice(1).match(/^[A-Za-z]+/);
+  if (!match) { suggest.style.display = 'none'; return; }
+
+  const typed = match[0].toUpperCase();
+  const found = FORMULAS.find(f => f.name.startsWith(typed) && typed.length > 0);
+  if (!found) { suggest.style.display = 'none'; return; }
+
+  const paramsHtml = found.params.map(p => `<div class="suggest-param"><strong>${p[0]}</strong> — ${p[1]}</div>`).join('');
+  suggest.innerHTML = `<div class="suggest-syntax">${found.syntax}</div><div class="suggest-desc">${found.description}</div>${paramsHtml}`;
+  suggest.style.display = 'block';
 }
 
 function checkAnswer(formula) {
