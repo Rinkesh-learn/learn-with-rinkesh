@@ -13,7 +13,7 @@
 
 .sticker-zone {
   position: absolute;
-  top: 78px;
+  top: 118px;
   right: 0;
   width: 340px;
   height: 260px;
@@ -254,6 +254,23 @@
 .reveal-stagger.visible .cell:nth-child(1) { transition-delay: 0.05s; }
 .reveal-stagger.visible .cell:nth-child(2) { transition-delay: 0.15s; }
 .reveal-stagger.visible .cell:nth-child(3) { transition-delay: 0.25s; }
+
+/* Buttons pop into place after their card has faded in */
+.reveal-stagger .cell-cta {
+  opacity: 0;
+  transform: scale(0.4);
+}
+.reveal-stagger.visible .cell-cta {
+  animation: ctaPopIn 0.55s cubic-bezier(.34, 1.56, .64, 1) forwards;
+}
+.reveal-stagger.visible .cell:nth-child(1) .cell-cta { animation-delay: 0.3s; }
+.reveal-stagger.visible .cell:nth-child(2) .cell-cta { animation-delay: 0.4s; }
+.reveal-stagger.visible .cell:nth-child(3) .cell-cta { animation-delay: 0.5s; }
+
+@keyframes ctaPopIn {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 /* ---------- Final CTA banner ---------- */
 
