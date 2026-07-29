@@ -43,6 +43,37 @@
     overflow: hidden;
   }
 
+  .guide-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 34px 34px;
+    opacity: 0.25;
+    animation: driftGrid 18s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes driftGrid {
+    from { background-position: 0 0; }
+    to { background-position: 340px 340px; }
+  }
+
+  .guide-icon {
+    font-size: 44px;
+    margin-bottom: 4px;
+    display: inline-block;
+    animation: iconPop 0.5s ease;
+  }
+
+  @keyframes iconPop {
+    0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+    60% { transform: scale(1.1) rotate(3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); }
+  }
+
   .guide-slide {
     animation: slideIn 0.45s ease;
   }
@@ -77,6 +108,38 @@
     margin: 20px 0;
     display: flex;
     justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .guide-slide > .guide-eyebrow,
+  .guide-slide > h2,
+  .guide-slide > p {
+    position: relative;
+    z-index: 1;
+  }
+
+  .datatype-chip {
+    display: inline-block;
+    padding: 9px 16px;
+    margin: 5px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+    animation: chipRise 0.45s ease forwards;
+  }
+  .guide-visual > div > .datatype-chip:nth-child(1) { animation-delay: 0.05s; }
+  .guide-visual > div > .datatype-chip:nth-child(2) { animation-delay: 0.15s; }
+  .guide-visual > div > .datatype-chip:nth-child(3) { animation-delay: 0.25s; }
+  .guide-visual > div > .datatype-chip:nth-child(4) { animation-delay: 0.35s; }
+  .guide-visual > div > .datatype-chip:nth-child(5) { animation-delay: 0.45s; }
+
+  @keyframes chipRise {
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   .guide-nav-row {
@@ -125,16 +188,6 @@
     color: var(--ink-soft);
   }
   .ribbon-tab.active { background: var(--excel-green); color: #fff; font-weight: 700; }
-
-  .datatype-chip {
-    display: inline-block;
-    padding: 6px 12px;
-    margin: 4px;
-    border-radius: 4px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px;
-    color: #fff;
-  }
 </style>
 </head>
 <body>
@@ -175,6 +228,7 @@
 const SLIDES = [
   {
     eyebrow: "WHY EXCEL",
+    icon: "💡",
     title: "Why does Excel even matter?",
     body: [
       "For over three decades, Excel has been the default language businesses use to make decisions — budgets, forecasts, plans, reports.",
@@ -190,6 +244,7 @@ const SLIDES = [
   },
   {
     eyebrow: "THE IMPACT",
+    icon: "🌍",
     title: "How Excel changed the way the world works",
     body: [
       "Before spreadsheets, recalculating a budget after one change meant redoing everything by hand — sometimes for days.",
@@ -202,6 +257,7 @@ const SLIDES = [
   },
   {
     eyebrow: "YOUR CAREER",
+    icon: "🚀",
     title: "Why this matters for you specifically",
     body: [
       "Open almost any job posting in finance, operations, HR, or data — 'Excel proficiency' shows up again and again.",
@@ -216,6 +272,7 @@ const SLIDES = [
   },
   {
     eyebrow: "WHAT'S POSSIBLE",
+    icon: "🛠️",
     title: "What you can actually build with it",
     body: [
       "Budgets and financial models. Sales dashboards. Attendance and inventory trackers. Automated reports that used to take hours.",
@@ -231,6 +288,7 @@ const SLIDES = [
   },
   {
     eyebrow: "THE FOUNDATION",
+    icon: "🔢",
     title: "So, what is Excel, really?",
     body: [
       "Underneath all of that, Excel is a grid of boxes called <strong>cells</strong> — and every cell can hold a number, a word, or a formula that calculates something automatically.",
@@ -244,6 +302,7 @@ const SLIDES = [
   },
   {
     eyebrow: "THE BASICS",
+    icon: "📐",
     title: "Rows, columns, and cell addresses",
     body: [
       "Columns are lettered (A, B, C...), rows are numbered (1, 2, 3...). Every cell has an address made of both — like <strong>B2</strong>.",
@@ -258,6 +317,7 @@ const SLIDES = [
   },
   {
     eyebrow: "THE INTERFACE",
+    icon: "🎛️",
     title: "The Ribbon — your toolbox",
     body: [
       "The Ribbon across the top groups every tool into tabs: <strong>Home</strong> for formatting, <strong>Insert</strong> for charts and tables, <strong>Formulas</strong> for functions, <strong>Data</strong> for sorting and filtering.",
@@ -273,6 +333,7 @@ const SLIDES = [
   },
   {
     eyebrow: "NAVIGATION",
+    icon: "⌨️",
     title: "Moving around fast",
     body: [
       "Arrow keys move one cell at a time. <strong>Ctrl + Arrow</strong> jumps to the edge of your data. <strong>Ctrl + Home</strong> jumps to A1.",
@@ -286,6 +347,7 @@ const SLIDES = [
   },
   {
     eyebrow: "DATA TYPES",
+    icon: "🏷️",
     title: "Excel treats data differently by type",
     body: [
       "Numbers can be calculated. Text can't. Dates are secretly numbers underneath, which is why you can add or subtract them.",
@@ -300,6 +362,7 @@ const SLIDES = [
   },
   {
     eyebrow: "FORMULAS 101",
+    icon: "✍️",
     title: "Every formula starts with =",
     body: [
       "Type <strong>=</strong> and Excel knows you're about to calculate something, not just type text.",
@@ -312,6 +375,7 @@ const SLIDES = [
   },
   {
     eyebrow: "LEVEL UP",
+    icon: "🔒",
     title: "Relative vs. Absolute references",
     body: [
       "Normally, <strong>A1</strong> shifts automatically when you copy a formula elsewhere — that's a <strong>relative</strong> reference.",
@@ -325,6 +389,7 @@ const SLIDES = [
   },
   {
     eyebrow: "MAKE IT READABLE",
+    icon: "🎨",
     title: "Formatting isn't decoration — it's communication",
     body: [
       "Bold headers, borders, number formats (₹, %, dates) and conditional formatting (auto color-coding) all exist to make your data understandable at a glance.",
@@ -338,6 +403,7 @@ const SLIDES = [
   },
   {
     eyebrow: "WORKING WITH DATA",
+    icon: "📶",
     title: "Sorting and filtering",
     body: [
       "Sort arranges your rows by a column's values — smallest to largest, A to Z, oldest to newest.",
@@ -352,6 +418,7 @@ const SLIDES = [
   },
   {
     eyebrow: "SEEING THE STORY",
+    icon: "📈",
     title: "Charts turn numbers into a picture",
     body: [
       "A table of 50 numbers is hard to read. A bar chart of the same 50 numbers is instant.",
@@ -366,6 +433,7 @@ const SLIDES = [
   },
   {
     eyebrow: "GOING FURTHER",
+    icon: "🧭",
     title: "PivotTables: your next big unlock",
     body: [
       "A PivotTable summarizes thousands of rows into a small, meaningful table — total sales by region, average score by class — in a few clicks, no formulas required.",
@@ -379,6 +447,7 @@ const SLIDES = [
   },
   {
     eyebrow: "YOU'RE READY",
+    icon: "🎉",
     title: "That's the whole foundation.",
     body: [
       "Cells, references, formulas, formatting, sorting, charts — everything else in Excel builds on these same ideas.",
@@ -405,6 +474,7 @@ function render() {
   const card = document.getElementById('guideCard');
   card.innerHTML = `
     <div class="guide-slide">
+      <div class="guide-icon">${s.icon || '📊'}</div>
       <div class="guide-eyebrow">${s.eyebrow}</div>
       <h2>${s.title}</h2>
       ${s.body.map(p => `<p>${p}</p>`).join('')}
