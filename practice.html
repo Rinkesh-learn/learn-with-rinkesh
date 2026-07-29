@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="practice-styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html">Formulas</a>
+      <a href="practice.html" class="active">Practice</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="hero" style="padding-bottom:20px;">
+  <h1 style="font-size:32px;">Pick a formula, practice it live.</h1>
+  <p class="lede" style="margin-bottom:0;">Click any formula on the list, read how it works, then solve it in a real spreadsheet grid.</p>
+</div>
+
+<div class="sheet" style="margin-top:0;">
+  <div class="practice-layout" id="practiceLayout">
+
+    <div class="formula-list-panel">
+      <div class="formula-list-header">
+        <h3>Formulas</h3>
+        <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
+      </div>
+      <ul class="formula-list" id="formulaList"></ul>
+    </div>
+
+    <div class="practice-main" id="practiceMain">
+      <div class="practice-empty">
+        Choose a formula on the list to get started.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hyperformula/dist/hyperformula.full.min.js"></script>
+<script>
+const CELEBRATIONS = [
+  "Hurray! You're a genius!",
+  "Nailed it — that's exactly right!",
+  "Boom! Correct.",
+  "You crushed that formula!",
+  "Perfect. On to the next one!",
+  "That's the one! Great work."
+];
+
+const ERROR_EXPLANATIONS = {
+  NA: "#N/A means Excel couldn't find a match. Check that the value you're looking up actually exists, and that FALSE is used for an exact match.",
+  VALUE: "#VALUE! usually means one of the formula's arguments is the wrong type.",
+  REF: "#REF! means the formula points to a cell reference that doesn't exist.",
+  NAME: "#NAME? means Excel doesn't recognize part of the formula — often a typo.",
+  DIV_BY_ZERO: "#DIV/0! means the formula is dividing by zero or an empty cell."
+};
+
+const FORMULAS = [
+  {
+    id: 'vlookup', name: 'VLOOKUP', category: 'Lookup',
+    syntax: '=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])',
+    description: "Searches for a value in the first column of a range, and returns a value from another column in the same row. It's the formula every recruiter expects you to know cold.",
+    params: [['lookup_value','The value you are searching for'],['table_array','The range that contains the data'],['col_index_num','Which column (from the left) to pull the result from'],['range_lookup','FALSE for an exact match (almost always what you want)']],
+    useCase: "A payroll analyst pulls each employee's salary into a department sheet without manually cross-referencing hundreds of rows.",
+    targetRow: 1, targetCol: 5, expectedValue: 62000, expectedType: 'number',
+    grid: [
+      ["Employee ID","Department","Salary","","Lookup ID","Result"],
+      [101,"Finance",55000,"",103,null],
+      [102,"HR",48000,"","",""],
+      [103,"IT",62000,"","",""],
+      [104,"Finance",51000,"","",""],
+      [105,"Marketing",45000,"","",""]
+    ]
+  },
+  {
+    id: 'sum', name: 'SUM', category: 'Math',
+    syntax: '=SUM(number1, [number2], ...)',
+    description: "Adds up all the numbers in a range. The most-used formula in Excel, and a building block for most financial models.",
+    params: [['number1','A number or cell range to add'],['number2, ...','Additional numbers or ranges (optional)']],
+    useCase: "A finance analyst totals four quarters of sales into an annual figure for a summary report.",
+    targetRow: 1, targetCol: 3, expectedValue: 5600, expectedType: 'number',
+    grid: [
+      ["Month","Sales","","Total"],
+      ["Jan",1200,"",null],
+      ["Feb",1500,"",""],
+      ["Mar",1100,"",""],
+      ["Apr",1800,"",""]
+    ]
+  },
+  {
+    id: 'if', name: 'IF', category: 'Logic',
+    syntax: '=IF(logical_test, value_if_true, value_if_false)',
+    description: "Checks whether a condition is true or false, and returns one value for true and another for false. The backbone of almost every decision rule in a spreadsheet.",
+    params: [['logical_test','The condition to check, e.g. B2>=40'],['value_if_true','What to return if true'],['value_if_false','What to return if false']],
+    useCase: "An HR analyst flags each employee as Pass or Fail based on whether their assessment score clears the cutoff.",
+    targetRow: 1, targetCol: 2, expectedValue: 'Pass', expectedType: 'string',
+    grid: [
+      ["Student","Score","Result"],
+      ["Amit",55,null],
+      ["Priya",32,""],
+      ["Neha",48,""]
+    ]
+  },
+  {
+    id: 'countif', name: 'COUNTIF', category: 'Math',
+    syntax: '=COUNTIF(range, criteria)',
+    description: "Counts how many cells in a range match a condition. Used constantly for quick headcounts without building a pivot table.",
+    params: [['range','The cells to check'],['criteria','The condition cells must match, e.g. "Finance"']],
+    useCase: "An operations manager counts how many employees belong to the Finance department directly from a raw list.",
+    targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
+    grid: [
+      ["Employee","Department","","Finance Count"],
+      ["Aman","Finance","",null],
+      ["Riya","HR","",""],
+      ["Karan","Finance","",""],
+      ["Simran","IT","",""]
+    ]
+  }
+];
+
+let currentFormula = null;
+
+// ---------- Sidebar list ----------
+function renderList() {
+  const list = document.getElementById('formulaList');
+  list.innerHTML = '';
+  FORMULAS.forEach(f => {
+    const li = document.createElement('li');
+    li.className = 'formula-list-item' + (currentFormula && currentFormula.id === f.id ? ' selected' : '');
+    li.innerHTML = `<span class="flname">${f.name}</span><span class="flcat">${f.category}</span>`;
+    li.addEventListener('click', () => openModal(f));
+    list.appendChild(li);
+  });
+}
+
+// ---------- Modal ----------
+function openModal(formula) {
+  const overlay = document.getElementById('modalOverlay');
+  const box = document.getElementById('modalBox');
+
+  const paramsRows = formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('');
+
+  box.innerHTML = `
+    <div class="formula-title">${formula.syntax}</div>
+    <span class="formula-category">${formula.category}</span>
+    <h4>What it does</h4>
+    <p>${formula.description}</p>
+    <h4>Parameters</h4>
+    <table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${paramsRows}</table>
+    <h4>Corporate use case</h4>
+    <p>${formula.useCase}</p>
+    <button class="btn btn-primary modal-ready-btn" id="readyBtn">Ready — let's practice</button>
+  `;
+
+  document.getElementById('readyBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+    startPractice(formula);
+  });
+
+  overlay.classList.add('open');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') e.target.classList.remove('open');
+});
+
+// ---------- Practice grid ----------
+function colLetter(i) { return String.fromCharCode(65 + i); }
+
+function renderGridHtml(formula) {
+  const grid = formula.grid;
+  let html = '<table class="practice-table"><tr><td class="colhead"></td>';
+  grid[0].forEach((_, c) => html += `<td class="colhead">${colLetter(c)}</td>`);
+  html += '</tr>';
+
+  grid.forEach((row, r) => {
+    html += `<tr><td class="colhead">${r + 1}</td>`;
+    row.forEach((cell, c) => {
+      const isTarget = r === formula.targetRow && c === formula.targetCol;
+      const tag = r === 0 ? 'th' : 'td';
+      const cls = isTarget ? ' class="target-cell" id="resultCell"' : '';
+      const content = isTarget ? '?' : (cell === null ? '' : cell);
+      html += `<${tag}${cls}>${content}</${tag}>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  return html;
+}
+
+function startPractice(formula) {
+  currentFormula = formula;
+  renderList();
+
+  const targetLabel = colLetter(formula.targetCol) + (formula.targetRow + 1);
+  const main = document.getElementById('practiceMain');
+  main.innerHTML = `
+    <div class="practice-active">
+      <h2>${formula.name}</h2>
+      <p class="target-label">Fill in cell ${targetLabel} below.</p>
+      <div class="practice-grid">
+        ${renderGridHtml(formula)}
+        <div class="practice-input-row">
+          <label>${targetLabel} =</label>
+          <input type="text" id="formulaInput" placeholder="Write your ${formula.name} formula">
+          <button class="btn btn-primary" id="checkBtn">Check</button>
+        </div>
+        <div class="practice-feedback" id="practiceFeedback"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('checkBtn').addEventListener('click', () => checkAnswer(formula));
+  document.getElementById('formulaInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAnswer(formula);
+  });
+}
+
+function checkAnswer(formula) {
+  const feedback = document.getElementById('practiceFeedback');
+  const resultCell = document.getElementById('resultCell');
+  let input = document.getElementById('formulaInput').value.trim();
+  feedback.className = 'practice-feedback';
+  feedback.innerHTML = '';
+
+  if (!input) {
+    feedback.innerHTML = 'Write a formula in the box above first.';
+    feedback.classList.add('incorrect');
+    return;
+  }
+  if (!input.startsWith('=')) input = '=' + input;
+
+  const sheetData = formula.grid.map((row, r) =>
+    row.map((cell, c) => (r === formula.targetRow && c === formula.targetCol) ? input : cell)
+  );
+
+  let value;
+  try {
+    const hf = HyperFormula.buildFromArray(sheetData, { licenseKey: 'gpl-v3' });
+    value = hf.getCellValue({ sheet: 0, row: formula.targetRow, col: formula.targetCol });
+  } catch (e) {
+    feedback.innerHTML = "That formula couldn't be understood. Double check the syntax.";
+    feedback.classList.add('incorrect');
+    return;
+  }
+
+  if (value && typeof value === 'object' && value.type) {
+    const label = { NA:'#N/A', VALUE:'#VALUE!', REF:'#REF!', NAME:'#NAME?', DIV_BY_ZERO:'#DIV/0!' }[value.type] || ('#' + value.type);
+    resultCell.textContent = label;
+    feedback.innerHTML = `Result: <strong>${label}</strong><span class="explain">${ERROR_EXPLANATIONS[value.type] || 'Check your formula syntax and cell references.'}</span>`;
+    feedback.classList.add('incorrect');
+    return;
+  }
+
+  resultCell.textContent = value;
+
+  const isCorrect = formula.expectedType === 'number'
+    ? Number(value) === formula.expectedValue
+    : String(value).trim().toLowerCase() === String(formula.expectedValue).trim().toLowerCase();
+
+  if (isCorrect) {
+    const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
+    feedback.innerHTML = `<span class="celebrate">${msg}</span> Result: <strong>${value}</strong>`;
+    feedback.classList.add('correct');
+  } else {
+    feedback.innerHTML = `Result: <strong>${value}</strong> — not quite. Expected ${formula.expectedValue}.`;
+    feedback.classList.add('incorrect');
+  }
+}
+
+// ---------- Swap panel side ----------
+document.getElementById('swapBtn').addEventListener('click', () => {
+  document.getElementById('practiceLayout').classList.toggle('reversed');
+});
+
+renderList();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
