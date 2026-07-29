@@ -45,7 +45,8 @@
   });
 
   const container = document.getElementById('formulaCategories');
-  Object.keys(categories).forEach(cat => {
+  CATEGORY_ORDER.forEach(cat => {
+    if (!categories[cat]) return;
     const section = document.createElement('div');
     section.style.marginBottom = '36px';
     section.innerHTML = `

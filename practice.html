@@ -292,7 +292,8 @@ function renderList() {
     byCategory[f.category].push(f);
   });
 
-  Object.keys(byCategory).forEach(cat => {
+  CATEGORY_ORDER.forEach(cat => {
+    if (!byCategory[cat]) return;
     const header = document.createElement('li');
     header.className = 'formula-list-category';
     header.textContent = `${CATEGORY_ICONS[cat] || ''} ${cat}`;

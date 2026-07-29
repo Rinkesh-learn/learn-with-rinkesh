@@ -8,6 +8,8 @@
 // explanation and a free-form live sheet to try them in.
 // =========================================================
 
+const CATEGORY_ORDER = ['Math & Trig', 'Text', 'Logic', 'Date & Time', 'Statistical', 'Financial', 'Information', 'Lookup & Reference'];
+
 const CATEGORY_ICONS = {
   'Lookup & Reference': '🔍',
   'Math & Trig': '➕',
