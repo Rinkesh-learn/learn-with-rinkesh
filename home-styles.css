@@ -7,39 +7,6 @@
   --sky: #2F80C9;
 }
 
-/* ---------- Floating sticker badges around hero ---------- */
-
-.hero-stickers {
-  position: relative;
-  height: 0;
-}
-
-.sticker {
-  position: absolute;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: 20px;
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-  animation: stickerBob 3.5s ease-in-out infinite;
-  white-space: nowrap;
-}
-
-.sticker.s1 { background: var(--coral); top: -18px; right: 60px; transform: rotate(-6deg); animation-delay: 0s; }
-.sticker.s2 { background: var(--sky); top: 70px; right: -10px; transform: rotate(4deg); animation-delay: 0.6s; }
-.sticker.s3 { background: var(--amber); top: 150px; right: 90px; transform: rotate(-3deg); animation-delay: 1.2s; }
-
-@keyframes stickerBob {
-  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
-  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
-}
-
-@media (max-width: 900px) {
-  .hero-stickers { display: none; }
-}
-
 /* ---------- Bouncy primary CTA ---------- */
 
 .btn-bounce {
@@ -78,55 +45,6 @@
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
-}
-
-/* ---------- Stats strip ---------- */
-
-.stats-strip {
-  max-width: 1080px;
-  margin: 50px auto;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.stat-tile {
-  background: #fff;
-  border: 1px solid var(--grid-line);
-  border-radius: var(--radius);
-  padding: 22px 18px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-tile::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 4px;
-}
-.stat-tile.c1::before { background: var(--excel-green); }
-.stat-tile.c2::before { background: var(--coral); }
-.stat-tile.c3::before { background: var(--sky); }
-.stat-tile.c4::before { background: var(--amber); }
-
-.stat-number {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 34px;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.stat-label {
-  font-size: 13px;
-  color: var(--ink-soft);
-  margin-top: 4px;
-}
-
-@media (max-width: 720px) {
-  .stats-strip { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ---------- How it works ---------- */
@@ -258,6 +176,49 @@
 .cell-grid .cell:nth-child(4) { border-top: 3px solid var(--amber); }
 .cell-grid .cell:nth-child(5) { border-top: 3px solid var(--excel-green); }
 .cell-grid .cell:nth-child(6) { border-top: 3px solid var(--coral); }
+
+.cell-grid .cell h3::before {
+  content: '📘 ';
+}
+.cell-grid .cell:nth-child(2) h3::before { content: '⌨️ '; }
+.cell-grid .cell:nth-child(3) h3::before { content: '🎯 '; }
+.cell-grid .cell:nth-child(4) h3::before { content: '📊 '; }
+.cell-grid .cell:nth-child(5) h3::before { content: '🏅 '; }
+.cell-grid .cell:nth-child(6) h3::before { content: '💬 '; }
+
+.cell-cta {
+  display: inline-block;
+  margin-top: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--excel-green-deep);
+  text-decoration: none;
+  border-bottom: 2px solid var(--amber);
+  padding-bottom: 1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.cell-cta:hover {
+  color: var(--excel-green);
+  border-color: var(--excel-green);
+}
+
+/* Staggered reveal for the feature card grid */
+.reveal-stagger .cell {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal-stagger.visible .cell {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-stagger.visible .cell:nth-child(1) { transition-delay: 0.05s; }
+.reveal-stagger.visible .cell:nth-child(2) { transition-delay: 0.12s; }
+.reveal-stagger.visible .cell:nth-child(3) { transition-delay: 0.19s; }
+.reveal-stagger.visible .cell:nth-child(4) { transition-delay: 0.26s; }
+.reveal-stagger.visible .cell:nth-child(5) { transition-delay: 0.33s; }
+.reveal-stagger.visible .cell:nth-child(6) { transition-delay: 0.4s; }
 
 /* ---------- Final CTA banner ---------- */
 
