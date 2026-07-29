@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel Basics — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="practice-styles.css">
+<style>
+  .guide-shell {
+    max-width: 900px;
+    margin: 30px auto 60px;
+    padding: 0 24px;
+  }
+
+  .guide-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+  .guide-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--grid-line);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .guide-dot.active { background: var(--excel-green); transform: scale(1.4); }
+
+  .guide-card {
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-top: 5px solid var(--excel-green);
+    border-radius: var(--radius);
+    padding: 48px;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(28,35,33,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .guide-slide {
+    animation: slideIn 0.45s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .guide-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--amber);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  .guide-card h2 {
+    font-size: 30px;
+    margin: 0 0 18px;
+  }
+
+  .guide-card p {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    max-width: 560px;
+    margin: 0 0 14px;
+  }
+
+  .guide-visual {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .guide-nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .guide-topbtn {
+    position: fixed;
+    top: 76px;
+    right: 24px;
+    z-index: 50;
+  }
+
+  @media (max-width: 720px) {
+    .guide-card { padding: 28px; min-height: auto; }
+    .guide-topbtn { position: static; margin: 0 auto 16px; display: block; text-align: center; }
+  }
+
+  /* mini grid illustration */
+  .mini-grid { border-collapse: collapse; }
+  .mini-grid td {
+    border: 1px solid var(--grid-line);
+    width: 46px; height: 30px;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .mini-grid td.hl { background: #FFF6C9; color: var(--ink); font-weight: 700; border: 2px solid var(--amber); }
+  .mini-grid td.head { background: #F0F5F1; color: var(--excel-green-deep); font-weight: 700; }
+
+  .ribbon-mock { display: flex; gap: 4px; }
+  .ribbon-tab {
+    padding: 8px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    border: 1px solid var(--grid-line);
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+    color: var(--ink-soft);
+  }
+  .ribbon-tab.active { background: var(--excel-green); color: #fff; font-weight: 700; }
+
+  .datatype-chip {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 4px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html">Formulas</a>
+      <a href="practice.html">Practice</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<a href="practice.html" class="btn btn-primary guide-topbtn">Start Practicing &rarr;</a>
+
+<div class="guide-shell">
+  <div class="guide-progress" id="guideProgress"></div>
+  <div class="guide-card" id="guideCard"></div>
+  <div class="guide-nav-row">
+    <button class="btn btn-ghost" id="prevBtn">&larr; Back</button>
+    <span id="slideCounter" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);"></span>
+    <button class="btn btn-primary" id="nextBtn">Next &rarr;</button>
+  </div>
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+<script>
+const SLIDES = [
+  {
+    eyebrow: "WELCOME",
+    title: "What is Excel, really?",
+    body: [
+      "Excel is a grid of boxes called <strong>cells</strong> — and every cell can hold a number, a word, or a formula that calculates something automatically.",
+      "That's it. Everything else — dashboards, models, reports — is just clever combinations of that one idea."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head"></td><td class="head">A</td><td class="head">B</td><td class="head">C</td></tr>
+      <tr><td class="head">1</td><td class="hl">123</td><td>Text</td><td>=A1+10</td></tr>
+      <tr><td class="head">2</td><td></td><td></td><td></td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "THE BASICS",
+    title: "Rows, columns, and cell addresses",
+    body: [
+      "Columns are lettered (A, B, C...), rows are numbered (1, 2, 3...). Every cell has an address made of both — like <strong>B2</strong>.",
+      "You'll use these addresses constantly, in every formula you ever write."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head"></td><td class="head">A</td><td class="head">B</td><td class="head">C</td></tr>
+      <tr><td class="head">1</td><td></td><td></td><td></td></tr>
+      <tr><td class="head">2</td><td></td><td class="hl">B2</td><td></td></tr>
+      <tr><td class="head">3</td><td></td><td></td><td></td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "THE INTERFACE",
+    title: "The Ribbon — your toolbox",
+    body: [
+      "The Ribbon across the top groups every tool into tabs: <strong>Home</strong> for formatting, <strong>Insert</strong> for charts and tables, <strong>Formulas</strong> for functions, <strong>Data</strong> for sorting and filtering.",
+      "You don't need to memorize where everything is — you'll find it naturally as you use it."
+    ],
+    visual: `<div class="ribbon-mock">
+      <div class="ribbon-tab active">Home</div>
+      <div class="ribbon-tab">Insert</div>
+      <div class="ribbon-tab">Formulas</div>
+      <div class="ribbon-tab">Data</div>
+      <div class="ribbon-tab">Review</div>
+    </div>`
+  },
+  {
+    eyebrow: "NAVIGATION",
+    title: "Moving around fast",
+    body: [
+      "Arrow keys move one cell at a time. <strong>Ctrl + Arrow</strong> jumps to the edge of your data. <strong>Ctrl + Home</strong> jumps to A1.",
+      "Learning these shortcuts early will save you hours over a career — mouse-clicking every cell is the single biggest habit to break."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head"></td><td class="head">A</td><td class="head">B</td><td class="head">C</td><td class="head">D</td></tr>
+      <tr><td class="head">1</td><td class="hl">Start</td><td>10</td><td>20</td><td>30</td></tr>
+      <tr><td class="head">2</td><td></td><td></td><td></td><td class="hl">End</td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "DATA TYPES",
+    title: "Excel treats data differently by type",
+    body: [
+      "Numbers can be calculated. Text can't. Dates are secretly numbers underneath, which is why you can add or subtract them.",
+      "Knowing what type you're working with explains most of Excel's weird behavior — and most #VALUE! errors."
+    ],
+    visual: `<div>
+      <span class="datatype-chip" style="background:#1C6B41;">123 — Number</span>
+      <span class="datatype-chip" style="background:#C9971E;">Text — Word</span>
+      <span class="datatype-chip" style="background:#4B5450;">01-Jan-26 — Date</span>
+      <span class="datatype-chip" style="background:#8a3b8f;">TRUE — Boolean</span>
+    </div>`
+  },
+  {
+    eyebrow: "FORMULAS 101",
+    title: "Every formula starts with =",
+    body: [
+      "Type <strong>=</strong> and Excel knows you're about to calculate something, not just type text.",
+      "A formula can be as simple as <code>=A1+B1</code>, or as powerful as a function like <code>=SUM(A1:A10)</code> — same idea, bigger scale."
+    ],
+    visual: `<div class="formula-bar" style="max-width:340px;">
+      <span class="fx">fx</span>
+      <span class="content">=A1+B1</span>
+    </div>`
+  },
+  {
+    eyebrow: "LEVEL UP",
+    title: "Relative vs. Absolute references",
+    body: [
+      "Normally, <strong>A1</strong> shifts automatically when you copy a formula elsewhere — that's a <strong>relative</strong> reference.",
+      "Lock it in place with dollar signs — <strong>$A$1</strong> — and it stays fixed no matter where you copy it. This one habit prevents a huge share of spreadsheet mistakes."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head"></td><td class="head">A</td><td class="head">B</td></tr>
+      <tr><td class="head">1</td><td class="hl">$A$1</td><td>=$A$1*2</td></tr>
+      <tr><td class="head">2</td><td>A2</td><td>=A2*2</td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "MAKE IT READABLE",
+    title: "Formatting isn't decoration — it's communication",
+    body: [
+      "Bold headers, borders, number formats (₹, %, dates) and conditional formatting (auto color-coding) all exist to make your data understandable at a glance.",
+      "A well-formatted sheet builds trust before anyone even reads a single number."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head" style="background:var(--excel-green); color:#fff;">Region</td><td class="head" style="background:var(--excel-green); color:#fff;">Sales</td></tr>
+      <tr><td>North</td><td style="color:#1C6B41; font-weight:700;">₹1,20,000</td></tr>
+      <tr><td>South</td><td style="color:#B3261E; font-weight:700;">₹45,000</td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "WORKING WITH DATA",
+    title: "Sorting and filtering",
+    body: [
+      "Sort arranges your rows by a column's values — smallest to largest, A to Z, oldest to newest.",
+      "Filter temporarily hides rows that don't match a condition, without deleting anything. Together, they're how you go from a messy list to an answer."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head">Before</td><td class="head">After Sort ↓</td></tr>
+      <tr><td>45000</td><td class="hl">12000</td></tr>
+      <tr><td>12000</td><td class="hl">45000</td></tr>
+      <tr><td>78000</td><td class="hl">78000</td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "SEEING THE STORY",
+    title: "Charts turn numbers into a picture",
+    body: [
+      "A table of 50 numbers is hard to read. A bar chart of the same 50 numbers is instant.",
+      "You don't need to master every chart type — just know that when someone asks 'what's the trend?', a chart is usually a faster answer than a formula."
+    ],
+    visual: `<svg width="220" height="100" viewBox="0 0 220 100">
+      <rect x="10" y="40" width="30" height="60" fill="#1C6B41"/>
+      <rect x="60" y="20" width="30" height="80" fill="#1C6B41"/>
+      <rect x="110" y="55" width="30" height="45" fill="#C9971E"/>
+      <rect x="160" y="10" width="30" height="90" fill="#1C6B41"/>
+    </svg>`
+  },
+  {
+    eyebrow: "GOING FURTHER",
+    title: "PivotTables: your next big unlock",
+    body: [
+      "A PivotTable summarizes thousands of rows into a small, meaningful table — total sales by region, average score by class — in a few clicks, no formulas required.",
+      "It's the tool that separates 'knows some Excel' from 'can actually analyze data' — worth learning once your formula foundation is solid."
+    ],
+    visual: `<table class="mini-grid">
+      <tr><td class="head">Region</td><td class="head">Total</td></tr>
+      <tr><td>North</td><td class="hl">₹3,20,000</td></tr>
+      <tr><td>South</td><td class="hl">₹1,85,000</td></tr>
+    </table>`
+  },
+  {
+    eyebrow: "YOU'RE READY",
+    title: "That's the whole foundation.",
+    body: [
+      "Cells, references, formulas, formatting, sorting, charts — everything else in Excel builds on these same ideas.",
+      "Now go put it into practice. Every formula on this site includes a real explanation and a real spreadsheet to try it in."
+    ],
+    visual: `<a href="practice.html" class="btn btn-primary" style="font-size:16px; padding:16px 28px;">Start Excel Practice &rarr;</a>`
+  }
+];
+
+let current = 0;
+
+function renderProgress() {
+  const wrap = document.getElementById('guideProgress');
+  wrap.innerHTML = SLIDES.map((_, i) =>
+    `<span class="guide-dot${i === current ? ' active' : ''}" data-i="${i}"></span>`
+  ).join('');
+  wrap.querySelectorAll('.guide-dot').forEach(dot => {
+    dot.addEventListener('click', () => { current = parseInt(dot.dataset.i); render(); });
+  });
+}
+
+function render() {
+  const s = SLIDES[current];
+  const card = document.getElementById('guideCard');
+  card.innerHTML = `
+    <div class="guide-slide">
+      <div class="guide-eyebrow">${s.eyebrow}</div>
+      <h2>${s.title}</h2>
+      ${s.body.map(p => `<p>${p}</p>`).join('')}
+      <div class="guide-visual">${s.visual}</div>
+    </div>
+  `;
+  document.getElementById('slideCounter').textContent = `${current + 1} / ${SLIDES.length}`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('prevBtn').style.opacity = current === 0 ? 0.4 : 1;
+  document.getElementById('nextBtn').textContent = current === SLIDES.length - 1 ? 'Restart' : 'Next →';
+  renderProgress();
+}
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (current > 0) { current--; render(); }
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (current < SLIDES.length - 1) { current++; } else { current = 0; }
+  render();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') document.getElementById('nextBtn').click();
+  if (e.key === 'ArrowLeft') document.getElementById('prevBtn').click();
+});
+
+render();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
