@@ -223,7 +223,7 @@
 
 .cell-cta {
   display: inline-block;
-  align-self: flex-start;
+  align-self: flex-end;
   margin-top: auto;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
