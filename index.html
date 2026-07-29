@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Learn With Rinkesh — Master Excel for Real Jobs</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="home-styles.css">
 </head>
 <body>
 
@@ -18,6 +19,7 @@
       <a href="index.html" class="active">Home</a>
       <a href="formula-example.html">Formulas</a>
       <a href="practice.html">Practice</a>
+      <a href="excel-guide.html">About Excel</a>
       <a href="about.html">About</a>
       <span id="navAuthArea"></span>
     </nav>
@@ -30,13 +32,124 @@
     <span class="content" id="heroTyping"></span>
   </div>
 
-  <h1>Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
+  <div style="position:relative;">
+    <h1>Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
+    <div class="hero-stickers">
+      <span class="sticker s1">🔥 116 formulas</span>
+      <span class="sticker s2">✅ 100% free to start</span>
+      <span class="sticker s3">🏆 real spreadsheet</span>
+    </div>
+  </div>
+
   <p class="lede">500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional, not a course factory.</p>
 
   <div class="cta-row">
-    <a href="practice.html" class="btn btn-primary">Start Excel Practice &rarr;</a>
+    <a href="practice.html" class="btn btn-primary btn-bounce">
+      Start Excel Practice &rarr;
+      <span class="confetti-dot"></span>
+      <span class="confetti-dot"></span>
+      <span class="confetti-dot"></span>
+    </a>
   </div>
 </div>
+
+<div class="stats-strip reveal" id="statsStrip">
+  <div class="stat-tile c1"><div class="stat-number" data-target="116">0</div><div class="stat-label">Formulas</div></div>
+  <div class="stat-tile c2"><div class="stat-number" data-target="8">0</div><div class="stat-label">Categories</div></div>
+  <div class="stat-tile c3"><div class="stat-number" data-target="80">0</div><div class="stat-label">Practice Questions</div></div>
+  <div class="stat-tile c4"><div class="stat-number" data-target="100" data-suffix="%">0</div><div class="stat-label">Free to Start</div></div>
+</div>
+
+<div class="howit-strip reveal">
+  <div class="sheet-header">
+    <span class="colletter">B</span>
+    <h2>How it works</h2>
+  </div>
+  <div class="howit-steps">
+    <div class="howit-step">
+      <div class="howit-badge">1</div>
+      <h3>Learn a formula</h3>
+      <p>Click any formula for a plain-English explanation and a real corporate use case.</p>
+    </div>
+    <div class="howit-step">
+      <div class="howit-badge">2</div>
+      <h3>Practice it live</h3>
+      <p>Solve real tasks in an actual spreadsheet — instant feedback, no fake grading.</p>
+    </div>
+    <div class="howit-step">
+      <div class="howit-badge">3</div>
+      <h3>Level up</h3>
+      <p>Each formula has 10 questions, easy to advanced — genuinely get good, not just familiar.</p>
+    </div>
+  </div>
+</div>
+
+<div class="preview-strip reveal">
+  <div class="preview-copy">
+    <h2>A real spreadsheet. Not a quiz.</h2>
+    <p>No multiple choice, no guessing games. You write actual formulas in an actual spreadsheet engine, and get graded on what Excel really calculates — the same way it'll work on the job.</p>
+    <a href="practice.html" class="btn btn-primary">Try it yourself &rarr;</a>
+  </div>
+  <div class="preview-mock">
+    <div class="pm-bar">fx &nbsp; =VLOOKUP(E2,A2:C6,3,FALSE)</div>
+    <table>
+      <tr><th></th><th>A</th><th>B</th><th>C</th></tr>
+      <tr><td></td><td>Employee ID</td><td>Department</td><td>Salary</td></tr>
+      <tr><td></td><td>103</td><td>IT</td><td class="target">62000</td></tr>
+    </table>
+    <div class="preview-toast">🎉 Hurray! You're a genius!</div>
+  </div>
+</div>
+
+<div class="sheet reveal">
+  <div class="sheet-header">
+    <span class="colletter">C</span>
+    <h2>What's on the sheet</h2>
+  </div>
+
+  <div class="cell-grid">
+    <div class="cell">
+      <span class="ref">B2</span>
+      <h3>Formula Reference</h3>
+      <p>Every formula explained with parameters, corporate examples, and a short demo — searchable by name or category.</p>
+    </div>
+    <div class="cell">
+      <span class="ref">C2</span>
+      <h3>Practice Grid</h3>
+      <p>Solve real problems in an in-browser spreadsheet. Instant feedback when you hit an #N/A or #VALUE!.</p>
+    </div>
+    <div class="cell">
+      <span class="ref">D2</span>
+      <h3>Three Ways to Learn</h3>
+      <p>Go sequential from formula one, pick a domain like Lookup or Finance, or start at your skill level.</p>
+    </div>
+    <div class="cell">
+      <span class="ref">B3</span>
+      <h3>Case Study Assignments</h3>
+      <p>Build a real sales dashboard or payroll model — the kind of work you'll actually be asked to do.</p>
+    </div>
+    <div class="cell">
+      <span class="ref">C3</span>
+      <h3>Verified Certificate</h3>
+      <p>Clear the exam, get a certificate with a QR code employers can verify — no guesswork.</p>
+    </div>
+    <div class="cell">
+      <span class="ref">D3</span>
+      <h3>1-on-1 Mentoring</h3>
+      <p>Book time directly with Rinkesh for topic help, spreadsheet audits, or career guidance.</p>
+    </div>
+  </div>
+</div>
+
+<div class="final-cta reveal">
+  <h2>Ready to actually get good at Excel?</h2>
+  <p>Free to start. Real spreadsheet. No credit card.</p>
+  <a href="practice.html" class="btn btn-primary">Start Excel Practice &rarr;</a>
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
 
 <script>
   const heroLines = [
@@ -77,51 +190,45 @@
   }
 
   cycleHero();
+
+  // Scroll-triggered reveal animations
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el => revealObserver.observe(el));
+
+  // Animated counting stats
+  function animateCount(el) {
+    const target = parseInt(el.dataset.target, 10);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1200;
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target) + suffix;
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        document.querySelectorAll('.stat-number').forEach(animateCount);
+        statsObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  const statsStripEl = document.getElementById('statsStrip');
+  if (statsStripEl) statsObserver.observe(statsStripEl);
 </script>
-
-<div class="sheet">
-  <div class="sheet-header">
-    <span class="colletter">B</span>
-    <h2>What's on the sheet</h2>
-  </div>
-
-  <div class="cell-grid">
-    <div class="cell">
-      <span class="ref">B2</span>
-      <h3>Formula Reference</h3>
-      <p>Every formula explained with parameters, corporate examples, and a short demo — searchable by name or category.</p>
-    </div>
-    <div class="cell">
-      <span class="ref">C2</span>
-      <h3>Practice Grid</h3>
-      <p>Solve real problems in an in-browser spreadsheet. Instant feedback when you hit an #N/A or #VALUE!.</p>
-    </div>
-    <div class="cell">
-      <span class="ref">D2</span>
-      <h3>Three Ways to Learn</h3>
-      <p>Go sequential from formula one, pick a domain like Lookup or Finance, or start at your skill level.</p>
-    </div>
-    <div class="cell">
-      <span class="ref">B3</span>
-      <h3>Case Study Assignments</h3>
-      <p>Build a real sales dashboard or payroll model — the kind of work you'll actually be asked to do.</p>
-    </div>
-    <div class="cell">
-      <span class="ref">C3</span>
-      <h3>Verified Certificate</h3>
-      <p>Clear the exam, get a certificate with a QR code employers can verify — no guesswork.</p>
-    </div>
-    <div class="cell">
-      <span class="ref">D3</span>
-      <h3>1-on-1 Mentoring</h3>
-      <p>Book time directly with Rinkesh for topic help, spreadsheet audits, or career guidance.</p>
-    </div>
-  </div>
-</div>
-
-<footer>
-  Learn With Rinkesh — built one cell at a time.
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>

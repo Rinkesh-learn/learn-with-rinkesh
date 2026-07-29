@@ -1,0 +1,288 @@
+/* ===========================================================
+   Learn With Rinkesh — homepage: energetic/gamified styling
+   =========================================================== */
+
+:root {
+  --coral: #E8604C;
+  --sky: #2F80C9;
+}
+
+/* ---------- Floating sticker badges around hero ---------- */
+
+.hero-stickers {
+  position: relative;
+  height: 0;
+}
+
+.sticker {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  animation: stickerBob 3.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.sticker.s1 { background: var(--coral); top: -18px; right: 60px; transform: rotate(-6deg); animation-delay: 0s; }
+.sticker.s2 { background: var(--sky); top: 70px; right: -10px; transform: rotate(4deg); animation-delay: 0.6s; }
+.sticker.s3 { background: var(--amber); top: 150px; right: 90px; transform: rotate(-3deg); animation-delay: 1.2s; }
+
+@keyframes stickerBob {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+
+@media (max-width: 900px) {
+  .hero-stickers { display: none; }
+}
+
+/* ---------- Bouncy primary CTA ---------- */
+
+.btn-bounce {
+  animation: ctaPulse 2.2s ease-in-out infinite;
+}
+@keyframes ctaPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+.confetti-dot {
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+.btn-bounce { position: relative; overflow: visible; }
+.btn-bounce:hover .confetti-dot { animation: confettiBurst 0.6s ease-out forwards; }
+.btn-bounce .confetti-dot:nth-child(1) { background: var(--coral); left: 20%; top: 0; animation-delay: 0s; }
+.btn-bounce .confetti-dot:nth-child(2) { background: var(--sky); left: 50%; top: 0; animation-delay: 0.05s; }
+.btn-bounce .confetti-dot:nth-child(3) { background: var(--amber); left: 80%; top: 0; animation-delay: 0.1s; }
+
+@keyframes confettiBurst {
+  0% { opacity: 1; transform: translateY(0) scale(0.5); }
+  100% { opacity: 0; transform: translateY(-34px) scale(1.2); }
+}
+
+/* ---------- Reveal-on-scroll ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Stats strip ---------- */
+
+.stats-strip {
+  max-width: 1080px;
+  margin: 50px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-tile {
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+}
+.stat-tile.c1::before { background: var(--excel-green); }
+.stat-tile.c2::before { background: var(--coral); }
+.stat-tile.c3::before { background: var(--sky); }
+.stat-tile.c4::before { background: var(--amber); }
+
+.stat-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- How it works ---------- */
+
+.howit-strip {
+  max-width: 1080px;
+  margin: 60px auto;
+  padding: 0 24px;
+}
+
+.howit-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  position: relative;
+  margin-top: 30px;
+}
+
+.howit-step {
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  padding: 26px 22px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.howit-step:hover {
+  transform: translateY(-6px) rotate(-1deg);
+  box-shadow: 0 14px 28px rgba(28,35,33,0.14);
+}
+
+.howit-badge {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.howit-step:nth-child(1) .howit-badge { background: var(--excel-green); }
+.howit-step:nth-child(2) .howit-badge { background: var(--coral); }
+.howit-step:nth-child(3) .howit-badge { background: var(--sky); }
+
+.howit-step h3 { font-size: 16px; margin: 0 0 8px; }
+.howit-step p { font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+@media (max-width: 720px) {
+  .howit-steps { grid-template-columns: 1fr; }
+}
+
+/* ---------- Live preview mockup ---------- */
+
+.preview-strip {
+  max-width: 1080px;
+  margin: 60px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.preview-copy h2 { font-size: 26px; margin-bottom: 12px; }
+.preview-copy p { color: var(--ink-soft); font-size: 15px; line-height: 1.6; margin-bottom: 18px; }
+
+.preview-mock {
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 40px rgba(28,35,33,0.12);
+  overflow: hidden;
+  transform: rotate(1.5deg);
+  transition: transform 0.3s ease;
+}
+.preview-mock:hover { transform: rotate(0deg) scale(1.01); }
+
+.preview-mock .pm-bar {
+  background: #F0F5F1;
+  padding: 10px 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--excel-green-deep);
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.preview-mock table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+.preview-mock td, .preview-mock th { border: 1px solid var(--grid-line); padding: 8px 10px; text-align: left; }
+.preview-mock th { background: #FAFAF7; color: var(--ink-soft); }
+.preview-mock .target { background: #FFF6C9; border: 2px solid var(--amber); font-weight: 700; }
+
+.preview-toast {
+  background: var(--excel-green);
+  color: #fff;
+  padding: 10px 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastPop 2s ease-in-out infinite;
+}
+@keyframes toastPop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (max-width: 820px) {
+  .preview-strip { grid-template-columns: 1fr; }
+}
+
+/* ---------- Feature cards, playful variant ---------- */
+
+.cell-grid .cell {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cell-grid .cell:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(28,35,33,0.12);
+  z-index: 1;
+}
+.cell-grid .cell:nth-child(1) { border-top: 3px solid var(--excel-green); }
+.cell-grid .cell:nth-child(2) { border-top: 3px solid var(--coral); }
+.cell-grid .cell:nth-child(3) { border-top: 3px solid var(--sky); }
+.cell-grid .cell:nth-child(4) { border-top: 3px solid var(--amber); }
+.cell-grid .cell:nth-child(5) { border-top: 3px solid var(--excel-green); }
+.cell-grid .cell:nth-child(6) { border-top: 3px solid var(--coral); }
+
+/* ---------- Final CTA banner ---------- */
+
+.final-cta {
+  max-width: 1080px;
+  margin: 70px auto 20px;
+  padding: 50px 40px;
+  background: linear-gradient(135deg, var(--excel-green), var(--excel-green-deep));
+  border-radius: var(--radius);
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.final-cta h2 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 28px;
+  margin: 0 0 10px;
+}
+
+.final-cta p { opacity: 0.9; margin: 0 0 24px; }
+
+.final-cta .btn-primary {
+  background: #fff;
+  color: var(--excel-green-deep);
+}
+.final-cta .btn-primary:hover { background: #F0F5F1; }
