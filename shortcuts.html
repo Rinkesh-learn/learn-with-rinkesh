@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel Keyboard Shortcuts — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="shortcuts-styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html">Formulas</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="sc-hero">
+  <div class="sc-key-float">
+    <span class="keycap">Ctrl</span>
+    <span class="keycap">Shift</span>
+    <span class="keycap">Alt</span>
+    <span class="keycap">Enter</span>
+  </div>
+  <h1>Every shortcut, in one place.</h1>
+  <p>Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.</p>
+</div>
+
+<div class="sc-search-wrap">
+  <span class="sc-search-icon">🔍</span>
+  <input type="text" id="scSearch" placeholder="Search a shortcut or action...">
+</div>
+
+<div class="sc-shell" id="scShell"></div>
+<div class="sc-no-results" id="scNoResults">No shortcuts match that search.</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+<script>
+const SHORTCUTS = [
+  // Navigation
+  { cat: "Navigation", keys: ["Ctrl", "Arrow"], desc: "Jump to the edge of the current data region" },
+  { cat: "Navigation", keys: ["Ctrl", "Home"], desc: "Go to cell A1" },
+  { cat: "Navigation", keys: ["Ctrl", "End"], desc: "Go to the last used cell on the sheet" },
+  { cat: "Navigation", keys: ["Page Up"], desc: "Move one screen up" },
+  { cat: "Navigation", keys: ["Page Down"], desc: "Move one screen down" },
+  { cat: "Navigation", keys: ["Alt", "Page Up"], desc: "Move one screen to the left" },
+  { cat: "Navigation", keys: ["Alt", "Page Down"], desc: "Move one screen to the right" },
+  { cat: "Navigation", keys: ["Ctrl", "Page Up"], desc: "Switch to the previous worksheet tab" },
+  { cat: "Navigation", keys: ["Ctrl", "Page Down"], desc: "Switch to the next worksheet tab" },
+  { cat: "Navigation", keys: ["Tab"], desc: "Move one cell to the right" },
+  { cat: "Navigation", keys: ["Shift", "Tab"], desc: "Move one cell to the left" },
+  { cat: "Navigation", keys: ["Enter"], desc: "Move one cell down" },
+  { cat: "Navigation", keys: ["F5"], desc: "Open the Go To dialog" },
+  { cat: "Navigation", keys: ["Ctrl", "G"], desc: "Open the Go To dialog" },
+
+  // Selection
+  { cat: "Selection", keys: ["Shift", "Arrow"], desc: "Extend the selection by one cell" },
+  { cat: "Selection", keys: ["Ctrl", "Shift", "Arrow"], desc: "Extend selection to the edge of the data region" },
+  { cat: "Selection", keys: ["Ctrl", "A"], desc: "Select the entire worksheet (or current region)" },
+  { cat: "Selection", keys: ["Shift", "Space"], desc: "Select the entire row" },
+  { cat: "Selection", keys: ["Ctrl", "Space"], desc: "Select the entire column" },
+  { cat: "Selection", keys: ["Ctrl", "Shift", "End"], desc: "Select through the last used cell" },
+  { cat: "Selection", keys: ["Ctrl", "Shift", "Home"], desc: "Select through cell A1" },
+  { cat: "Selection", keys: ["Ctrl", "Click"], desc: "Add a non-adjacent cell to the selection" },
+
+  // Editing
+  { cat: "Editing", keys: ["Ctrl", "C"], desc: "Copy the selected cells" },
+  { cat: "Editing", keys: ["Ctrl", "X"], desc: "Cut the selected cells" },
+  { cat: "Editing", keys: ["Ctrl", "V"], desc: "Paste" },
+  { cat: "Editing", keys: ["Ctrl", "Z"], desc: "Undo" },
+  { cat: "Editing", keys: ["Ctrl", "Y"], desc: "Redo" },
+  { cat: "Editing", keys: ["Delete"], desc: "Clear the contents of selected cells" },
+  { cat: "Editing", keys: ["F2"], desc: "Edit the active cell" },
+  { cat: "Editing", keys: ["Ctrl", "D"], desc: "Fill down from the cell above" },
+  { cat: "Editing", keys: ["Ctrl", "R"], desc: "Fill right from the cell to the left" },
+  { cat: "Editing", keys: ["Alt", "Enter"], desc: "Start a new line within the same cell" },
+  { cat: "Editing", keys: ["Ctrl", "Enter"], desc: "Fill all selected cells with the same entry" },
+  { cat: "Editing", keys: ["Ctrl", "-"], desc: "Delete selected cells, rows, or columns" },
+  { cat: "Editing", keys: ["Ctrl", "Shift", "+"], desc: "Insert cells, rows, or columns" },
+
+  // Formatting
+  { cat: "Formatting", keys: ["Ctrl", "B"], desc: "Bold" },
+  { cat: "Formatting", keys: ["Ctrl", "I"], desc: "Italic" },
+  { cat: "Formatting", keys: ["Ctrl", "U"], desc: "Underline" },
+  { cat: "Formatting", keys: ["Ctrl", "1"], desc: "Open the Format Cells dialog" },
+  { cat: "Formatting", keys: ["Ctrl", "Shift", "$"], desc: "Apply currency format" },
+  { cat: "Formatting", keys: ["Ctrl", "Shift", "%"], desc: "Apply percentage format" },
+  { cat: "Formatting", keys: ["Ctrl", "Shift", "#"], desc: "Apply date format" },
+  { cat: "Formatting", keys: ["Ctrl", "Shift", "&"], desc: "Add an outline border" },
+  { cat: "Formatting", keys: ["Ctrl", "Shift", "_"], desc: "Remove borders" },
+
+  // Formulas & Data
+  { cat: "Formulas & Data", keys: ["="], desc: "Start typing a formula" },
+  { cat: "Formulas & Data", keys: ["F4"], desc: "Toggle relative/absolute reference ($A$1)" },
+  { cat: "Formulas & Data", keys: ["Ctrl", "`"], desc: "Show formulas instead of their results" },
+  { cat: "Formulas & Data", keys: ["Alt", "="], desc: "AutoSum the selected range" },
+  { cat: "Formulas & Data", keys: ["F9"], desc: "Recalculate all open workbooks" },
+  { cat: "Formulas & Data", keys: ["Ctrl", "Shift", "Enter"], desc: "Enter a formula as an array formula" },
+  { cat: "Formulas & Data", keys: ["Alt", "Arrow Down"], desc: "Show AutoComplete suggestions for the cell" },
+  { cat: "Formulas & Data", keys: ["Shift", "F3"], desc: "Open the Insert Function dialog" },
+
+  // Rows & Columns
+  { cat: "Rows & Columns", keys: ["Ctrl", "9"], desc: "Hide selected rows" },
+  { cat: "Rows & Columns", keys: ["Ctrl", "Shift", "9"], desc: "Unhide rows" },
+  { cat: "Rows & Columns", keys: ["Ctrl", "0"], desc: "Hide selected columns" },
+  { cat: "Rows & Columns", keys: ["Ctrl", "Shift", "0"], desc: "Unhide columns" },
+
+  // File & View
+  { cat: "File & View", keys: ["Ctrl", "N"], desc: "Create a new workbook" },
+  { cat: "File & View", keys: ["Ctrl", "O"], desc: "Open a workbook" },
+  { cat: "File & View", keys: ["Ctrl", "S"], desc: "Save the workbook" },
+  { cat: "File & View", keys: ["F12"], desc: "Save As" },
+  { cat: "File & View", keys: ["Ctrl", "P"], desc: "Print" },
+  { cat: "File & View", keys: ["Ctrl", "W"], desc: "Close the workbook" },
+  { cat: "File & View", keys: ["Ctrl", "F1"], desc: "Show or hide the Ribbon" },
+  { cat: "File & View", keys: ["Ctrl", "Tab"], desc: "Switch between open workbooks" },
+
+  // Find & Other
+  { cat: "Find & Other", keys: ["Ctrl", "F"], desc: "Find" },
+  { cat: "Find & Other", keys: ["Ctrl", "H"], desc: "Find and Replace" },
+  { cat: "Find & Other", keys: ["Ctrl", "K"], desc: "Insert a hyperlink" },
+  { cat: "Find & Other", keys: ["Alt", "F1"], desc: "Insert a chart on the current sheet" },
+  { cat: "Find & Other", keys: ["F11"], desc: "Create a chart on a new sheet" },
+  { cat: "Find & Other", keys: ["Ctrl", ";"], desc: "Insert today's date" },
+  { cat: "Find & Other", keys: ["Ctrl", "Shift", ";"], desc: "Insert the current time" }
+];
+
+const CATEGORY_ICONS = {
+  "Navigation": "🧭",
+  "Selection": "🎯",
+  "Editing": "✍️",
+  "Formatting": "🎨",
+  "Formulas & Data": "🧮",
+  "Rows & Columns": "📐",
+  "File & View": "🗂️",
+  "Find & Other": "🔎"
+};
+
+function render(filterText) {
+  const shell = document.getElementById('scShell');
+  const noResults = document.getElementById('scNoResults');
+  shell.innerHTML = '';
+
+  const grouped = {};
+  SHORTCUTS.forEach(s => {
+    const matches = !filterText ||
+      s.desc.toLowerCase().includes(filterText) ||
+      s.keys.join(' ').toLowerCase().includes(filterText) ||
+      s.cat.toLowerCase().includes(filterText);
+    if (!matches) return;
+    if (!grouped[s.cat]) grouped[s.cat] = [];
+    grouped[s.cat].push(s);
+  });
+
+  const categories = Object.keys(grouped);
+  if (categories.length === 0) {
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  categories.forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'sc-category';
+    section.dataset.cat = cat;
+
+    const rows = grouped[cat].map(s => `
+      <div class="sc-row">
+        <div class="sc-row-desc">${s.desc}</div>
+        <div class="sc-row-keys">
+          ${s.keys.map((k, i) => `${i > 0 ? '<span class="sc-plus">+</span>' : ''}<span class="keycap">${k}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+
+    section.innerHTML = `
+      <div class="sc-category-header">
+        <span class="icon">${CATEGORY_ICONS[cat] || ''}</span>
+        <h2>${cat}</h2>
+      </div>
+      ${rows}
+    `;
+    shell.appendChild(section);
+  });
+
+  // Trigger reveal animation
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.sc-category').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 60);
+    });
+  });
+}
+
+document.getElementById('scSearch').addEventListener('input', (e) => {
+  render(e.target.value.trim().toLowerCase());
+});
+
+render('');
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
