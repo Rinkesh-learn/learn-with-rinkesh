@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Practice — Learn With Rinkesh</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="practice-styles.css">
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="practice-styles.css">
 </head>
 <body>
 
@@ -88,6 +88,8 @@ const CELEBRATIONS = [
 
 const TASK_OFFSET = 2;
 const COLUMN_WIDTHS = { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 };
+
+const CATEGORY_ICONS = { Lookup: '🔍', Math: '➕', Logic: '⚡' };
 
 const FORMULAS = [
   {
@@ -180,7 +182,7 @@ function openModal(formula) {
 
   box.innerHTML = `
     <div class="formula-title">${formula.syntax}</div>
-    <span class="formula-category">${formula.category}</span>
+    <span class="formula-category">${CATEGORY_ICONS[formula.category] || ''} ${formula.category}</span>
     <h4>What it does</h4>
     <p>${formula.description}</p>
     <h4>Parameters</h4>
@@ -210,16 +212,26 @@ function showResultModal({ correct, html }) {
   const idx = currentFormula ? FORMULAS.findIndex(f => f.id === currentFormula.id) : -1;
   const nextFormula = idx > -1 ? FORMULAS[(idx + 1) % FORMULAS.length] : null;
 
+  box.className = 'modal-box ' + (correct ? 'result-success' : 'result-fail');
+  const icon = correct ? '🎉' : '🤔';
+
   box.innerHTML = `
-    <div style="font-size:16px; margin-bottom:20px;">${html}</div>
-    <div style="display:flex; gap:10px;">
-      <button class="btn btn-ghost" id="resultCloseBtn" style="flex:1;">Close</button>
-      ${nextFormula ? `<button class="btn btn-primary" id="resultNextBtn" style="flex:1;">Next: ${nextFormula.name} &rarr;</button>` : ''}
+    <div class="result-icon">${icon}</div>
+    <div class="result-message">${html}</div>
+    <div class="result-btn-row">
+      <button class="btn btn-ghost" id="resultAgainBtn">Practice Again</button>
+      <button class="btn btn-ghost" id="resultCloseBtn">Close</button>
+      ${nextFormula ? `<button class="btn btn-primary" id="resultNextBtn">Next: ${nextFormula.name} &rarr;</button>` : ''}
     </div>
   `;
 
   document.getElementById('resultCloseBtn').addEventListener('click', () => {
     overlay.classList.remove('open');
+  });
+
+  document.getElementById('resultAgainBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+    if (currentFormula) startPractice(currentFormula);
   });
 
   if (nextFormula) {
@@ -356,23 +368,6 @@ function checkAnswer(formula, actualTargetRow) {
 document.getElementById('swapBtn').addEventListener('click', () => {
   document.getElementById('practiceLayout').classList.toggle('reversed');
   setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
-});
-
-// ---------- Scroll-jump fix ----------
-// The embedded sheet's hidden input sometimes triggers the browser to
-// auto-scroll the page when a cell is clicked. This locks the page's
-// scroll position in place immediately after any click inside the sheet.
-let lockedScrollY = null;
-document.addEventListener('mousedown', (e) => {
-  const container = document.getElementById('luckysheetContainer');
-  if (container && container.contains(e.target)) {
-    lockedScrollY = window.scrollY;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (lockedScrollY !== null) window.scrollTo(window.scrollX, lockedScrollY);
-      });
-    });
-  }
 });
 
 renderList();
