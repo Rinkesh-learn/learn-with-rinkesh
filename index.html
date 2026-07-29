@@ -71,7 +71,7 @@
     </div>
     <div class="cell">
       <h3>1-on-1 Career Guidance</h3>
-      <p>Feeling stuck or unsure about your next move in data? Book a quick session with Rinkesh for honest, personal guidance on your career path.</p>
+      <p>Stuck on your next move in data? Get real, 1-on-1 career guidance from Rinkesh.</p>
       <a href="about.html" class="cell-cta">Book a Slot &rarr;</a>
     </div>
   </div>
@@ -170,9 +170,16 @@
   cycleHero();
 
   // Floating capsules dodge the cursor — the touched one jumps far,
-  // the other two reset back to their starting spot
+  // the other two reset back to their starting spot, and the touched
+  // one also drifts back home on its own after a short pause
   const stickerZone = document.getElementById('stickerZone');
   const allStickers = document.querySelectorAll('.sticker');
+  const returnTimers = {};
+
+  function goHome(el) {
+    el.style.left = '';
+    el.style.top = '';
+  }
 
   function dodgeSticker(target) {
     const zoneRect = stickerZone.getBoundingClientRect();
@@ -181,12 +188,13 @@
     const maxTop = Math.max(0, zoneRect.height - elRect.height);
 
     allStickers.forEach(el => {
+      clearTimeout(returnTimers[el.id]);
       if (el === target) {
         el.style.left = Math.round(Math.random() * maxLeft) + 'px';
         el.style.top = Math.round(Math.random() * maxTop) + 'px';
+        returnTimers[el.id] = setTimeout(() => goHome(el), 2200);
       } else {
-        el.style.left = '';
-        el.style.top = '';
+        goHome(el);
       }
     });
   }
