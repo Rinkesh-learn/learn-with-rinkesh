@@ -20,7 +20,7 @@ const CATEGORY_ICONS = {
 };
 
 // Formulas with a full graded 10-question practice set (see practice.html)
-const PRACTICE_ENABLED_IDS = ['vlookup', 'sum', 'if', 'countif'];
+const PRACTICE_ENABLED_IDS = ['vlookup', 'sum', 'if', 'countif', 'hlookup', 'index', 'match', 'choose'];
 
 const FORMULA_META = [
 
@@ -32,19 +32,27 @@ const FORMULA_META = [
     useCase: "Pulling an employee's salary into another sheet using their ID." },
   { id: 'hlookup', name: 'HLOOKUP', category: 'Lookup & Reference',
     syntax: '=HLOOKUP(lookup_value, table_array, row_index_num, [range_lookup])',
-    description: "Like VLOOKUP but searches across the first row and pulls a value down a column." },
+    description: "Like VLOOKUP but searches across the first row and pulls a value down a column.",
+    params: [['lookup_value','Value to search for in the top row'],['table_array','Range containing the data'],['row_index_num','Which row (from the top) to pull the result from'],['range_lookup','FALSE for exact match']],
+    useCase: "Pulling a specific month's figure from a report laid out horizontally instead of in columns." },
   { id: 'xlookup', name: 'XLOOKUP', category: 'Lookup & Reference',
     syntax: '=XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])',
     description: "The modern replacement for VLOOKUP — searches any column and returns from any other, no column counting needed." },
   { id: 'index', name: 'INDEX', category: 'Lookup & Reference',
     syntax: '=INDEX(array, row_num, [column_num])',
-    description: "Returns the value at a given row/column position within a range." },
+    description: "Returns the value at a given row/column position within a range.",
+    params: [['array','The range to pull from'],['row_num','Which row within the range'],['column_num','Which column within the range (optional for single-column ranges)']],
+    useCase: "Pulling the Nth item from a list — often paired with MATCH to look up in any direction." },
   { id: 'match', name: 'MATCH', category: 'Lookup & Reference',
     syntax: '=MATCH(lookup_value, lookup_array, [match_type])',
-    description: "Finds the position of a value within a range — usually paired with INDEX." },
+    description: "Finds the position of a value within a range — usually paired with INDEX.",
+    params: [['lookup_value','Value to search for'],['lookup_array','Range to search in'],['match_type','0 for exact match']],
+    useCase: "Finding exactly where a value sits in a list, so INDEX can pull the matching row." },
   { id: 'choose', name: 'CHOOSE', category: 'Lookup & Reference',
     syntax: '=CHOOSE(index_num, value1, [value2], ...)',
-    description: "Picks one value from a list based on a position number." },
+    description: "Picks one value from a list based on a position number.",
+    params: [['index_num','Which item to return (1-based position)'],['value1, value2, ...','The list of items to choose from']],
+    useCase: "Turning a numeric rating (1–5) into a readable label like Poor, Fair, Good, Great, Excellent." },
   { id: 'indirect', name: 'INDIRECT', category: 'Lookup & Reference',
     syntax: '=INDIRECT(ref_text, [a1])',
     description: "Turns a text string into an actual cell reference." },

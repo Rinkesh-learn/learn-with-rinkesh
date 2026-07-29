@@ -61,26 +61,29 @@
   margin: 0;
   padding: 8px;
   overflow-y: auto;
+  max-height: 560px;
 }
 
 .formula-list-item {
-  padding: 10px 12px;
+  padding: 9px 12px;
   border-radius: var(--radius);
   cursor: pointer;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .formula-list-item:hover { background: #F0F5F1; }
 
 .formula-list-category {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-soft);
-  padding: 14px 12px 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--excel-green-deep);
+  padding: 16px 12px 8px;
+  border-bottom: 1px solid var(--grid-line);
+  margin-bottom: 4px;
 }
-.formula-list-category:first-child { padding-top: 4px; }
+.formula-list-category:first-child { padding-top: 2px; }
 
 .practice-dot {
   display: inline-block;
@@ -98,15 +101,9 @@
 }
 
 .formula-list-item .flname {
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 700;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 400;
   font-size: 14px;
-  display: block;
-}
-
-.formula-list-item .flcat {
-  font-size: 11px;
-  opacity: 0.75;
 }
 
 .practice-main {
