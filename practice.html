@@ -31,7 +31,7 @@
 
 <div class="hero" style="padding-bottom:20px;">
   <h1 style="font-size:32px;">Pick a formula, practice it live.</h1>
-  <p class="lede" style="margin-bottom:0;">Click any formula on the list, read how it works, then solve it in a real spreadsheet — actual Excel functions, actual formula bar.</p>
+  <p class="lede" style="margin-bottom:0;">Click any formula on the list for a task to solve, or just start typing below — it's a real, free-to-use spreadsheet.</p>
 </div>
 
 <div class="sheet" style="margin-top:0;">
@@ -45,9 +45,15 @@
       <ul class="formula-list" id="formulaList"></ul>
     </div>
 
-    <div class="practice-main" id="practiceMain">
-      <div class="practice-empty">
-        Choose a formula on the list to get started.
+    <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
+      <div class="practice-active" style="width:100%;">
+        <h2 id="activeTitle">Free Practice</h2>
+        <p class="target-label" id="activeTask">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
+        <div id="luckysheetContainer" style="width:100%; height:620px; position:relative; border:1px solid var(--grid-line);"></div>
+        <div class="practice-input-row" id="checkRow" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0; display:none;">
+          <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
+        </div>
+        <div class="practice-feedback" id="practiceFeedback"></div>
       </div>
     </div>
 
@@ -76,13 +82,17 @@ const CELEBRATIONS = [
   "That's the one! Great work."
 ];
 
+// Row offset so row 0 can hold the task instruction inside the sheet itself
+const TASK_OFFSET = 2;
+
 const FORMULAS = [
   {
     id: 'vlookup', name: 'VLOOKUP', category: 'Lookup',
     syntax: '=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])',
-    description: "Searches for a value in the first column of a range, and returns a value from another column in the same row. It's the formula every recruiter expects you to know cold.",
-    params: [['lookup_value','The value you are searching for'],['table_array','The range that contains the data'],['col_index_num','Which column (from the left) to pull the result from'],['range_lookup','FALSE for an exact match (almost always what you want)']],
-    useCase: "A payroll analyst pulls each employee's salary into a department sheet without manually cross-referencing hundreds of rows.",
+    description: "Looks up a value in the first column of a range and returns a value from another column, same row.",
+    params: [['lookup_value','Value to search for'],['table_array','Range containing the data'],['col_index_num','Column to pull the result from'],['range_lookup','FALSE for exact match']],
+    useCase: "Pulling an employee's salary into another sheet using their ID.",
+    task: "Task: Find the Salary for Employee ID 103.",
     targetRow: 1, targetCol: 5, expectedValue: 62000, expectedType: 'number',
     grid: [
       ["Employee ID","Department","Salary","","Lookup ID","Result"],
@@ -96,9 +106,10 @@ const FORMULAS = [
   {
     id: 'sum', name: 'SUM', category: 'Math',
     syntax: '=SUM(number1, [number2], ...)',
-    description: "Adds up all the numbers in a range. The most-used formula in Excel, and a building block for most financial models.",
-    params: [['number1','A number or cell range to add'],['number2, ...','Additional numbers or ranges (optional)']],
-    useCase: "A finance analyst totals four quarters of sales into an annual figure for a summary report.",
+    description: "Adds up all the numbers in a range — the most-used formula in Excel.",
+    params: [['number1','A number or range to add'],['number2, ...','More numbers or ranges (optional)']],
+    useCase: "Totaling four quarters of sales into an annual figure.",
+    task: "Task: Find the Total sales from Jan to Apr.",
     targetRow: 1, targetCol: 3, expectedValue: 5600, expectedType: 'number',
     grid: [
       ["Month","Sales","","Total"],
@@ -111,9 +122,10 @@ const FORMULAS = [
   {
     id: 'if', name: 'IF', category: 'Logic',
     syntax: '=IF(logical_test, value_if_true, value_if_false)',
-    description: "Checks whether a condition is true or false, and returns one value for true and another for false. The backbone of almost every decision rule in a spreadsheet.",
-    params: [['logical_test','The condition to check, e.g. B2>=40'],['value_if_true','What to return if true'],['value_if_false','What to return if false']],
-    useCase: "An HR analyst flags each employee as Pass or Fail based on whether their assessment score clears the cutoff.",
+    description: "Returns one value if a condition is true, another if false.",
+    params: [['logical_test','The condition to check, e.g. B2>=40'],['value_if_true','Result if true'],['value_if_false','Result if false']],
+    useCase: "Flagging an employee as Pass or Fail based on a score cutoff.",
+    task: 'Task: Mark Amit\'s Result as "Pass" if Score is 40 or above, else "Fail".',
     targetRow: 1, targetCol: 2, expectedValue: 'Pass', expectedType: 'string',
     grid: [
       ["Student","Score","Result"],
@@ -125,9 +137,10 @@ const FORMULAS = [
   {
     id: 'countif', name: 'COUNTIF', category: 'Math',
     syntax: '=COUNTIF(range, criteria)',
-    description: "Counts how many cells in a range match a condition. Used constantly for quick headcounts without building a pivot table.",
-    params: [['range','The cells to check'],['criteria','The condition cells must match, e.g. "Finance"']],
-    useCase: "An operations manager counts how many employees belong to the Finance department directly from a raw list.",
+    description: "Counts how many cells in a range match a condition.",
+    params: [['range','Cells to check'],['criteria','Condition to match, e.g. "Finance"']],
+    useCase: "Counting how many employees belong to one department.",
+    task: 'Task: Count how many employees are in the "Finance" department.',
     targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
     grid: [
       ["Employee","Department","","Finance Count"],
@@ -187,41 +200,26 @@ function colLetter(i) { return String.fromCharCode(65 + i); }
 
 function buildCelldata(formula) {
   const cells = [];
+  cells.push({ r: 0, c: 0, v: { v: formula.task, bl: 1, fc: '#1C6B41', fs: 13 } });
+
   formula.grid.forEach((row, r) => {
     row.forEach((val, c) => {
       const isTarget = r === formula.targetRow && c === formula.targetCol;
+      const actualRow = r + TASK_OFFSET;
       if (isTarget) {
-        cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
+        cells.push({ r: actualRow, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
       } else if (val !== null && val !== '') {
-        cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
+        cells.push({ r: actualRow, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
       }
     });
   });
   return cells;
 }
 
-function startPractice(formula) {
-  currentFormula = formula;
-  renderList();
-
-  const targetLabel = colLetter(formula.targetCol) + (formula.targetRow + 1);
-  const main = document.getElementById('practiceMain');
-  main.innerHTML = `
-    <div class="practice-active" style="width:100%;">
-      <h2>${formula.name}</h2>
-      <p class="target-label">The yellow cell (${targetLabel}) is where you write your formula. Click it and use the real formula bar above the sheet.</p>
-      <div id="luckysheetContainer" style="width:100%; height:480px; position:relative; border:1px solid var(--grid-line);"></div>
-      <div class="practice-input-row" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0;">
-        <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
-      </div>
-      <div class="practice-feedback" id="practiceFeedback"></div>
-    </div>
-  `;
-
+function createSheet(name, celldata) {
   if (sheetReady && window.luckysheet && window.luckysheet.destroy) {
     try { luckysheet.destroy(); } catch (e) {}
   }
-
   luckysheet.create({
     container: 'luckysheetContainer',
     lang: 'en',
@@ -229,33 +227,76 @@ function startPractice(formula) {
     showsheetbar: false,
     showstatisticBarConfig: { count: false, view: false, zoom: false },
     data: [{
-      name: formula.name,
-      celldata: buildCelldata(formula),
-      row: 20,
-      column: 12,
+      name: name,
+      celldata: celldata,
+      row: 60,
+      column: 26,
       status: 1
     }]
   });
   sheetReady = true;
-
-  document.getElementById('checkBtn').addEventListener('click', () => checkAnswer(formula));
 }
 
-function checkAnswer(formula) {
+function startBlankSheet() {
+  currentFormula = null;
+  document.getElementById('activeTitle').textContent = 'Free Practice';
+  document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
+  document.getElementById('checkRow').style.display = 'none';
+  document.getElementById('practiceFeedback').innerHTML = '';
+  document.getElementById('practiceFeedback').className = 'practice-feedback';
+  createSheet('Free Practice', []);
+}
+
+function startPractice(formula) {
+  currentFormula = formula;
+  renderList();
+
+  const actualTargetRow = formula.targetRow + TASK_OFFSET;
+  const targetLabel = colLetter(formula.targetCol) + (actualTargetRow + 1);
+
+  document.getElementById('activeTitle').textContent = formula.name;
+  document.getElementById('activeTask').innerHTML = `<strong>${formula.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
+  document.getElementById('checkRow').style.display = 'flex';
+  document.getElementById('practiceFeedback').innerHTML = '';
+  document.getElementById('practiceFeedback').className = 'practice-feedback';
+
+  createSheet(formula.name, buildCelldata(formula));
+
+  document.getElementById('checkBtn').onclick = () => checkAnswer(formula, actualTargetRow);
+}
+
+function unwrapValue(raw) {
+  if (raw !== null && typeof raw === 'object') {
+    if (raw.v !== undefined) return raw.v;
+    if (raw.m !== undefined) return raw.m;
+  }
+  return raw;
+}
+
+function checkAnswer(formula, actualTargetRow) {
   const feedback = document.getElementById('practiceFeedback');
   feedback.className = 'practice-feedback';
 
+  try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
+
   let value;
   try {
-    value = luckysheet.getCellValue(formula.targetRow, formula.targetCol);
+    value = luckysheet.getCellValue(actualTargetRow, formula.targetCol);
+    value = unwrapValue(value);
   } catch (e) {
-    feedback.innerHTML = "Couldn't read that cell — try clicking outside the cell first, then Check again.";
+    feedback.innerHTML = "Couldn't read that cell — click outside the cell once, then press Check My Answer again.";
     feedback.classList.add('incorrect');
     return;
   }
 
   if (value === null || value === undefined || value === '') {
-    feedback.innerHTML = 'Write a formula in the highlighted cell first.';
+    feedback.innerHTML = 'Write a formula in the highlighted cell first, then click outside it before checking.';
+    feedback.classList.add('incorrect');
+    return;
+  }
+
+  if (typeof value === 'string' && value.trim().startsWith('=')) {
+    feedback.innerHTML = "Click outside the cell (or press Enter) to confirm your formula, then check again.";
     feedback.classList.add('incorrect');
     return;
   }
@@ -286,6 +327,9 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 });
 
 renderList();
+window.addEventListener('load', () => {
+  setTimeout(startBlankSheet, 200);
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
