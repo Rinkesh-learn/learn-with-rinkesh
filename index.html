@@ -25,19 +25,59 @@
 </div>
 
 <div class="hero">
-  <div class="formula-bar">
+  <div class="formula-bar hero-float">
     <span class="fx">fx</span>
-    <span class="content">="Stop memorizing Excel. Start using it."</span>
+    <span class="content" id="heroTyping"></span>
   </div>
 
   <h1>Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
   <p class="lede">500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional, not a course factory.</p>
 
   <div class="cta-row">
-    <a href="practice.html" class="btn btn-primary">Try a formula &rarr;</a>
-    <a href="about.html" class="btn btn-ghost">About Rinkesh</a>
+    <a href="practice.html" class="btn btn-primary">Start Excel Practice &rarr;</a>
   </div>
 </div>
+
+<script>
+  const heroLines = [
+    '="Stop memorizing Excel. Start using it."',
+    '=VLOOKUP("theory","practice",1,FALSE)',
+    '="500+ formulas. One real spreadsheet."',
+    '=IF(you.practice, "job-ready", "keep going")'
+  ];
+  let heroLineIndex = 0;
+  const heroEl = document.getElementById('heroTyping');
+
+  function typeLine(text, i, cb) {
+    heroEl.textContent = text.slice(0, i);
+    if (i <= text.length) {
+      setTimeout(() => typeLine(text, i + 1, cb), 35);
+    } else {
+      setTimeout(cb, 1800);
+    }
+  }
+
+  function eraseLine(text, i, cb) {
+    heroEl.textContent = text.slice(0, i);
+    if (i >= 0) {
+      setTimeout(() => eraseLine(text, i - 1, cb), 18);
+    } else {
+      cb();
+    }
+  }
+
+  function cycleHero() {
+    const line = heroLines[heroLineIndex];
+    typeLine(line, 0, () => {
+      eraseLine(line, line.length, () => {
+        heroLineIndex = (heroLineIndex + 1) % heroLines.length;
+        cycleHero();
+      });
+    });
+  }
+
+  cycleHero();
+</script>
 
 <div class="sheet">
   <div class="sheet-header">

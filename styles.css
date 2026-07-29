@@ -44,7 +44,7 @@ a { color: inherit; }
   background: var(--cell-bg);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 99999;
 }
 
 .topbar-inner {
@@ -437,3 +437,84 @@ footer {
 .setup-box #message { margin-top: 14px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
 .setup-box #message.error { color: #B3261E; }
 .setup-box #message.success { color: var(--excel-green-deep); }
+
+/* ---------- Practice grid ---------- */
+
+.practice-grid {
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  max-width: 620px;
+}
+
+.practice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.practice-table th, .practice-table td {
+  border: 1px solid var(--grid-line);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.practice-table th {
+  background: #F0F5F1;
+  color: var(--excel-green-deep);
+  font-weight: 600;
+}
+
+.practice-table td.colhead {
+  background: #FAFAF7;
+  color: var(--grid-line);
+  text-align: center;
+  width: 24px;
+}
+
+.practice-table td.target-cell {
+  background: #FFFBEA;
+  font-weight: 600;
+}
+
+.practice-input-row {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
+  border-top: 1px solid var(--grid-line);
+  background: var(--paper);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.practice-input-row label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.practice-input-row input {
+  flex: 1;
+  min-width: 220px;
+  padding: 9px 12px;
+  border: 1px solid var(--grid-line);
+  border-radius: var(--radius);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+}
+
+.practice-feedback {
+  padding: 0 16px 16px;
+  font-size: 14px;
+}
+
+.practice-feedback.correct { color: var(--excel-green-deep); }
+.practice-feedback.incorrect { color: #B3261E; }
+.practice-feedback .explain {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}

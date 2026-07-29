@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VLOOKUP — Learn With Rinkesh</title>
+<title>Formulas — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="practice-styles.css">
 </head>
 <body>
 
@@ -24,155 +25,47 @@
   </div>
 </div>
 
-<div class="formula-page">
-
-  <div class="formula-title">=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])</div>
-  <span class="formula-category">Lookup &middot; Beginner</span>
-
-  <section>
-    <h2>What it does</h2>
-    <p>Searches for a value in the first column of a range, and returns a value from another column in the same row. It's the formula every recruiter expects you to know cold — used constantly for pulling one dataset's details into another, like matching an Employee ID to a name and salary.</p>
-  </section>
-
-  <section>
-    <h2>Demo</h2>
-    <div class="video-slot">15-second demo video goes here</div>
-  </section>
-
-  <section>
-    <h2>Parameters</h2>
-    <table class="params-table">
-      <tr><th>Parameter</th><th>Meaning</th></tr>
-      <tr><td>lookup_value</td><td>The value you're searching for</td></tr>
-      <tr><td>table_array</td><td>The range that contains the data</td></tr>
-      <tr><td>col_index_num</td><td>Which column (counting from the left of table_array) to pull the result from</td></tr>
-      <tr><td>range_lookup</td><td>FALSE for an exact match (almost always what you want), TRUE for approximate</td></tr>
-    </table>
-  </section>
-
-  <section>
-    <h2>Corporate use case</h2>
-    <p>A payroll analyst has one sheet with Employee IDs and department codes, and another with Employee IDs and salaries. VLOOKUP pulls the salary into the department sheet without manually cross-referencing hundreds of rows by hand.</p>
-  </section>
-
-  <section>
-    <h2>Try it</h2>
-    <p style="font-size:14px; color:var(--ink-soft); margin-bottom:14px;">Below is a real employee table. Write a VLOOKUP formula in the highlighted cell (F2) that looks up the Salary for the Employee ID in E2.</p>
-
-    <div class="practice-grid">
-      <table class="practice-table">
-        <tr>
-          <td class="colhead"></td>
-          <td class="colhead">A</td>
-          <td class="colhead">B</td>
-          <td class="colhead">C</td>
-          <td class="colhead">D</td>
-          <td class="colhead">E</td>
-          <td class="colhead">F</td>
-        </tr>
-        <tr>
-          <td class="colhead">1</td>
-          <th>Employee ID</th>
-          <th>Department</th>
-          <th>Salary</th>
-          <th></th>
-          <th>Lookup ID</th>
-          <th>Result</th>
-        </tr>
-        <tr>
-          <td class="colhead">2</td>
-          <td>101</td><td>Finance</td><td>55000</td><td></td>
-          <td>103</td>
-          <td class="target-cell" id="resultCell">?</td>
-        </tr>
-        <tr><td class="colhead">3</td><td>102</td><td>HR</td><td>48000</td><td></td><td></td><td></td></tr>
-        <tr><td class="colhead">4</td><td>103</td><td>IT</td><td>62000</td><td></td><td></td><td></td></tr>
-        <tr><td class="colhead">5</td><td>104</td><td>Finance</td><td>51000</td><td></td><td></td><td></td></tr>
-        <tr><td class="colhead">6</td><td>105</td><td>Marketing</td><td>45000</td><td></td><td></td><td></td></tr>
-      </table>
-
-      <div class="practice-input-row">
-        <label for="formulaInput">F2 =</label>
-        <input type="text" id="formulaInput" placeholder="Write your formula, e.g. =VLOOKUP(E2,A2:C6,3,FALSE)">
-        <button class="btn btn-primary" id="checkBtn">Check</button>
-      </div>
-
-      <div class="practice-feedback" id="practiceFeedback"></div>
-    </div>
-  </section>
-
+<div class="hero" style="padding-bottom:10px;">
+  <h1 style="font-size:32px;">The formula reference.</h1>
+  <p class="lede" style="margin-bottom:0;">Browse by category. Click any formula to see how it works and jump straight into practicing it.</p>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/hyperformula/dist/hyperformula.full.min.js"></script>
-<script>
-  const ERROR_EXPLANATIONS = {
-    NA: "#N/A means Excel couldn't find a match. Check that the value you're looking up actually exists in the table, and that FALSE is used for an exact match.",
-    VALUE: "#VALUE! usually means one of the formula's arguments is the wrong type — like pointing to a cell with text where a number was expected.",
-    REF: "#REF! means the formula points to a cell reference that doesn't exist.",
-    NAME: "#NAME? means Excel doesn't recognize part of the formula — often a typo in the function name.",
-    DIV_BY_ZERO: "#DIV/0! means the formula is dividing by zero or an empty cell."
-  };
-
-  const EXPECTED_VALUE = 62000;
-
-  document.getElementById('checkBtn').addEventListener('click', () => {
-    const feedback = document.getElementById('practiceFeedback');
-    const resultCell = document.getElementById('resultCell');
-    let formula = document.getElementById('formulaInput').value.trim();
-    feedback.className = 'practice-feedback';
-    feedback.innerHTML = '';
-
-    if (!formula) {
-      feedback.innerHTML = 'Write a formula in the box above first.';
-      feedback.classList.add('incorrect');
-      return;
-    }
-    if (!formula.startsWith('=')) formula = '=' + formula;
-
-    const sheetData = [
-      ["Employee ID", "Department", "Salary", "", "Lookup ID", "Result"],
-      [101, "Finance", 55000, "", 103, formula],
-      [102, "HR", 48000, "", "", ""],
-      [103, "IT", 62000, "", "", ""],
-      [104, "Finance", 51000, "", "", ""],
-      [105, "Marketing", 45000, "", "", ""]
-    ];
-
-    let value;
-    try {
-      const hf = HyperFormula.buildFromArray(sheetData, { licenseKey: 'gpl-v3' });
-      value = hf.getCellValue({ sheet: 0, row: 1, col: 5 });
-    } catch (e) {
-      feedback.innerHTML = "That formula couldn't be understood. Double check the syntax.";
-      feedback.classList.add('incorrect');
-      resultCell.textContent = '#ERROR';
-      return;
-    }
-
-    // HyperFormula returns error values as objects like { type: 'NA' }
-    if (value && typeof value === 'object' && value.type) {
-      const excelLabel = { NA: '#N/A', VALUE: '#VALUE!', REF: '#REF!', NAME: '#NAME?', DIV_BY_ZERO: '#DIV/0!' }[value.type] || ('#' + value.type);
-      resultCell.textContent = excelLabel;
-      feedback.innerHTML = `Result: <strong>${excelLabel}</strong><span class="explain">${ERROR_EXPLANATIONS[value.type] || 'Check your formula syntax and cell references.'}</span>`;
-      feedback.classList.add('incorrect');
-      return;
-    }
-
-    resultCell.textContent = value;
-
-    if (Number(value) === EXPECTED_VALUE) {
-      feedback.innerHTML = `Correct! Result: <strong>${value}</strong> — that's the exact salary for Employee ID 103.`;
-      feedback.classList.add('correct');
-    } else {
-      feedback.innerHTML = `Result: <strong>${value}</strong> — not quite. Expected ${EXPECTED_VALUE}. Check your table_array range and col_index_num.`;
-      feedback.classList.add('incorrect');
-    }
-  });
-</script>
+<div class="sheet" id="formulaCategories" style="margin-top:10px;"></div>
 
 <footer>
   Learn With Rinkesh — built one cell at a time.
 </footer>
+
+<script src="formulas-data.js"></script>
+<script>
+  const categories = {};
+  FORMULA_META.forEach(f => {
+    if (!categories[f.category]) categories[f.category] = [];
+    categories[f.category].push(f);
+  });
+
+  const container = document.getElementById('formulaCategories');
+  Object.keys(categories).forEach(cat => {
+    const section = document.createElement('div');
+    section.style.marginBottom = '36px';
+    section.innerHTML = `
+      <div class="sheet-header">
+        <span class="colletter">${CATEGORY_ICONS[cat] || ''}</span>
+        <h2>${cat}</h2>
+      </div>
+      <div class="formula-card-grid">
+        ${categories[cat].map(f => `
+          <a class="formula-card" href="practice.html?formula=${f.id}">
+            <div class="formula-card-name">${f.name}</div>
+            <div class="formula-card-desc">${f.description}</div>
+            <div class="formula-card-cta">Practice this &rarr;</div>
+          </a>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(section);
+  });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>

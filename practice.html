@@ -73,6 +73,7 @@
   <div class="modal-box" id="resultBox" style="max-width:400px; text-align:center;"></div>
 </div>
 
+<script src="formulas-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
 
@@ -86,79 +87,106 @@ const CELEBRATIONS = [
   "That's the one! Great work."
 ];
 
-const TASK_OFFSET = 2;
-const COLUMN_WIDTHS = { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 };
+// ---------- Question banks: 10 per formula, easy -> advanced ----------
+const QUESTION_SETS = {
 
-const CATEGORY_ICONS = { Lookup: '🔍', Math: '➕', Logic: '⚡' };
+  vlookup: [
+    { task: "Find the Salary for Employee ID 103.", targetRow: 1, targetCol: 5, expectedValue: 62000, expectedType: 'number',
+      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",103,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""]] },
+    { task: "Find the Department for Employee ID 104.", targetRow: 1, targetCol: 5, expectedValue: "Finance", expectedType: 'string',
+      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",104,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""]] },
+    { task: "Find the Salary for Employee ID 107.", targetRow: 1, targetCol: 5, expectedValue: 39000, expectedType: 'number',
+      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",107,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""],[106,"IT",58000,"","",""],[107,"HR",39000,"","",""],[108,"Finance",67000,"","",""]] },
+    { task: "Find the Department for Employee ID 108.", targetRow: 1, targetCol: 5, expectedValue: "Finance", expectedType: 'string',
+      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",108,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""],[106,"IT",58000,"","",""],[107,"HR",39000,"","",""],[108,"Finance",67000,"","",""]] },
+    { task: "Find the Bonus for Employee ID 106 (4th column).", targetRow: 1, targetCol: 6, expectedValue: 6000, expectedType: 'number',
+      grid: [["Employee ID","Department","Salary","Bonus","","Lookup ID","Result"],[101,"Finance",55000,5000,"",106,null],[102,"HR",48000,3000,"","",""],[103,"IT",62000,7000,"","",""],[104,"Finance",51000,4000,"","",""],[105,"Marketing",45000,2000,"","",""],[106,"IT",58000,6000,"","",""],[107,"HR",39000,2500,"","",""],[108,"Finance",67000,8000,"","",""]] },
+    { task: "Find Karan's Salary using their name.", targetRow: 1, targetCol: 6, expectedValue: 62000, expectedType: 'number',
+      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Karan",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""]] },
+    { task: "Find Simran's Bonus using their name.", targetRow: 1, targetCol: 6, expectedValue: 4000, expectedType: 'number',
+      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Simran",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""]] },
+    { task: "Find Vikram's Salary using their name.", targetRow: 1, targetCol: 6, expectedValue: 67000, expectedType: 'number',
+      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Vikram",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] },
+    { task: "Find Priya's Bonus using their name.", targetRow: 1, targetCol: 6, expectedValue: 2500, expectedType: 'number',
+      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Priya",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] },
+    { task: "Find Aditya's Department using their name.", targetRow: 1, targetCol: 6, expectedValue: "IT", expectedType: 'string',
+      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Aditya",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] }
+  ],
 
-const FORMULAS = [
-  {
-    id: 'vlookup', name: 'VLOOKUP', category: 'Lookup',
-    syntax: '=VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])',
-    description: "Looks up a value in the first column of a range and returns a value from another column, same row.",
-    params: [['lookup_value','Value to search for'],['table_array','Range containing the data'],['col_index_num','Column to pull the result from'],['range_lookup','FALSE for exact match']],
-    useCase: "Pulling an employee's salary into another sheet using their ID.",
-    task: "Task: Find the Salary for Employee ID 103.",
-    targetRow: 1, targetCol: 5, expectedValue: 62000, expectedType: 'number',
-    grid: [
-      ["Employee ID","Department","Salary","","Lookup ID","Result"],
-      [101,"Finance",55000,"",103,null],
-      [102,"HR",48000,"","",""],
-      [103,"IT",62000,"","",""],
-      [104,"Finance",51000,"","",""],
-      [105,"Marketing",45000,"","",""]
-    ]
-  },
-  {
-    id: 'sum', name: 'SUM', category: 'Math',
-    syntax: '=SUM(number1, [number2], ...)',
-    description: "Adds up all the numbers in a range — the most-used formula in Excel.",
-    params: [['number1','A number or range to add'],['number2, ...','More numbers or ranges (optional)']],
-    useCase: "Totaling four quarters of sales into an annual figure.",
-    task: "Task: Find the Total sales from Jan to Apr.",
-    targetRow: 1, targetCol: 3, expectedValue: 5600, expectedType: 'number',
-    grid: [
-      ["Month","Sales","","Total"],
-      ["Jan",1200,"",null],
-      ["Feb",1500,"",""],
-      ["Mar",1100,"",""],
-      ["Apr",1800,"",""]
-    ]
-  },
-  {
-    id: 'if', name: 'IF', category: 'Logic',
-    syntax: '=IF(logical_test, value_if_true, value_if_false)',
-    description: "Returns one value if a condition is true, another if false.",
-    params: [['logical_test','The condition to check, e.g. B2>=40'],['value_if_true','Result if true'],['value_if_false','Result if false']],
-    useCase: "Flagging an employee as Pass or Fail based on a score cutoff.",
-    task: 'Task: Mark Amit\'s Result as "Pass" if Score is 40 or above, else "Fail".',
-    targetRow: 1, targetCol: 2, expectedValue: 'Pass', expectedType: 'string',
-    grid: [
-      ["Student","Score","Result"],
-      ["Amit",55,null],
-      ["Priya",32,""],
-      ["Neha",48,""]
-    ]
-  },
-  {
-    id: 'countif', name: 'COUNTIF', category: 'Math',
-    syntax: '=COUNTIF(range, criteria)',
-    description: "Counts how many cells in a range match a condition.",
-    params: [['range','Cells to check'],['criteria','Condition to match, e.g. "Finance"']],
-    useCase: "Counting how many employees belong to one department.",
-    task: 'Task: Count how many employees are in the "Finance" department.',
-    targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
-    grid: [
-      ["Employee","Department","","Finance Count"],
-      ["Aman","Finance","",null],
-      ["Riya","HR","",""],
-      ["Karan","Finance","",""],
-      ["Simran","IT","",""]
-    ]
-  }
-];
+  sum: [
+    { task: "Find the Total sales from Jan to Apr.", targetRow: 1, targetCol: 3, expectedValue: 5600, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""]] },
+    { task: "Find the Total sales from Jan to Jun.", targetRow: 1, targetCol: 3, expectedValue: 8600, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""]] },
+    { task: "Find the Total sales from Jan to Aug.", targetRow: 1, targetCol: 3, expectedValue: 11600, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""],["Jul",1700,"",""],["Aug",1300,"",""]] },
+    { task: "Find the Total expense across all 4 quarters.", targetRow: 1, targetCol: 3, expectedValue: 5602, expectedType: 'number',
+      grid: [["Quarter","Expense","","Total"],["Q1",1200.5,"",null],["Q2",1500.75,"",""],["Q3",1100.25,"",""],["Q4",1800.5,"",""]] },
+    { task: "Find the Total profit/loss across all months (some are losses).", targetRow: 1, targetCol: 3, expectedValue: 3200, expectedType: 'number',
+      grid: [["Month","Profit","","Total"],["Jan",2000,"",null],["Feb",-500,"",""],["Mar",1500,"",""],["Apr",-800,"",""],["May",1000,"",""]] },
+    { task: "Find the Total sales across all 10 days.", targetRow: 1, targetCol: 3, expectedValue: 7400, expectedType: 'number',
+      grid: [["Day","Sales","","Total"],["Day1",500,"",null],["Day2",700,"",""],["Day3",650,"",""],["Day4",800,"",""],["Day5",900,"",""],["Day6",750,"",""],["Day7",600,"",""],["Day8",850,"",""],["Day9",950,"",""],["Day10",700,"",""]] },
+    { task: "Find the Total sales for Jan–Mar only (ignore the rest).", targetRow: 1, targetCol: 3, expectedValue: 1850, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",500,"",null],["Feb",700,"",""],["Mar",650,"",""],["Apr",800,"",""],["May",900,"",""],["Jun",750,"",""],["Jul",600,"",""],["Aug",850,"",""],["Sep",950,"",""],["Oct",700,"",""]] },
+    { task: "Find the Total sales — one month has no data, skip it.", targetRow: 1, targetCol: 3, expectedValue: 1800, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",400,"",null],["Feb",600,"",""],["Mar","","",""],["Apr",300,"",""],["May",500,"",""]] },
+    { task: "Find the Total sales — one row is a text note, skip it.", targetRow: 1, targetCol: 3, expectedValue: 7500, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar","N/A","",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""]] },
+    { task: "Find the Total sales (Jan–Apr) plus the Bonus row below.", targetRow: 1, targetCol: 3, expectedValue: 6600, expectedType: 'number',
+      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["","","",""],["Bonus",1000,"",""]] }
+  ],
+
+  if: [
+    { task: 'Mark Amit\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 1, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
+      grid: [["Student","Score","Result"],["Amit",55,null],["Priya",32,""],["Neha",48,""]] },
+    { task: 'Mark Priya\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 2, targetCol: 2, expectedValue: "Fail", expectedType: 'string',
+      grid: [["Student","Score","Result"],["Amit",55,""],["Priya",32,null],["Neha",48,""]] },
+    { task: 'Mark Neha\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 3, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
+      grid: [["Student","Score","Result"],["Amit",55,""],["Priya",32,""],["Neha",48,null]] },
+    { task: 'Mark Ravi\'s Result as "Pass" if Score is 50 or above, else "Fail".', targetRow: 1, targetCol: 2, expectedValue: "Fail", expectedType: 'string',
+      grid: [["Student","Score","Result"],["Ravi",45,null],["Sonal",62,""],["Amit",50,""]] },
+    { task: 'Mark Amit\'s Result as "Pass" if Score is 50 or above, else "Fail".', targetRow: 3, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
+      grid: [["Student","Score","Result"],["Ravi",45,""],["Sonal",62,""],["Amit",50,null]] },
+    { task: 'Mark Karan\'s Grade as "Low" if Score is below 60, else "High".', targetRow: 2, targetCol: 2, expectedValue: "Low", expectedType: 'string',
+      grid: [["Student","Score","Grade"],["Meera",70,""],["Karan",55,null],["Divya",60,""]] },
+    { task: 'Mark Divya\'s Grade as "Low" if Score is below 60, else "High".', targetRow: 3, targetCol: 2, expectedValue: "High", expectedType: 'string',
+      grid: [["Student","Score","Grade"],["Meera",70,""],["Karan",55,""],["Divya",60,null]] },
+    { task: 'Give Riya a Bonus of 500 if Sales exceed 1000, else 0.', targetRow: 2, targetCol: 2, expectedValue: 0, expectedType: 'number',
+      grid: [["Rep","Sales","Bonus"],["Aman",1200,""],["Riya",900,null],["Karan",1500,""]] },
+    { task: 'Give Karan a Bonus of 500 if Sales exceed 1000, else 0.', targetRow: 3, targetCol: 2, expectedValue: 500, expectedType: 'number',
+      grid: [["Rep","Sales","Bonus"],["Aman",1200,""],["Riya",900,""],["Karan",1500,null]] },
+    { task: 'Mark WidgetB\'s Status as "Match" if Actual equals Target, else "Mismatch".', targetRow: 2, targetCol: 3, expectedValue: "Mismatch", expectedType: 'string',
+      grid: [["Item","Target","Actual","Status"],["WidgetA",100,100,""],["WidgetB",150,140,null],["WidgetC",80,80,""]] }
+  ],
+
+  countif: [
+    { task: 'Count how many employees are in the "Finance" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
+      grid: [["Employee","Department","","Finance Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""]] },
+    { task: 'Count how many employees are in the "Finance" department.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
+      grid: [["Employee","Department","","Finance Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
+    { task: 'Count how many employees are in the "IT" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
+      grid: [["Employee","Department","","IT Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
+    { task: 'Count how many employees are in the "HR" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
+      grid: [["Employee","Department","","HR Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
+    { task: 'Count how many employees are in the "Marketing" department.', targetRow: 1, targetCol: 3, expectedValue: 1, expectedType: 'number',
+      grid: [["Employee","Department","","Marketing Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
+    { task: 'Count how many reps had Sales greater than 1000.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
+      grid: [["Rep","Sales","","Count >1000"],["Aman",1200,"",null],["Riya",900,"",""],["Karan",1500,"",""],["Simran",800,"",""],["Neha",1100,"",""]] },
+    { task: 'Count how many reps had Sales of 1000 or less.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
+      grid: [["Rep","Sales","","Count <=1000"],["Aman",1200,"",null],["Riya",900,"",""],["Karan",1500,"",""],["Simran",800,"",""],["Neha",1100,"",""]] },
+    { task: 'Count how many employees are in an "IT" department (IT Support or IT Infra) — try a wildcard.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
+      grid: [["Employee","Department","","IT* Count"],["Aman","IT Support","",null],["Riya","HR","",""],["Karan","IT Infra","",""],["Simran","Finance","",""],["Neha","IT Support","",""]] },
+    { task: 'Count how many days attendance was marked "Present".', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
+      grid: [["Day","Attendance","","Present Count"],["Mon","Present","",null],["Tue","Absent","",""],["Wed","Present","",""],["Thu","Present","",""],["Fri","Absent","",""]] },
+    { task: 'Count how many employees match the department shown in the Target cell (use a cell reference, not typed text).', targetRow: 1, targetCol: 4, expectedValue: 4, expectedType: 'number',
+      grid: [["Employee","Department","","Target","Result"],["E1","Finance","","Finance",null],["E2","HR","","",""],["E3","Finance","","",""],["E4","IT","","",""],["E5","Finance","","",""],["E6","Marketing","","",""],["E7","HR","","",""],["E8","Finance","","",""],["E9","IT","","",""],["E10","HR","","",""]] }
+  ]
+};
+
+const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: QUESTION_SETS[m.id] }));
 
 let currentFormula = null;
+let currentQuestionIndex = 0;
 let sheetReady = false;
 
 // ---------- Sidebar ----------
@@ -194,7 +222,7 @@ function openModal(formula) {
 
   document.getElementById('readyBtn').addEventListener('click', () => {
     overlay.classList.remove('open');
-    startPractice(formula);
+    startPractice(formula, 0);
   });
 
   overlay.classList.add('open');
@@ -204,13 +232,14 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'modalOverlay') e.target.classList.remove('open');
 });
 
-// ---------- Result modal ----------
+// ---------- Result modal (icon buttons with hover tooltips) ----------
 function showResultModal({ correct, html }) {
   const overlay = document.getElementById('resultOverlay');
   const box = document.getElementById('resultBox');
 
-  const idx = currentFormula ? FORMULAS.findIndex(f => f.id === currentFormula.id) : -1;
-  const nextFormula = idx > -1 ? FORMULAS[(idx + 1) % FORMULAS.length] : null;
+  const fIdx = currentFormula ? FORMULAS.findIndex(f => f.id === currentFormula.id) : -1;
+  const nextFormula = fIdx > -1 ? FORMULAS[(fIdx + 1) % FORMULAS.length] : null;
+  const hasNextQuestion = currentFormula && currentQuestionIndex < currentFormula.questions.length - 1;
 
   box.className = 'modal-box ' + (correct ? 'result-success' : 'result-fail');
   const icon = correct ? '🎉' : '🤔';
@@ -218,24 +247,30 @@ function showResultModal({ correct, html }) {
   box.innerHTML = `
     <div class="result-icon">${icon}</div>
     <div class="result-message">${html}</div>
-    <div class="result-btn-row">
-      <button class="btn btn-ghost" id="resultAgainBtn">Practice Again</button>
-      <button class="btn btn-ghost" id="resultCloseBtn">Close</button>
-      ${nextFormula ? `<button class="btn btn-primary" id="resultNextBtn">Next: ${nextFormula.name} &rarr;</button>` : ''}
+    <div class="icon-btn-row">
+      <button class="icon-btn" id="resultAgainBtn" title="Practice Again">🔁</button>
+      ${hasNextQuestion ? `<button class="icon-btn primary" id="resultNextQBtn" title="Next Question">➡️</button>` : ''}
+      ${nextFormula ? `<button class="icon-btn" id="resultNextFBtn" title="Next Formula: ${nextFormula.name}">⏭️</button>` : ''}
+      <button class="icon-btn" id="resultCloseBtn" title="Close">✕</button>
     </div>
   `;
 
-  document.getElementById('resultCloseBtn').addEventListener('click', () => {
-    overlay.classList.remove('open');
-  });
+  document.getElementById('resultCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
 
   document.getElementById('resultAgainBtn').addEventListener('click', () => {
     overlay.classList.remove('open');
-    if (currentFormula) startPractice(currentFormula);
+    if (currentFormula) startPractice(currentFormula, currentQuestionIndex);
   });
 
+  if (hasNextQuestion) {
+    document.getElementById('resultNextQBtn').addEventListener('click', () => {
+      overlay.classList.remove('open');
+      startPractice(currentFormula, currentQuestionIndex + 1);
+    });
+  }
+
   if (nextFormula) {
-    document.getElementById('resultNextBtn').addEventListener('click', () => {
+    document.getElementById('resultNextFBtn').addEventListener('click', () => {
       overlay.classList.remove('open');
       openModal(nextFormula);
     });
@@ -251,18 +286,15 @@ document.getElementById('resultOverlay').addEventListener('click', (e) => {
 // ---------- Sheet ----------
 function colLetter(i) { return String.fromCharCode(65 + i); }
 
-function buildCelldata(formula) {
+function buildCelldata(question) {
   const cells = [];
-  cells.push({ r: 0, c: 0, v: { v: formula.task, bl: 1, fc: '#1C6B41', fs: 13 } });
-
-  formula.grid.forEach((row, r) => {
+  question.grid.forEach((row, r) => {
     row.forEach((val, c) => {
-      const isTarget = r === formula.targetRow && c === formula.targetCol;
-      const actualRow = r + TASK_OFFSET;
+      const isTarget = r === question.targetRow && c === question.targetCol;
       if (isTarget) {
-        cells.push({ r: actualRow, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
+        cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
       } else if (val !== null && val !== '') {
-        cells.push({ r: actualRow, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
+        cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
       }
     });
   });
@@ -277,7 +309,7 @@ function createSheet(name, celldata) {
     container: 'luckysheetContainer',
     lang: 'en',
     showinfobar: false,
-    showsheetbar: false,
+    showsheetbar: true,
     showstatisticBarConfig: { count: false, view: false, zoom: false },
     data: [{
       name: name,
@@ -285,10 +317,7 @@ function createSheet(name, celldata) {
       row: 60,
       column: 26,
       status: 1,
-      config: {
-        merge: { "0_0": { r: 0, c: 0, rs: 1, cs: 12 } },
-        columnlen: COLUMN_WIDTHS
-      }
+      config: { columnlen: { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 } }
     }]
   });
   sheetReady = true;
@@ -302,20 +331,21 @@ function startBlankSheet() {
   createSheet('Free Practice', []);
 }
 
-function startPractice(formula) {
+function startPractice(formula, qIndex) {
   currentFormula = formula;
+  currentQuestionIndex = qIndex;
   renderList();
 
-  const actualTargetRow = formula.targetRow + TASK_OFFSET;
-  const targetLabel = colLetter(formula.targetCol) + (actualTargetRow + 1);
+  const question = formula.questions[qIndex];
+  const targetLabel = colLetter(question.targetCol) + (question.targetRow + 1);
 
   document.getElementById('activeTitle').textContent = formula.name;
-  document.getElementById('activeTask').innerHTML = `<strong>${formula.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
+  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
   document.getElementById('checkRow').style.display = 'flex';
 
-  createSheet(formula.name, buildCelldata(formula));
+  createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
-  document.getElementById('checkBtn').onclick = () => checkAnswer(formula, actualTargetRow);
+  document.getElementById('checkBtn').onclick = () => checkAnswer(question);
 }
 
 function unwrapValue(raw) {
@@ -326,12 +356,12 @@ function unwrapValue(raw) {
   return raw;
 }
 
-function checkAnswer(formula, actualTargetRow) {
+function checkAnswer(question) {
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
   let value;
   try {
-    value = luckysheet.getCellValue(actualTargetRow, formula.targetCol);
+    value = luckysheet.getCellValue(question.targetRow, question.targetCol);
     value = unwrapValue(value);
   } catch (e) {
     showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again." });
@@ -353,15 +383,15 @@ function checkAnswer(formula, actualTargetRow) {
     return;
   }
 
-  const isCorrect = formula.expectedType === 'number'
-    ? Number(value) === formula.expectedValue
-    : String(value).trim().toLowerCase() === String(formula.expectedValue).trim().toLowerCase();
+  const isCorrect = question.expectedType === 'number'
+    ? Number(value) === question.expectedValue
+    : String(value).trim().toLowerCase() === String(question.expectedValue).trim().toLowerCase();
 
   if (isCorrect) {
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
-    showResultModal({ correct: false, html: `Result: <strong>${value}</strong> — not quite.<br>Expected ${formula.expectedValue}. Try again!` });
+    showResultModal({ correct: false, html: `Result: <strong>${value}</strong> — not quite.<br>Expected ${question.expectedValue}. Try again!` });
   }
 }
 
@@ -371,8 +401,18 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 });
 
 renderList();
+
 window.addEventListener('load', () => {
-  setTimeout(startBlankSheet, 200);
+  setTimeout(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get('formula');
+    const match = requested ? FORMULAS.find(f => f.id === requested) : null;
+    if (match) {
+      openModal(match);
+    } else {
+      startBlankSheet();
+    }
+  }, 200);
 });
 </script>
 

@@ -243,6 +243,113 @@
 
 .result-btn-row .btn { flex: 1; min-width: 120px; }
 
+/* ---------- Formula reference cards ---------- */
+
+.formula-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.formula-card {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  border-top: 4px solid var(--excel-green);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formula-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(28,35,33,0.12);
+}
+
+.formula-card-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--excel-green-deep);
+  margin-bottom: 8px;
+}
+
+.formula-card-desc {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.formula-card-cta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+/* ---------- Icon result buttons with hover tooltip ---------- */
+
+.icon-btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.icon-btn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--grid-line);
+  background: #fff;
+  font-size: 19px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.icon-btn:hover { background: #F0F5F1; border-color: var(--excel-green); }
+.icon-btn.primary { background: var(--excel-green); border-color: var(--excel-green); color: #fff; }
+.icon-btn.primary:hover { background: var(--excel-green-deep); }
+
+.question-progress {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--amber);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ---------- Sheet overlay/z-index fix ---------- */
+
+#luckysheetContainer {
+  isolation: isolate;
+  z-index: 1;
+}
+
+/* ---------- Hero animation ---------- */
+
+.formula-bar .content.typing {
+  border-right: 2px solid var(--excel-green);
+  white-space: nowrap;
+  overflow: hidden;
+  animation: none;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.hero-float {
+  animation: heroFloat 3.5s ease-in-out infinite;
+}
+
 /* ---------- Real spreadsheet-style formula bar ---------- */
 
 .formula-toolbar {
