@@ -33,11 +33,11 @@
     border: 1px solid var(--grid-line);
     border-top: 5px solid var(--excel-green);
     border-radius: var(--radius);
-    padding: 48px;
-    min-height: 420px;
+    padding: 20px 48px 40px;
+    min-height: 380px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     box-shadow: 0 10px 30px rgba(28,35,33,0.08);
     position: relative;
     overflow: hidden;
@@ -61,18 +61,35 @@
     to { background-position: 340px 340px; }
   }
 
-  .guide-icon {
-    font-size: 44px;
-    margin-bottom: 4px;
-    display: inline-block;
-    animation: iconPop 0.5s ease;
+  .guide-illustration {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2px;
+    position: relative;
+    z-index: 1;
   }
+  .guide-illustration svg { overflow: visible; }
 
-  @keyframes iconPop {
-    0% { transform: scale(0.4) rotate(-8deg); opacity: 0; }
-    60% { transform: scale(1.1) rotate(3deg); opacity: 1; }
-    100% { transform: scale(1) rotate(0); }
-  }
+  @keyframes glowPulse { 0%,100% { opacity: 0.35; r: 34; } 50% { opacity: 0.7; r: 40; } }
+  @keyframes bulbShine { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+  @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes rocketFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes flameFlicker { 0%,100% { transform: scaleY(1) scaleX(1); } 50% { transform: scaleY(1.3) scaleX(0.85); } }
+  @keyframes gearSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes gearSpinRev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+  @keyframes cellLight { 0%,40%,100% { opacity: 0.25; } 55% { opacity: 1; } }
+  @keyframes tabGlide { 0%,100% { transform: translateX(0); } 50% { transform: translateX(50px); } }
+  @keyframes keyBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes tagFloat { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
+  @keyframes writeLine { from { stroke-dashoffset: 120; } to { stroke-dashoffset: 0; } }
+  @keyframes lockShut { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes paintSweep { from { transform: translateX(-30px); } to { transform: translateX(30px); } }
+  @keyframes funnelDrop { 0% { transform: translateY(-10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(30px); opacity: 0; } }
+  @keyframes barGrow { from { transform: scaleY(0.3); } to { transform: scaleY(1); } }
+  @keyframes compassSpin { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(80deg); } 50% { transform: rotate(-30deg); } 75% { transform: rotate(40deg); } }
+  @keyframes confettiPop { 0% { transform: translateY(0) scale(0); opacity: 0; } 40% { opacity: 1; } 100% { transform: translateY(-40px) scale(1); opacity: 0; } }
 
   .guide-slide {
     animation: slideIn 0.45s ease;
@@ -225,10 +242,109 @@
 </footer>
 
 <script>
+const ILLUS = {
+  idea: `<svg width="90" height="110" viewBox="0 0 90 110">
+    <circle cx="45" cy="40" r="34" fill="#C9971E" opacity="0.35" style="animation: glowPulse 2s ease-in-out infinite; transform-origin:45px 40px;"/>
+    <circle cx="45" cy="40" r="22" fill="#F6C846" style="animation: bulbShine 1.6s ease-in-out infinite;"/>
+    <rect x="38" y="60" width="14" height="10" rx="2" fill="#8a7a4a"/>
+    <rect x="40" y="72" width="10" height="6" rx="1" fill="#4B5450"/>
+  </svg>`,
+  globe: `<svg width="100" height="100" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="32" fill="none" stroke="#1C6B41" stroke-width="3"/>
+    <ellipse cx="50" cy="50" rx="32" ry="14" fill="none" stroke="#1C6B41" stroke-width="2" opacity="0.6"/>
+    <ellipse cx="50" cy="50" rx="14" ry="32" fill="none" stroke="#1C6B41" stroke-width="2" opacity="0.6"/>
+    <g style="animation: orbitSpin 4s linear infinite; transform-origin:50px 50px;">
+      <circle cx="50" cy="14" r="5" fill="#C9971E"/>
+    </g>
+  </svg>`,
+  rocket: `<svg width="80" height="120" viewBox="0 0 80 120">
+    <g style="animation: rocketFloat 1.8s ease-in-out infinite;">
+      <path d="M40 10 L55 55 L55 75 L25 75 L25 55 Z" fill="#1C6B41"/>
+      <circle cx="40" cy="45" r="6" fill="#F6F4EC"/>
+      <path d="M25 60 L10 80 L25 75 Z" fill="#C9971E"/>
+      <path d="M55 60 L70 80 L55 75 Z" fill="#C9971E"/>
+    </g>
+    <path d="M32 78 Q40 100 48 78 Z" fill="#C9971E" style="animation: flameFlicker 0.3s ease-in-out infinite; transform-origin:40px 78px;"/>
+  </svg>`,
+  gears: `<svg width="110" height="90" viewBox="0 0 110 90">
+    <g style="animation: gearSpin 5s linear infinite; transform-origin:38px 45px;">
+      <circle cx="38" cy="45" r="22" fill="none" stroke="#C9971E" stroke-width="6" stroke-dasharray="6 5"/>
+      <circle cx="38" cy="45" r="9" fill="#C9971E"/>
+    </g>
+    <g style="animation: gearSpinRev 4s linear infinite; transform-origin:75px 30px;">
+      <circle cx="75" cy="30" r="15" fill="none" stroke="#1C6B41" stroke-width="5" stroke-dasharray="5 4"/>
+      <circle cx="75" cy="30" r="6" fill="#1C6B41"/>
+    </g>
+  </svg>`,
+  grid: `<svg width="120" height="80" viewBox="0 0 120 80">
+    ${[0,1,2].map(r => [0,1,2,3].map(c =>
+      `<rect x="${c*30+2}" y="${r*26+2}" width="26" height="22" fill="#1C6B41" style="animation: cellLight 2.4s ease-in-out infinite; animation-delay:${(r*4+c)*0.12}s;"/>`
+    ).join('')).join('')}
+  </svg>`,
+  ribbon: `<svg width="140" height="60" viewBox="0 0 140 60">
+    <rect x="0" y="30" width="140" height="20" fill="#F0F5F1"/>
+    <rect x="10" y="15" width="34" height="34" rx="4" fill="#1C6B41" style="animation: tabGlide 3s ease-in-out infinite;"/>
+    <rect x="55" y="20" width="24" height="24" rx="3" fill="#C9971E" opacity="0.6"/>
+    <rect x="90" y="20" width="24" height="24" rx="3" fill="#4B5450" opacity="0.4"/>
+  </svg>`,
+  keyboard: `<svg width="130" height="60" viewBox="0 0 130 60">
+    ${[0,1,2,3,4].map(i => `<rect x="${i*24+5}" y="20" width="18" height="18" rx="3" fill="#1C6B41" style="animation: keyBounce 1.2s ease-in-out infinite; animation-delay:${i*0.15}s;"/>`).join('')}
+  </svg>`,
+  tag: `<svg width="130" height="80" viewBox="0 0 130 80">
+    <rect x="5" y="25" width="45" height="22" rx="5" fill="#1C6B41" style="animation: tagFloat 2.4s ease-in-out infinite;"/>
+    <rect x="55" y="10" width="35" height="22" rx="5" fill="#C9971E" style="animation: tagFloat 2.4s ease-in-out infinite; animation-delay:0.3s;"/>
+    <rect x="95" y="35" width="30" height="22" rx="5" fill="#8a3b8f" style="animation: tagFloat 2.4s ease-in-out infinite; animation-delay:0.6s;"/>
+  </svg>`,
+  pencil: `<svg width="120" height="60" viewBox="0 0 120 60">
+    <path d="M10 40 L100 40" stroke="#1C6B41" stroke-width="3" stroke-dasharray="120" style="animation: writeLine 1.6s ease-in-out infinite;"/>
+    <path d="M95 30 L110 40 L95 50 Z" fill="#C9971E"/>
+  </svg>`,
+  lock: `<svg width="70" height="90" viewBox="0 0 70 90">
+    <rect x="15" y="40" width="40" height="34" rx="4" fill="#1C6B41"/>
+    <path d="M22 40 V26 a13 13 0 0 1 26 0 V40" fill="none" stroke="#4B5450" stroke-width="5" style="animation: lockShut 1.6s ease-in-out infinite;"/>
+    <circle cx="35" cy="56" r="5" fill="#C9971E"/>
+  </svg>`,
+  paint: `<svg width="120" height="60" viewBox="0 0 120 60">
+    <rect x="10" y="10" width="100" height="16" fill="#F0F5F1"/>
+    <rect x="10" y="10" width="100" height="16" fill="none" stroke="var(--grid-line)"/>
+    <rect x="20" y="14" width="24" height="8" fill="#C9971E" style="animation: paintSweep 2s ease-in-out infinite;"/>
+    <rect x="20" y="8" width="10" height="30" rx="2" fill="#4B5450" style="animation: paintSweep 2s ease-in-out infinite;"/>
+  </svg>`,
+  funnel: `<svg width="90" height="100" viewBox="0 0 90 100">
+    <path d="M10 10 L80 10 L50 55 L40 55 Z" fill="#1C6B41" opacity="0.8"/>
+    <rect x="38" y="55" width="14" height="20" fill="#1C6B41" opacity="0.8"/>
+    <circle cx="45" cy="20" r="4" fill="#C9971E" style="animation: funnelDrop 1.8s ease-in infinite;"/>
+    <circle cx="45" cy="20" r="4" fill="#8a3b8f" style="animation: funnelDrop 1.8s ease-in infinite; animation-delay:0.6s;"/>
+    <circle cx="45" cy="20" r="4" fill="#B3261E" style="animation: funnelDrop 1.8s ease-in infinite; animation-delay:1.2s;"/>
+  </svg>`,
+  chartbars: `<svg width="120" height="90" viewBox="0 0 120 90">
+    <rect x="10" y="30" width="22" height="60" fill="#1C6B41" style="animation: barGrow 1s ease-out; transform-origin:bottom;"/>
+    <rect x="42" y="10" width="22" height="80" fill="#1C6B41" style="animation: barGrow 1s ease-out 0.15s; transform-origin:bottom;"/>
+    <rect x="74" y="45" width="22" height="45" fill="#C9971E" style="animation: barGrow 1s ease-out 0.3s; transform-origin:bottom;"/>
+  </svg>`,
+  compass: `<svg width="90" height="90" viewBox="0 0 90 90">
+    <circle cx="45" cy="45" r="36" fill="none" stroke="#4B5450" stroke-width="3"/>
+    <path d="M45 15 L54 45 L45 75 L36 45 Z" fill="#B3261E" style="animation: compassSpin 3.5s ease-in-out infinite; transform-origin:45px 45px;"/>
+    <circle cx="45" cy="45" r="5" fill="#1C6B41"/>
+  </svg>`,
+  confetti: `<svg width="130" height="90" viewBox="0 0 130 90">
+    ${[0,1,2,3,4,5].map(i => {
+      const colors = ['#1C6B41','#C9971E','#8a3b8f','#B3261E','#1C6B41','#C9971E'];
+      return `<rect x="${i*20+5}" y="60" width="10" height="10" fill="${colors[i]}" style="animation: confettiPop 1.4s ease-out infinite; animation-delay:${i*0.12}s;"/>`;
+    }).join('')}
+  </svg>`
+};
+
 const SLIDES = [
   {
     eyebrow: "WHY EXCEL",
     icon: "💡",
+    illustration: `<svg viewBox="0 0 100 100" width="90" height="90">
+      <circle cx="50" cy="42" r="34" fill="var(--amber)" opacity="0.3" style="animation: glowPulse 2s ease-in-out infinite; transform-origin:50px 42px;"/>
+      <circle cx="50" cy="40" r="20" fill="var(--amber)" style="animation: bulbShine 2s ease-in-out infinite;"/>
+      <rect x="43" y="58" width="14" height="9" rx="2" fill="var(--ink-soft)"/>
+      <rect x="45" y="69" width="10" height="5" rx="2" fill="var(--ink-soft)"/>
+    </svg>`,
     title: "Why does Excel even matter?",
     body: [
       "For over three decades, Excel has been the default language businesses use to make decisions — budgets, forecasts, plans, reports.",
@@ -245,6 +361,14 @@ const SLIDES = [
   {
     eyebrow: "THE IMPACT",
     icon: "🌍",
+    illustration: `<svg viewBox="0 0 100 90" width="90" height="80">
+      <g style="transform-origin:35px 45px; animation: gearSpin 6s linear infinite;">
+        <circle cx="35" cy="45" r="16" fill="none" stroke="var(--excel-green)" stroke-width="6" stroke-dasharray="6 4"/>
+      </g>
+      <g style="transform-origin:66px 45px; animation: gearSpinRev 6s linear infinite;">
+        <circle cx="66" cy="45" r="12" fill="none" stroke="var(--amber)" stroke-width="5" stroke-dasharray="5 3"/>
+      </g>
+    </svg>`,
     title: "How Excel changed the way the world works",
     body: [
       "Before spreadsheets, recalculating a budget after one change meant redoing everything by hand — sometimes for days.",
@@ -258,6 +382,13 @@ const SLIDES = [
   {
     eyebrow: "YOUR CAREER",
     icon: "🚀",
+    illustration: `<svg viewBox="0 0 100 90" width="80" height="80">
+      <g style="animation: rocketFloat 2s ease-in-out infinite;">
+        <polygon points="50,10 62,52 38,52" fill="var(--excel-green)"/>
+        <circle cx="50" cy="36" r="5" fill="#fff"/>
+        <polygon points="42,52 58,52 50,74" fill="var(--amber)" style="animation: flameFlicker 0.4s ease-in-out infinite; transform-origin:50px 52px;"/>
+      </g>
+    </svg>`,
     title: "Why this matters for you specifically",
     body: [
       "Open almost any job posting in finance, operations, HR, or data — 'Excel proficiency' shows up again and again.",
@@ -273,6 +404,12 @@ const SLIDES = [
   {
     eyebrow: "WHAT'S POSSIBLE",
     icon: "🛠️",
+    illustration: `<svg viewBox="0 0 100 90" width="90" height="80">
+      <g style="transform-origin:50px 45px; animation: gearSpin 5s linear infinite;">
+        <circle cx="50" cy="45" r="22" fill="none" stroke="var(--amber)" stroke-width="7" stroke-dasharray="8 5"/>
+      </g>
+      <rect x="45" y="40" width="10" height="10" fill="var(--ink)"/>
+    </svg>`,
     title: "What you can actually build with it",
     body: [
       "Budgets and financial models. Sales dashboards. Attendance and inventory trackers. Automated reports that used to take hours.",
@@ -289,6 +426,14 @@ const SLIDES = [
   {
     eyebrow: "THE FOUNDATION",
     icon: "🔢",
+    illustration: `<svg viewBox="0 0 100 90" width="90" height="80">
+      <rect x="10" y="5" width="80" height="80" fill="none" stroke="var(--grid-line)" stroke-width="2"/>
+      <line x1="10" y1="31" x2="90" y2="31" stroke="var(--grid-line)"/>
+      <line x1="10" y1="58" x2="90" y2="58" stroke="var(--grid-line)"/>
+      <line x1="37" y1="5" x2="37" y2="85" stroke="var(--grid-line)"/>
+      <line x1="64" y1="5" x2="64" y2="85" stroke="var(--grid-line)"/>
+      <rect x="38" y="32" width="25" height="25" fill="var(--amber)" style="animation: cellLight 2.5s ease-in-out infinite;"/>
+    </svg>`,
     title: "So, what is Excel, really?",
     body: [
       "Underneath all of that, Excel is a grid of boxes called <strong>cells</strong> — and every cell can hold a number, a word, or a formula that calculates something automatically.",
@@ -303,6 +448,14 @@ const SLIDES = [
   {
     eyebrow: "THE BASICS",
     icon: "📐",
+    illustration: `<svg viewBox="0 0 100 90" width="90" height="80">
+      <rect x="10" y="5" width="80" height="80" fill="none" stroke="var(--grid-line)" stroke-width="2"/>
+      <line x1="10" y1="31" x2="90" y2="31" stroke="var(--grid-line)"/>
+      <line x1="10" y1="58" x2="90" y2="58" stroke="var(--grid-line)"/>
+      <line x1="37" y1="5" x2="37" y2="85" stroke="var(--grid-line)"/>
+      <line x1="64" y1="5" x2="64" y2="85" stroke="var(--grid-line)"/>
+      <rect x="65" y="59" width="24" height="25" fill="var(--excel-green)" style="animation: cellLight 2.5s ease-in-out infinite; animation-delay:0.3s;"/>
+    </svg>`,
     title: "Rows, columns, and cell addresses",
     body: [
       "Columns are lettered (A, B, C...), rows are numbered (1, 2, 3...). Every cell has an address made of both — like <strong>B2</strong>.",
@@ -318,6 +471,10 @@ const SLIDES = [
   {
     eyebrow: "THE INTERFACE",
     icon: "🎛️",
+    illustration: `<svg viewBox="0 0 100 60" width="100" height="55">
+      <rect x="5" y="20" width="90" height="14" fill="none" stroke="var(--grid-line)" stroke-width="2"/>
+      <rect x="5" y="20" width="30" height="14" fill="var(--excel-green)" style="animation: tabGlide 3s ease-in-out infinite;"/>
+    </svg>`,
     title: "The Ribbon — your toolbox",
     body: [
       "The Ribbon across the top groups every tool into tabs: <strong>Home</strong> for formatting, <strong>Insert</strong> for charts and tables, <strong>Formulas</strong> for functions, <strong>Data</strong> for sorting and filtering.",
@@ -334,6 +491,11 @@ const SLIDES = [
   {
     eyebrow: "NAVIGATION",
     icon: "⌨️",
+    illustration: `<svg viewBox="0 0 100 60" width="100" height="55">
+      <rect x="10" y="18" width="20" height="20" rx="3" fill="var(--excel-green)" style="animation: keyBounce 1s ease-in-out infinite;"/>
+      <rect x="40" y="18" width="20" height="20" rx="3" fill="var(--amber)" style="animation: keyBounce 1s ease-in-out infinite; animation-delay:0.15s;"/>
+      <rect x="70" y="18" width="20" height="20" rx="3" fill="var(--excel-green)" style="animation: keyBounce 1s ease-in-out infinite; animation-delay:0.3s;"/>
+    </svg>`,
     title: "Moving around fast",
     body: [
       "Arrow keys move one cell at a time. <strong>Ctrl + Arrow</strong> jumps to the edge of your data. <strong>Ctrl + Home</strong> jumps to A1.",
@@ -348,6 +510,11 @@ const SLIDES = [
   {
     eyebrow: "DATA TYPES",
     icon: "🏷️",
+    illustration: `<svg viewBox="0 0 100 60" width="100" height="55">
+      <rect x="6" y="20" width="26" height="17" rx="4" fill="var(--excel-green)" style="animation: tagFloat 2.5s ease-in-out infinite;"/>
+      <rect x="38" y="15" width="26" height="17" rx="4" fill="var(--amber)" style="animation: tagFloat 2.5s ease-in-out infinite; animation-delay:0.3s;"/>
+      <rect x="70" y="22" width="26" height="17" rx="4" fill="#8a3b8f" style="animation: tagFloat 2.5s ease-in-out infinite; animation-delay:0.6s;"/>
+    </svg>`,
     title: "Excel treats data differently by type",
     body: [
       "Numbers can be calculated. Text can't. Dates are secretly numbers underneath, which is why you can add or subtract them.",
@@ -363,6 +530,9 @@ const SLIDES = [
   {
     eyebrow: "FORMULAS 101",
     icon: "✍️",
+    illustration: `<svg viewBox="0 0 100 60" width="100" height="55">
+      <path d="M8,45 L28,18 L48,38 L68,12 L92,32" fill="none" stroke="var(--excel-green)" stroke-width="4" stroke-linecap="round" stroke-dasharray="140" style="animation: writeLine 2s ease-in-out infinite;"/>
+    </svg>`,
     title: "Every formula starts with =",
     body: [
       "Type <strong>=</strong> and Excel knows you're about to calculate something, not just type text.",
@@ -376,6 +546,12 @@ const SLIDES = [
   {
     eyebrow: "LEVEL UP",
     icon: "🔒",
+    illustration: `<svg viewBox="0 0 60 80" width="55" height="75">
+      <g style="animation: lockShut 1.6s ease-in-out infinite;">
+        <rect x="14" y="34" width="32" height="28" rx="4" fill="var(--excel-green)"/>
+        <path d="M19,34 v-9 a11,11 0 0 1 22,0 v9" fill="none" stroke="var(--ink)" stroke-width="4"/>
+      </g>
+    </svg>`,
     title: "Relative vs. Absolute references",
     body: [
       "Normally, <strong>A1</strong> shifts automatically when you copy a formula elsewhere — that's a <strong>relative</strong> reference.",
@@ -390,6 +566,10 @@ const SLIDES = [
   {
     eyebrow: "MAKE IT READABLE",
     icon: "🎨",
+    illustration: `<svg viewBox="0 0 100 60" width="100" height="55">
+      <rect x="8" y="24" width="84" height="12" fill="var(--grid-line)"/>
+      <rect x="8" y="24" width="32" height="12" fill="var(--amber)" style="animation: paintSweep 2s ease-in-out infinite;"/>
+    </svg>`,
     title: "Formatting isn't decoration — it's communication",
     body: [
       "Bold headers, borders, number formats (₹, %, dates) and conditional formatting (auto color-coding) all exist to make your data understandable at a glance.",
@@ -404,6 +584,11 @@ const SLIDES = [
   {
     eyebrow: "WORKING WITH DATA",
     icon: "📶",
+    illustration: `<svg viewBox="0 0 60 80" width="55" height="75">
+      <polygon points="8,8 52,8 33,36 27,36" fill="var(--ink-soft)"/>
+      <rect x="26" y="36" width="8" height="16" fill="var(--ink-soft)"/>
+      <circle cx="30" cy="60" r="5" fill="var(--excel-green)" style="animation: funnelDrop 1.6s ease-in-out infinite;"/>
+    </svg>`,
     title: "Sorting and filtering",
     body: [
       "Sort arranges your rows by a column's values — smallest to largest, A to Z, oldest to newest.",
@@ -419,6 +604,11 @@ const SLIDES = [
   {
     eyebrow: "SEEING THE STORY",
     icon: "📈",
+    illustration: `<svg viewBox="0 0 100 75" width="95" height="72">
+      <rect x="14" y="30" width="16" height="38" fill="var(--excel-green)" style="transform-origin:22px 68px; animation: barGrow 1.4s ease-in-out infinite;"/>
+      <rect x="42" y="12" width="16" height="56" fill="var(--amber)" style="transform-origin:50px 68px; animation: barGrow 1.4s ease-in-out infinite; animation-delay:0.2s;"/>
+      <rect x="70" y="40" width="16" height="28" fill="var(--excel-green)" style="transform-origin:78px 68px; animation: barGrow 1.4s ease-in-out infinite; animation-delay:0.4s;"/>
+    </svg>`,
     title: "Charts turn numbers into a picture",
     body: [
       "A table of 50 numbers is hard to read. A bar chart of the same 50 numbers is instant.",
@@ -434,6 +624,10 @@ const SLIDES = [
   {
     eyebrow: "GOING FURTHER",
     icon: "🧭",
+    illustration: `<svg viewBox="0 0 70 70" width="70" height="68">
+      <circle cx="35" cy="35" r="28" fill="none" stroke="var(--grid-line)" stroke-width="3"/>
+      <polygon points="35,10 41,35 35,60 29,35" fill="var(--excel-green)" style="transform-origin:35px 35px; animation: compassSpin 3s ease-in-out infinite;"/>
+    </svg>`,
     title: "PivotTables: your next big unlock",
     body: [
       "A PivotTable summarizes thousands of rows into a small, meaningful table — total sales by region, average score by class — in a few clicks, no formulas required.",
@@ -448,6 +642,12 @@ const SLIDES = [
   {
     eyebrow: "YOU'RE READY",
     icon: "🎉",
+    illustration: `<svg viewBox="0 0 100 70" width="100" height="65">
+      <circle cx="18" cy="50" r="4" fill="var(--excel-green)" style="animation: confettiPop 1.4s ease-in-out infinite;"/>
+      <circle cx="42" cy="50" r="4" fill="var(--amber)" style="animation: confettiPop 1.4s ease-in-out infinite; animation-delay:0.2s;"/>
+      <circle cx="66" cy="50" r="4" fill="#8a3b8f" style="animation: confettiPop 1.4s ease-in-out infinite; animation-delay:0.4s;"/>
+      <circle cx="88" cy="50" r="4" fill="var(--excel-green)" style="animation: confettiPop 1.4s ease-in-out infinite; animation-delay:0.6s;"/>
+    </svg>`,
     title: "That's the whole foundation.",
     body: [
       "Cells, references, formulas, formatting, sorting, charts — everything else in Excel builds on these same ideas.",
@@ -474,7 +674,7 @@ function render() {
   const card = document.getElementById('guideCard');
   card.innerHTML = `
     <div class="guide-slide">
-      <div class="guide-icon">${s.icon || '📊'}</div>
+      <div class="guide-illustration">${s.illustration || ''}</div>
       <div class="guide-eyebrow">${s.eyebrow}</div>
       <h2>${s.title}</h2>
       ${s.body.map(p => `<p>${p}</p>`).join('')}
