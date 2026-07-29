@@ -32,6 +32,12 @@
     <span class="content" id="heroTyping"></span>
   </div>
 
+  <div class="sticker-zone" id="stickerZone">
+    <span class="sticker s1" id="sticker1">🔥 500+ formulas</span>
+    <span class="sticker s2" id="sticker2">✅ 100% free to start</span>
+    <span class="sticker s3" id="sticker3">🏆 real spreadsheet</span>
+  </div>
+
   <h1>Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
 
   <p class="lede">500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional, not a course factory.</p>
@@ -49,22 +55,10 @@
 <div class="sheet reveal reveal-stagger" id="featureGrid">
   <div class="sheet-header">
     <span class="colletter">B</span>
-    <h2>What's on the sheet</h2>
+    <h2>Take it further</h2>
   </div>
 
   <div class="cell-grid">
-    <div class="cell">
-      <h3>Formula Reference</h3>
-      <p>Every formula explained with parameters, corporate examples, and a short demo — searchable by name or category.</p>
-    </div>
-    <div class="cell">
-      <h3>Practice Grid</h3>
-      <p>Solve real problems in an in-browser spreadsheet. Instant feedback when you hit an #N/A or #VALUE!.</p>
-    </div>
-    <div class="cell">
-      <h3>Three Ways to Learn</h3>
-      <p>Go sequential from formula one, pick a domain like Lookup or Finance, or start at your skill level.</p>
-    </div>
     <div class="cell">
       <h3>Case Study Assignments</h3>
       <p>Build a real sales dashboard or payroll model — the kind of work you'll actually be asked to do.</p>
@@ -174,6 +168,21 @@
   }
 
   cycleHero();
+
+  // Floating capsules dodge the cursor
+  const stickerZone = document.getElementById('stickerZone');
+  function dodgeSticker(el) {
+    const zoneRect = stickerZone.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const maxLeft = Math.max(0, zoneRect.width - elRect.width);
+    const maxTop = Math.max(0, zoneRect.height - elRect.height);
+    el.style.left = Math.round(Math.random() * maxLeft) + 'px';
+    el.style.top = Math.round(Math.random() * maxTop) + 'px';
+  }
+  document.querySelectorAll('.sticker').forEach(el => {
+    el.addEventListener('mouseenter', () => dodgeSticker(el));
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); dodgeSticker(el); });
+  });
 
   // Scroll-triggered reveal animations
   const revealEls = document.querySelectorAll('.reveal');

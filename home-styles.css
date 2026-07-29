@@ -7,6 +7,49 @@
   --sky: #2F80C9;
 }
 
+/* ---------- Floating "catch me if you can" capsule badges ---------- */
+
+.hero { position: relative; }
+
+.sticker-zone {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  width: 300px;
+  height: 220px;
+  pointer-events: none;
+}
+
+.sticker {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: top 0.4s ease, left 0.4s ease, transform 0.15s ease;
+  animation: stickerBob 3.5s ease-in-out infinite;
+}
+.sticker:hover { transform: scale(1.08); }
+
+.sticker.s1 { background: var(--coral); top: 0px; left: 40px; }
+.sticker.s2 { background: var(--sky); top: 80px; left: 140px; }
+.sticker.s3 { background: var(--amber); top: 155px; left: 30px; }
+
+@keyframes stickerBob {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -8px; }
+}
+
+@media (max-width: 900px) {
+  .sticker-zone { display: none; }
+}
+
 /* ---------- Bouncy primary CTA ---------- */
 
 .btn-bounce {
@@ -173,34 +216,28 @@
 .cell-grid .cell:nth-child(1) { border-top: 3px solid var(--excel-green); }
 .cell-grid .cell:nth-child(2) { border-top: 3px solid var(--coral); }
 .cell-grid .cell:nth-child(3) { border-top: 3px solid var(--sky); }
-.cell-grid .cell:nth-child(4) { border-top: 3px solid var(--amber); }
-.cell-grid .cell:nth-child(5) { border-top: 3px solid var(--excel-green); }
-.cell-grid .cell:nth-child(6) { border-top: 3px solid var(--coral); }
 
-.cell-grid .cell h3::before {
-  content: '📘 ';
-}
-.cell-grid .cell:nth-child(2) h3::before { content: '⌨️ '; }
-.cell-grid .cell:nth-child(3) h3::before { content: '🎯 '; }
-.cell-grid .cell:nth-child(4) h3::before { content: '📊 '; }
-.cell-grid .cell:nth-child(5) h3::before { content: '🏅 '; }
-.cell-grid .cell:nth-child(6) h3::before { content: '💬 '; }
+.cell-grid .cell h3::before { content: '📊 '; }
+.cell-grid .cell:nth-child(2) h3::before { content: '🏅 '; }
+.cell-grid .cell:nth-child(3) h3::before { content: '💬 '; }
 
 .cell-cta {
   display: inline-block;
-  margin-top: 12px;
+  margin-top: 14px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   font-weight: 700;
-  color: var(--excel-green-deep);
+  color: #fff;
+  background: var(--excel-green);
   text-decoration: none;
-  border-bottom: 2px solid var(--amber);
-  padding-bottom: 1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  padding: 9px 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(28,107,65,0.25);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .cell-cta:hover {
-  color: var(--excel-green);
-  border-color: var(--excel-green);
+  background: var(--excel-green-deep);
+  transform: translateY(-2px);
 }
 
 /* Staggered reveal for the feature card grid */
@@ -214,11 +251,8 @@
   transform: translateY(0);
 }
 .reveal-stagger.visible .cell:nth-child(1) { transition-delay: 0.05s; }
-.reveal-stagger.visible .cell:nth-child(2) { transition-delay: 0.12s; }
-.reveal-stagger.visible .cell:nth-child(3) { transition-delay: 0.19s; }
-.reveal-stagger.visible .cell:nth-child(4) { transition-delay: 0.26s; }
-.reveal-stagger.visible .cell:nth-child(5) { transition-delay: 0.33s; }
-.reveal-stagger.visible .cell:nth-child(6) { transition-delay: 0.4s; }
+.reveal-stagger.visible .cell:nth-child(2) { transition-delay: 0.15s; }
+.reveal-stagger.visible .cell:nth-child(3) { transition-delay: 0.25s; }
 
 /* ---------- Final CTA banner ---------- */
 
