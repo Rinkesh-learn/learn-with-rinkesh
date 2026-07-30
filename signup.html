@@ -9,12 +9,12 @@
   .login-shell {
     max-width: 500px;
     margin: 0 auto;
-    padding: 44px 24px 0;
+    padding: 16px 24px 0;
     text-align: center;
   }
 
   .login-icon {
-    font-size: 34px;
+    font-size: 24px;
     display: inline-block;
     animation: excitedBounce 1s ease-in-out infinite;
   }
@@ -25,11 +25,11 @@
 
   .login-headline {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--excel-green-deep);
-    min-height: 50px;
-    margin-top: 8px;
+    min-height: 20px;
+    margin-top: 4px;
     opacity: 0;
     transform: translateY(10px);
     animation: headlineIn 0.5s ease 0.2s forwards;
@@ -41,14 +41,14 @@
   .auth-wrap {
     position: relative;
     max-width: 400px;
-    margin: 24px auto 60px;
+    margin: 14px auto 30px;
   }
 
   .auth-box {
     background: var(--cell-bg);
     border: 1px solid var(--grid-line);
     border-radius: var(--radius);
-    padding: 32px;
+    padding: 26px 28px;
     opacity: 0;
     transform: translateY(24px) scale(0.97);
     animation: authBoxIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s forwards;
@@ -59,18 +59,18 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  .auth-box h1 { font-size: 20px; margin: 0 0 20px; }
+  .auth-box h1 { font-size: 18px; margin: 0 0 14px; }
   .auth-box label {
     display: block;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
     color: var(--ink-soft);
-    margin-bottom: 6px;
-    margin-top: 16px;
+    margin-bottom: 4px;
+    margin-top: 10px;
   }
   .auth-box input {
     width: 100%;
-    padding: 10px 12px;
+    padding: 8px 12px;
     border: 1px solid var(--grid-line);
     border-radius: var(--radius);
     font-family: 'IBM Plex Sans', sans-serif;
@@ -78,21 +78,21 @@
   }
   .auth-box button {
     width: 100%;
-    margin-top: 24px;
+    margin-top: 16px;
   }
   #message {
-    margin-top: 16px;
+    margin-top: 10px;
     font-size: 13px;
     font-family: 'IBM Plex Mono', monospace;
   }
   #message.error { color: #B3261E; }
   #message.success { color: var(--excel-green-deep); }
-  .switch-link { margin-top: 18px; font-size: 13px; text-align: center; }
+  .switch-link { margin-top: 12px; font-size: 13px; text-align: center; }
   .divider {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 22px 0;
+    margin: 14px 0;
     color: var(--ink-soft);
     font-size: 12px;
     font-family: 'IBM Plex Mono', monospace;
@@ -181,7 +181,6 @@
     "Join and start building real skill today.",
     "This is where job-ready Excel begins.",
     "Sign up — your future self will thank you.",
-    "One account, 116 formulas, zero excuses.",
     "Start practicing in the next two minutes.",
     "Your data career starts with one formula.",
     "Skip the theory. Get straight to practice.",
