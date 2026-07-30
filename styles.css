@@ -52,9 +52,9 @@ a { color: inherit; }
 .topbar-inner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 14px 24px 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
 }
 
@@ -67,6 +67,7 @@ a { color: inherit; }
   font-weight: 600;
   font-size: 15px;
   color: #fff;
+  padding-bottom: 12px;
 }
 
 .brand .namebox {
@@ -80,18 +81,18 @@ a { color: inherit; }
 
 nav.mainnav {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   font-size: 13px;
   font-weight: 600;
-  align-items: center;
+  align-items: flex-end;
 }
 
 nav.mainnav a {
   text-decoration: none;
   color: rgba(255,255,255,0.82);
   background: rgba(255,255,255,0.12);
-  padding: 9px 18px;
-  border-radius: 20px;
+  padding: 10px 18px;
+  border-radius: 8px 8px 0 0;
   display: inline-block;
   line-height: 1.2;
   box-sizing: border-box;
@@ -104,7 +105,7 @@ nav.mainnav a:hover {
 }
 
 nav.mainnav a.active {
-  background: #fff;
+  background: var(--paper);
   color: var(--excel-green-deep);
 }
 
