@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Prep — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="interview-prep-styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="ip-hero">
+  <div class="ip-hero-icon">🎯</div>
+  <h1>Walk into that interview ready.</h1>
+  <p>The questions that actually come up for reporting, analyst, and data-heavy roles — plus how to talk through your answers, not just know them.</p>
+</div>
+
+<div class="ip-tips-shell">
+  <div class="sheet-header">
+    <span class="colletter">B</span>
+    <h2>Before you walk in</h2>
+  </div>
+  <div class="ip-tips-grid" id="ipTipsGrid">
+    <div class="ip-tip-card">
+      <div class="icon">🗣️</div>
+      <h3>Say it out loud</h3>
+      <p>Practice explaining your logic verbally, not just typing formulas. Interviewers grade how you think, not just the answer.</p>
+    </div>
+    <div class="ip-tip-card">
+      <div class="icon">📁</div>
+      <h3>Know your own work</h3>
+      <p>Be ready to walk through any Excel project on your resume in detail — that's where most real follow-up questions come from.</p>
+    </div>
+    <div class="ip-tip-card">
+      <div class="icon">⚖️</div>
+      <h3>Know the trade-offs</h3>
+      <p>Don't just know VLOOKUP — know why you'd pick it over INDEX-MATCH, and when you wouldn't.</p>
+    </div>
+    <div class="ip-tip-card">
+      <div class="icon">⌨️</div>
+      <h3>Move fast, live</h3>
+      <p>Live Excel tests are common. <a href="shortcuts.html" style="color:var(--excel-green-deep);">Know your shortcuts</a> so you're not hunting for the mouse.</p>
+    </div>
+  </div>
+</div>
+
+<div class="ip-shell">
+  <div class="sheet-header">
+    <span class="colletter">C</span>
+    <h2>Common interview questions</h2>
+  </div>
+
+  <div class="ip-level-tabs" id="ipTabs">
+    <div class="ip-level-tab active" data-level="all">All</div>
+    <div class="ip-level-tab" data-level="basic">Basic</div>
+    <div class="ip-level-tab" data-level="intermediate">Intermediate</div>
+    <div class="ip-level-tab" data-level="advanced">Advanced</div>
+  </div>
+
+  <div id="ipQaList"></div>
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+<script>
+const QUESTIONS = [
+  { level: "basic", q: "What's the difference between a formula and a function?", a: "A formula is anything you write starting with '=' that calculates a result — it can be as simple as =A1+B1. A function is a predefined formula built into Excel, like SUM or VLOOKUP, that you use inside a formula to do a specific job." },
+  { level: "basic", q: "What's the difference between COUNT, COUNTA, and COUNTIF?", a: "COUNT counts only cells containing numbers. COUNTA counts any non-empty cell, numbers or text. COUNTIF counts cells that match a specific condition you set, like counting only cells that say \"Finance\"." },
+  { level: "basic", q: "What's the difference between relative and absolute cell references?", a: "A relative reference like A1 shifts automatically when you copy the formula elsewhere. An absolute reference like $A$1 stays locked to that exact cell no matter where you copy it — you toggle between them with the F4 key." },
+  { level: "basic", q: "What is conditional formatting, and when would you use it?", a: "It automatically changes a cell's appearance — color, bold, icons — based on its value. A common use is highlighting all figures below a target in red so problems are visible at a glance without reading every number." },
+  { level: "basic", q: "How would you remove duplicate rows from a dataset?", a: "Select the data, then use Data → Remove Duplicates. Excel lets you choose which columns to check — it'll only remove rows that match exactly across the columns you select." },
+  { level: "basic", q: "What's the difference between a .xlsx and a .csv file?", a: ".xlsx is Excel's native format — it keeps formulas, formatting, multiple sheets, and charts. .csv is plain text with just the raw data, comma-separated, no formulas or formatting, but it's more universal for importing into other systems." },
+  { level: "basic", q: "What is Data Validation used for?", a: "It restricts what can be typed into a cell — like only allowing whole numbers, dates in a range, or values from a dropdown list. It's how you prevent bad data from entering a sheet in the first place." },
+
+  { level: "intermediate", q: "What is VLOOKUP, and what are its limitations?", a: "VLOOKUP searches the first column of a range and returns a value from a column to the right of it, on the same row. Its main limitations: it can only look right (not left), it breaks if columns get inserted since it relies on a fixed column number, and it's slower on very large datasets compared to INDEX-MATCH." },
+  { level: "intermediate", q: "Why would you use INDEX-MATCH instead of VLOOKUP?", a: "INDEX-MATCH can look in any direction (left or right), doesn't break when columns are inserted or reordered since it references columns dynamically, and is generally faster on large datasets. VLOOKUP is simpler to write, but INDEX-MATCH is considered the more robust, professional choice." },
+  { level: "intermediate", q: "What's the difference between SUMIF and SUMIFS?", a: "SUMIF sums values based on a single condition. SUMIFS does the same thing but can check multiple conditions at once — for example, summing sales only where the region is \"North\" AND the month is \"January\"." },
+  { level: "intermediate", q: "What is a PivotTable, and when would you use one?", a: "A PivotTable summarizes large datasets into a compact table — totals, averages, counts — by dragging fields into rows, columns, and values, without writing any formulas. Use it any time you need to quickly answer 'what's the total by category' from raw data." },
+  { level: "intermediate", q: "How do you handle errors in a formula gracefully?", a: "Wrap the formula in IFERROR, like =IFERROR(A1/B1, \"N/A\"). If the formula would normally return an error (like dividing by zero), it shows your fallback value instead of a broken-looking error message." },
+  { level: "intermediate", q: "What is a named range, and why use one?", a: "It's a custom name given to a specific cell or range, like naming A1:A10 as \"SalesData\". Formulas become far more readable — =SUM(SalesData) instead of =SUM(A1:A10) — and the reference stays consistent even if the sheet layout changes." },
+  { level: "intermediate", q: "How would you consolidate data from multiple sheets or files?", a: "Options include: Power Query to pull and combine data from multiple sources automatically, 3D formulas that reference the same cell across several sheets, or Consolidate under the Data tab for simple summing across sheets. Power Query is the most scalable, professional answer for this." },
+
+  { level: "advanced", q: "What is XLOOKUP, and how is it different from VLOOKUP?", a: "XLOOKUP is the modern replacement for VLOOKUP — it can search in any direction, doesn't rely on column position, has a built-in \"not found\" fallback, and can return an entire row or column instead of a single value. It's the preferred answer in interviews when it's available." },
+  { level: "advanced", q: "What's an array formula, and when would you need one?", a: "An array formula performs a calculation across multiple values at once instead of one cell at a time — for example, summing the product of two ranges without a helper column. In modern Excel, functions like SUMPRODUCT often achieve the same result without needing a true array formula." },
+  { level: "advanced", q: "How would you build a dashboard that updates automatically?", a: "Structure the raw data as a proper Excel Table so it auto-expands, connect PivotTables and charts to that table, and use slicers for interactive filtering. For live external data, Power Query can refresh the source automatically on open." },
+  { level: "advanced", q: "How do you protect a worksheet while still letting users enter data in specific cells?", a: "By default all cells are locked when protection is turned on. Unlock only the specific input cells first (Format Cells → Protection → uncheck Locked), then apply Protect Sheet — everything stays locked except those cells." },
+  { level: "advanced", q: "What would you check first if a VLOOKUP is returning #N/A unexpectedly?", a: "Check for extra spaces or inconsistent formatting in the lookup value (text vs. number), confirm the lookup value actually exists in the first column of the range, and confirm FALSE is being used for an exact match rather than an unintended approximate match." },
+  { level: "advanced", q: "Tell me about a time you used Excel to solve a real business problem.", a: "This is a behavioral question, not a formula question — the interviewer wants a specific story: what the problem was, what you built (a tracker, a dashboard, an automated report), and what the measurable outcome was (hours saved, errors reduced). Have one real example from your own work ready before the interview, not a hypothetical." }
+];
+
+let currentLevel = 'all';
+let openIndex = null;
+
+function renderQA() {
+  const list = document.getElementById('ipQaList');
+  list.innerHTML = '';
+
+  const filtered = QUESTIONS.filter(q => currentLevel === 'all' || q.level === currentLevel);
+
+  filtered.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'ip-qa-item';
+    div.innerHTML = `
+      <div class="ip-qa-question">
+        <span><span class="ip-qa-badge ${item.level}">${item.level}</span>${item.q}</span>
+        <span class="ip-qa-arrow">▾</span>
+      </div>
+      <div class="ip-qa-answer">${item.a}</div>
+    `;
+    div.querySelector('.ip-qa-question').addEventListener('click', () => {
+      div.classList.toggle('open');
+    });
+    list.appendChild(div);
+  });
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.ip-qa-item').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 40);
+    });
+  });
+}
+
+document.querySelectorAll('.ip-level-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.ip-level-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentLevel = tab.dataset.level;
+    renderQA();
+  });
+});
+
+renderQA();
+
+// Reveal tip cards on scroll
+const tipObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      tipObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.2 });
+document.querySelectorAll('.ip-tip-card').forEach((el, i) => {
+  setTimeout(() => tipObserver.observe(el), i * 50);
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
