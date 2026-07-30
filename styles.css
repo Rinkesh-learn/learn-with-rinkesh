@@ -96,7 +96,7 @@ nav.mainnav a {
   border-radius: 8px 8px 0 0;
   border: 1px solid transparent;
   border-bottom: none;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
   box-sizing: border-box;
 }
 
@@ -109,18 +109,6 @@ nav.mainnav a.active {
   background: var(--paper);
   color: var(--excel-green-deep);
   border-color: var(--grid-line);
-  position: relative;
-}
-
-nav.mainnav a.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--amber);
-  border-radius: 8px 8px 0 0;
 }
 
 /* ---------- Hero: literal formula bar ---------- */
