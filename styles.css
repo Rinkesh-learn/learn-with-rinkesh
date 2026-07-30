@@ -97,6 +97,13 @@ nav.mainnav a {
   line-height: 1.2;
   box-sizing: border-box;
   transition: color 0.2s ease, background 0.2s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+nav.mainnav a:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.7);
+  outline-offset: -2px;
 }
 
 nav.mainnav a:hover {
