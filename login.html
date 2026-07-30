@@ -6,14 +6,51 @@
 <title>Log In — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
 <style>
+  .login-shell {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 44px 24px 0;
+    text-align: center;
+  }
+
+  .login-icon {
+    font-size: 34px;
+    display: inline-block;
+    animation: excitedBounce 1s ease-in-out infinite;
+  }
+  @keyframes excitedBounce {
+    0%, 100% { transform: translateY(0) rotate(-6deg); }
+    50% { transform: translateY(-8px) rotate(6deg); }
+  }
+
+  .login-headline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--excel-green-deep);
+    min-height: 50px;
+    margin-top: 8px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .login-headline.show { opacity: 1; transform: translateY(0); }
+
   .auth-box {
     max-width: 400px;
-    margin: 64px auto;
+    margin: 24px auto 0;
     background: var(--cell-bg);
     border: 1px solid var(--grid-line);
     border-radius: var(--radius);
     padding: 32px;
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+    animation: authBoxIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s forwards;
   }
+  @keyframes authBoxIn {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
   .auth-box h1 { font-size: 20px; margin: 0 0 20px; }
   .auth-box label {
     display: block;
@@ -76,6 +113,60 @@
   }
   .btn-google:hover { border-color: var(--ink-soft); }
   .btn-google svg { width: 18px; height: 18px; }
+
+  /* ---------- Band scene below the login box ---------- */
+
+  .band-scene {
+    max-width: 700px;
+    height: 150px;
+    margin: 10px auto 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .band-char {
+    position: absolute;
+    bottom: 0;
+    width: 110px;
+    height: 130px;
+  }
+
+  .char-drum-kid { left: 50%; margin-left: -140px; animation: walkInLeft 2.2s ease-out forwards; }
+  .char-trumpet-kid { left: 50%; margin-left: 30px; animation: walkInRight 2.2s ease-out forwards; }
+  .char-dog { left: 50%; margin-left: -35px; width: 90px; animation: walkInRight 2.6s ease-out 0.5s forwards; opacity: 0; }
+
+  @keyframes walkInLeft {
+    from { transform: translateX(-260px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes walkInRight {
+    from { transform: translateX(260px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .bounce-group { animation: idleBounce 0.55s ease-in-out infinite; transform-origin: bottom center; }
+  @keyframes idleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .drumstick { animation: drumHit 0.55s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom right; }
+  @keyframes drumHit {
+    0%, 100% { transform: rotate(-25deg); }
+    50% { transform: rotate(10deg); }
+  }
+
+  .trumpet-cheek { animation: cheekPuff 0.55s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes cheekPuff {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+  }
+
+  .dog-tail { animation: tailWag 0.4s ease-in-out infinite; transform-box: fill-box; transform-origin: left center; }
+  @keyframes tailWag {
+    0%, 100% { transform: rotate(-15deg); }
+    50% { transform: rotate(20deg); }
+  }
 </style>
 </head>
 <body>
@@ -92,6 +183,11 @@
       <a href="signup.html">Sign Up</a>
     </nav>
   </div>
+</div>
+
+<div class="login-shell">
+  <span class="login-icon">🎉</span>
+  <div class="login-headline" id="loginHeadline"></div>
 </div>
 
 <div class="auth-box">
@@ -118,9 +214,87 @@
   <div class="switch-link">New here? <a href="signup.html">Create an account</a></div>
 </div>
 
+<!-- Little welcome band -->
+<div class="band-scene">
+  <svg class="band-char char-drum-kid" viewBox="0 0 110 130" xmlns="http://www.w3.org/2000/svg">
+    <g class="bounce-group">
+      <ellipse cx="55" cy="122" rx="30" ry="6" fill="rgba(0,0,0,0.08)"/>
+      <rect x="30" y="60" width="50" height="45" rx="14" fill="#2F80C9"/>
+      <circle cx="55" cy="38" r="22" fill="#F2C29A"/>
+      <path d="M33 30 Q55 8 77 30 Q77 18 55 15 Q33 18 33 30Z" fill="#3B2A1E"/>
+      <circle cx="47" cy="38" r="2.5" fill="#2b1c12"/>
+      <circle cx="63" cy="38" r="2.5" fill="#2b1c12"/>
+      <path d="M48 47 Q55 52 62 47" stroke="#2b1c12" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <rect x="10" y="88" width="30" height="26" rx="6" fill="#8a4a2b"/>
+      <ellipse cx="25" cy="88" rx="15" ry="6" fill="#c97b3f"/>
+      <line x1="30" y1="70" x2="18" y2="90" class="drumstick" stroke="#5b3b23" stroke-width="4" stroke-linecap="round"/>
+      <rect x="12" y="105" width="14" height="20" fill="#1c2a4a"/>
+      <rect x="60" y="105" width="14" height="20" fill="#1c2a4a"/>
+    </g>
+  </svg>
+
+  <svg class="band-char char-trumpet-kid" viewBox="0 0 110 130" xmlns="http://www.w3.org/2000/svg">
+    <g class="bounce-group">
+      <ellipse cx="55" cy="122" rx="30" ry="6" fill="rgba(0,0,0,0.08)"/>
+      <rect x="30" y="60" width="50" height="45" rx="14" fill="#E85D75"/>
+      <circle cx="55" cy="38" r="22" fill="#C98A5E"/>
+      <path d="M33 32 Q55 6 77 32 Q80 20 55 14 Q30 20 33 32Z" fill="#1a1a1a"/>
+      <circle class="trumpet-cheek" cx="47" cy="42" r="4" fill="#e8a582" opacity="0.7"/>
+      <circle cx="47" cy="38" r="2.5" fill="#2b1c12"/>
+      <circle cx="63" cy="38" r="2.5" fill="#2b1c12"/>
+      <path d="M75 46 L95 44 L95 50 L75 52Z" fill="#E8B923"/>
+      <circle cx="95" cy="47" r="6" fill="#E8B923"/>
+      <rect x="12" y="105" width="14" height="20" fill="#3a2a4a"/>
+      <rect x="60" y="105" width="14" height="20" fill="#3a2a4a"/>
+    </g>
+  </svg>
+
+  <svg class="band-char char-dog" viewBox="0 0 110 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="55" cy="94" rx="28" ry="5" fill="rgba(0,0,0,0.08)"/>
+    <ellipse cx="50" cy="65" rx="26" ry="20" fill="#C9971E"/>
+    <circle cx="82" cy="48" r="16" fill="#D9A94A"/>
+    <path d="M70 36 Q66 22 76 30 Z" fill="#C9971E"/>
+    <path d="M94 36 Q100 22 90 30 Z" fill="#C9971E"/>
+    <circle cx="78" cy="48" r="2" fill="#2b1c12"/>
+    <circle cx="88" cy="48" r="2" fill="#2b1c12"/>
+    <ellipse cx="92" cy="54" rx="4" ry="3" fill="#2b1c12"/>
+    <path d="M24 60 Q6 52 14 66" class="dog-tail" stroke="#C9971E" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <rect x="35" y="80" width="9" height="14" rx="4" fill="#a87c1a"/>
+    <rect x="55" y="80" width="9" height="14" rx="4" fill="#a87c1a"/>
+  </svg>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
+  const loginLines = [
+    "You're one step back from leveling up.",
+    "Ready to pick up right where you left off?",
+    "Every login gets you closer to job-ready.",
+    "Let's turn practice into progress.",
+    "Consistency beats cramming — welcome back.",
+    "Small daily reps build real Excel skill.",
+    "Your next formula win starts here.",
+    "Log in and keep the streak alive.",
+    "Skill up. One cell at a time.",
+    "Come back stronger than yesterday.",
+    "Excel mastery is closer than you think.",
+    "Your spreadsheet is right where you left it."
+  ];
+  let loginLineIdx = 0;
+  const headlineEl = document.getElementById('loginHeadline');
+
+  function cycleHeadline() {
+    headlineEl.classList.remove('show');
+    setTimeout(() => {
+      headlineEl.textContent = loginLines[loginLineIdx];
+      headlineEl.classList.add('show');
+      loginLineIdx = (loginLineIdx + 1) % loginLines.length;
+    }, 300);
+  }
+  cycleHeadline();
+  setInterval(cycleHeadline, 3200);
+
   document.getElementById('googleLoginBtn').addEventListener('click', async () => {
     await supabaseClient.auth.signInWithOAuth({ provider: 'google' });
   });

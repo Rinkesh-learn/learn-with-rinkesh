@@ -28,21 +28,28 @@
 </div>
 
 <div class="hero" style="padding-bottom:20px;">
+  <div class="formula-bar hero-float" style="max-width:520px;">
+    <span class="fx">fx</span>
+    <span class="content" id="practiceHeroTyping"></span>
+  </div>
   <h1 style="font-size:32px;">Pick a formula, practice it live.</h1>
-  <p class="lede" style="margin-bottom:0;">Click any formula on the list for a task to solve, or just start typing below — it's a real, free-to-use spreadsheet.</p>
+  <p class="lede" style="margin-bottom:18px;">Click any formula on the list for a task to solve, or just start typing below — it's a real, free-to-use spreadsheet.</p>
+  <div class="practice-quicklinks">
+    <a href="excel-guide.html">📘 About Excel</a>
+    <a href="shortcuts.html">⌨️ Excel Shortcuts</a>
+    <a href="formula-example.html">📖 Check All Formulas</a>
+    <a href="interview-prep.html">🎯 Interview Prep</a>
+  </div>
 </div>
 
 <div class="sheet" style="margin-top:0;">
   <div class="practice-layout" id="practiceLayout">
 
     <div class="formula-list-panel">
-      <a href="excel-guide.html" class="about-excel-btn">📘 <span>About Excel</span></a>
       <div class="formula-list-header">
         <h3>Formulas</h3>
         <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
       </div>
-      <a href="formula-example.html" style="display:block; text-align:center; margin:0 12px 6px; padding:9px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border:1px solid var(--grid-line); border-radius:var(--radius);">📖 Check All Formulas &rarr;</a>
-      <a href="interview-prep.html" style="display:block; text-align:center; margin:0 12px 10px; padding:9px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border:1px solid var(--grid-line); border-radius:var(--radius);">🎯 Interview Prep &rarr;</a>
       <ul class="formula-list" id="formulaList"></ul>
     </div>
 
@@ -531,6 +538,33 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 });
 
 renderList();
+
+// Animated formula bar in the hero
+const practiceHeroLines = [
+  '=IF(you.practice, "job-ready", "keep going")',
+  '="80 graded questions. One real spreadsheet."',
+  '=VLOOKUP("confused","confident",1,FALSE)'
+];
+let practiceHeroIdx = 0;
+const practiceHeroEl = document.getElementById('practiceHeroTyping');
+function ptype(text, i, cb) {
+  practiceHeroEl.textContent = text.slice(0, i);
+  if (i <= text.length) setTimeout(() => ptype(text, i + 1, cb), 35);
+  else setTimeout(cb, 1800);
+}
+function perase(text, i, cb) {
+  practiceHeroEl.textContent = text.slice(0, i);
+  if (i >= 0) setTimeout(() => perase(text, i - 1, cb), 18);
+  else cb();
+}
+function pcycle() {
+  const line = practiceHeroLines[practiceHeroIdx];
+  ptype(line, 0, () => perase(line, line.length, () => {
+    practiceHeroIdx = (practiceHeroIdx + 1) % practiceHeroLines.length;
+    pcycle();
+  }));
+}
+if (practiceHeroEl) pcycle();
 
 window.addEventListener('load', () => {
   setTimeout(() => {

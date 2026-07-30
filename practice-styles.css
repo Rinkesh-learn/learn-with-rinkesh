@@ -95,6 +95,35 @@
   vertical-align: middle;
 }
 
+.practice-quicklinks {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.practice-quicklinks a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  color: var(--excel-green-deep);
+  text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(28,35,33,0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.practice-quicklinks a:hover {
+  transform: translateY(-2px);
+  background: var(--excel-green);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(28,107,65,0.25);
+}
+
 .about-excel-btn {
   display: flex;
   align-items: center;
