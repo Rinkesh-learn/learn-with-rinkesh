@@ -43,7 +43,6 @@ a { color: inherit; }
 /* ---------- Top bar: styled like an actual Excel ribbon ---------- */
 
 .topbar {
-  border-bottom: 1px solid var(--excel-green-deep);
   background: var(--excel-green);
   position: sticky;
   top: 0;
