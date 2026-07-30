@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="about-styles.css">
 </head>
 <body>
 
@@ -22,16 +23,127 @@
   </div>
 </div>
 
-<div class="formula-page">
-  <section>
-    <h2>About</h2>
-    <p style="font-size:17px; color:var(--ink);">This is a placeholder — we'll write your real background, experience, and story here once the skeleton is live. For now this page exists just to prove the navigation and layout work end to end.</p>
-  </section>
+<div class="ab-hero">
+  <div class="ab-avatar">R</div>
+  <h1>Hi, I'm Rinkesh.</h1>
+  <p class="ab-tagline">I built Learn With Rinkesh to teach Excel the way it's actually used at work — real formulas, real corporate scenarios, real practice. Not another course that stops at theory.</p>
+</div>
+
+<div class="ab-section" id="abWhy">
+  <h2>Why this exists</h2>
+  <p>Most Excel content either stays too basic to be useful on the job, or jumps straight into advanced tricks nobody explains properly. This platform is built to close that gap — a formula reference with real corporate use cases, a genuine spreadsheet to practice in (not a multiple-choice quiz), and questions that actually get harder as you improve. The goal isn't to help you memorize functions. It's to get you comfortable enough to open a blank sheet at work and actually build something.</p>
+</div>
+
+<div class="ab-section" id="abMe">
+  <h2>About me</h2>
+  <p>I'm a Business Analyst working in legal and business process automation, with 5+ years of experience in the data industry. My path wasn't a straight line — I've worked across a few very different industries, and Excel has been the one constant skill that traveled with me through every one of them.</p>
+
+  <div class="ab-timeline">
+    <div class="ab-tl-step">
+      <div class="ab-tl-dot">🚚</div>
+      <h3>US Logistics</h3>
+      <p>Where it started</p>
+    </div>
+    <div class="ab-tl-step">
+      <div class="ab-tl-dot">🏥</div>
+      <h3>RCM Healthcare</h3>
+      <p>Revenue cycle management</p>
+    </div>
+    <div class="ab-tl-step">
+      <div class="ab-tl-dot">⚖️</div>
+      <h3>Legal &amp; Business Automation</h3>
+      <p>Where I am now</p>
+    </div>
+  </div>
+</div>
+
+<div class="ab-section" id="abConnect" style="text-align:center;">
+  <h2>Get in touch</h2>
+  <p>Follow along, or reach out directly if you've got a question.</p>
+  <div class="ab-connect-row">
+    <a href="https://www.instagram.com/learnwithrinkesh/" target="_blank" rel="noopener" class="ab-connect-btn instagram">📸 Instagram</a>
+    <a href="https://www.youtube.com/@LearnWithRinkesh" target="_blank" rel="noopener" class="ab-connect-btn youtube">▶️ YouTube</a>
+    <button class="ab-connect-btn contact" id="openContactBtn">✉️ Contact Us</button>
+  </div>
 </div>
 
 <footer>
   Learn With Rinkesh — built one cell at a time.
 </footer>
+
+<!-- Contact modal -->
+<div class="ab-modal-overlay" id="contactOverlay">
+  <div class="ab-modal-box">
+    <div id="contactFormView">
+      <h3>Send a message</h3>
+      <p class="hint">Questions, feedback, or just want to say hi — this goes straight to Rinkesh.</p>
+
+      <label for="cName">Name</label>
+      <input type="text" id="cName" placeholder="Your name">
+
+      <label for="cEmail">Email</label>
+      <input type="email" id="cEmail" placeholder="you@example.com">
+
+      <label for="cMessage">Message</label>
+      <textarea id="cMessage" rows="4" placeholder="What's on your mind?"></textarea>
+
+      <div class="ab-modal-btn-row">
+        <button class="btn btn-ghost" id="closeContactBtn">Cancel</button>
+        <button class="btn btn-primary" id="sendContactBtn">Send</button>
+      </div>
+    </div>
+
+    <div class="ab-modal-success" id="contactSuccessView">
+      <div class="icon">🎉</div>
+      <h3>Got it!</h3>
+      <p class="hint">Thanks for reaching out — this will be on its way to Rinkesh once messaging is fully connected.</p>
+      <button class="btn btn-primary" id="doneContactBtn" style="width:100%; margin-top:10px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('contactOverlay');
+  const formView = document.getElementById('contactFormView');
+  const successView = document.getElementById('contactSuccessView');
+
+  document.getElementById('openContactBtn').addEventListener('click', () => {
+    formView.style.display = 'block';
+    successView.style.display = 'none';
+    overlay.classList.add('open');
+  });
+
+  document.getElementById('closeContactBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
+
+  document.getElementById('doneContactBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+
+  document.getElementById('sendContactBtn').addEventListener('click', () => {
+    // NOTE: no backend/email service connected yet — this just shows a
+    // confirmation UI. Nothing is actually sent until that's wired up.
+    formView.style.display = 'none';
+    successView.style.display = 'block';
+  });
+
+  // Scroll-triggered reveal for sections
+  const sections = document.querySelectorAll('.ab-section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  sections.forEach(el => observer.observe(el));
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
