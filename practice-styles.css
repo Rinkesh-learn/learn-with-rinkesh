@@ -99,6 +99,7 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .practice-quicklinks a {
@@ -107,21 +108,21 @@
   gap: 6px;
   padding: 9px 16px;
   border-radius: 20px;
-  background: #fff;
-  border: 1px solid var(--grid-line);
-  color: var(--excel-green-deep);
+  background: var(--excel-green);
+  border: 1px solid var(--excel-green);
+  color: #fff;
   text-decoration: none;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(28,35,33,0.06);
+  box-shadow: 0 3px 10px rgba(28,107,65,0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 .practice-quicklinks a:hover {
   transform: translateY(-2px);
-  background: var(--excel-green);
-  color: #fff;
-  box-shadow: 0 8px 18px rgba(28,107,65,0.25);
+  background: var(--amber);
+  border-color: var(--amber);
+  box-shadow: 0 8px 18px rgba(201,151,30,0.3);
 }
 
 .about-excel-btn {

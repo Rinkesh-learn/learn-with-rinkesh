@@ -115,17 +115,11 @@ function renderQA() {
 
   filtered.forEach((item, i) => {
     const div = document.createElement('div');
-    div.className = 'ip-qa-item';
+    div.className = `ip-qa-item ${item.level}`;
     div.innerHTML = `
-      <div class="ip-qa-question">
-        <span><span class="ip-qa-badge ${item.level}">${item.level}</span>${item.q}</span>
-        <span class="ip-qa-arrow">▾</span>
-      </div>
+      <div class="ip-qa-question"><span class="ip-qa-badge ${item.level}">${item.level}</span>${item.q}</div>
       <div class="ip-qa-answer">${item.a}</div>
     `;
-    div.querySelector('.ip-qa-question').addEventListener('click', () => {
-      div.classList.toggle('open');
-    });
     list.appendChild(div);
   });
 
