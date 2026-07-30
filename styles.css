@@ -418,16 +418,21 @@ footer {
 
 .nav-account-menu.open { display: block; }
 
-.nav-account-menu a {
+.nav-account-menu a,
+nav.mainnav .nav-account-menu a {
   display: block;
   padding: 10px 14px;
   font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
-  color: var(--ink);
+  color: var(--ink) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
   border-bottom: 1px solid var(--grid-line);
+  line-height: 1.4;
 }
 .nav-account-menu a:last-child { border-bottom: none; }
-.nav-account-menu a:hover { background: #F0F5F1; }
+.nav-account-menu a:hover { background: #F0F5F1 !important; }
 
 /* ---------- Profile setup form ---------- */
 

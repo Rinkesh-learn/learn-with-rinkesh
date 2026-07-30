@@ -47,8 +47,8 @@ async function renderNavAuth() {
         <span>${displayName}</span>
       </button>
       <div class="nav-account-menu" id="navAccountMenu">
-        <a href="account.html">My Account</a>
-        <a href="index.html">My Progress</a>
+        <a href="account.html">⚙️ Account Settings</a>
+        <a href="purchases.html">🧾 Purchases</a>
         <a href="#" id="navLogoutBtn">Log Out</a>
       </div>
     </div>

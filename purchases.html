@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchases — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="setup-box" style="text-align:center;">
+  <h1>Purchases</h1>
+  <p class="hint">Nothing here yet — once certification and exams go live, your purchase history will show up here.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+<script>
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session) window.location.href = 'login.html';
+  });
+</script>
+
+</body>
+</html>

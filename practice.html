@@ -46,6 +46,9 @@
         <h3>Formulas</h3>
         <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
       </div>
+      <div style="padding:0 12px 10px;">
+        <input type="text" id="formulaSearch" placeholder="🔍 Search formulas..." style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--grid-line); border-radius:20px; font-family:'IBM Plex Sans',sans-serif; font-size:13px;">
+      </div>
       <ul class="formula-list" id="formulaList"></ul>
     </div>
 
@@ -286,12 +289,29 @@ let currentQuestionIndex = 0;
 let sheetReady = false;
 
 // ---------- Sidebar ----------
+let formulaSearchTerm = '';
+
 function renderList() {
   const list = document.getElementById('formulaList');
   list.innerHTML = '';
 
+  const term = formulaSearchTerm.trim().toLowerCase();
+  const visibleFormulas = term
+    ? FORMULAS.filter(f => f.name.toLowerCase().includes(term))
+    : FORMULAS;
+
+  if (term && visibleFormulas.length === 0) {
+    const empty = document.createElement('li');
+    empty.style.padding = '16px 12px';
+    empty.style.fontSize = '13px';
+    empty.style.color = 'var(--ink-soft)';
+    empty.textContent = 'No formulas match that search.';
+    list.appendChild(empty);
+    return;
+  }
+
   const byCategory = {};
-  FORMULAS.forEach(f => {
+  visibleFormulas.forEach(f => {
     if (!byCategory[f.category]) byCategory[f.category] = [];
     byCategory[f.category].push(f);
   });
@@ -317,6 +337,11 @@ function renderList() {
     });
   });
 }
+
+document.getElementById('formulaSearch').addEventListener('input', (e) => {
+  formulaSearchTerm = e.target.value;
+  renderList();
+});
 
 // ---------- Explain modal ----------
 function openModal(formula) {
