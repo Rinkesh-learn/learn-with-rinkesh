@@ -69,7 +69,26 @@
   border-radius: var(--radius);
   cursor: pointer;
   margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
+.formula-video-icon {
+  font-size: 14px;
+  text-decoration: none;
+  opacity: 1;
+  filter: none;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.formula-video-icon:hover { transform: scale(1.2); }
+.formula-video-icon.faded {
+  opacity: 0.25;
+  filter: grayscale(1);
+  cursor: default;
+}
+.formula-video-icon.faded:hover { transform: none; }
 
 .formula-list-item:hover { background: #F0F5F1; }
 

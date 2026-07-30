@@ -197,11 +197,6 @@ document.querySelectorAll('#ipModeTabs .ip-level-tab').forEach(tab => {
   });
 });
 
-// This page is part of "Take it further" — requires login
-supabaseClient.auth.getSession().then(({ data: { session } }) => {
-  if (!session) window.location.href = 'login.html';
-});
-
 // Reveal tip cards on scroll
 const tipObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -219,6 +214,12 @@ document.querySelectorAll('.ip-tip-card').forEach((el, i) => {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="auth-nav.js"></script>
+<script>
+  // This page is part of "Take it further" — requires login
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session) window.location.href = 'login.html';
+  });
+</script>
 
 </body>
 </html>

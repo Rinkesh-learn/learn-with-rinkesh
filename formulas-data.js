@@ -24,6 +24,11 @@ const CATEGORY_ICONS = {
 // Formulas with a full graded 10-question practice set (see practice.html)
 const PRACTICE_ENABLED_IDS = ['vlookup', 'sum', 'if', 'countif', 'hlookup', 'index', 'match', 'choose'];
 
+// To add a tutorial video for a formula later, add a videoUrl field to its
+// entry below, e.g.: videoUrl: 'https://youtu.be/XXXXXXXXXXX'
+// The video icon next to that formula in the Practice sidebar will
+// automatically light up and become clickable once that field is set.
+
 const FORMULA_META = [
 
   // ---------------- Lookup & Reference ----------------

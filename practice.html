@@ -327,7 +327,11 @@ function renderList() {
       const hasPractice = !!(f.questions && f.questions.length);
       const li = document.createElement('li');
       li.className = 'formula-list-item' + (currentFormula && currentFormula.id === f.id ? ' selected' : '');
-      li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>`;
+      const hasVideo = !!f.videoUrl;
+      const videoIcon = hasVideo
+        ? `<a href="${f.videoUrl}" target="_blank" rel="noopener" title="Watch tutorial" class="formula-video-icon" onclick="event.stopPropagation();">🎥</a>`
+        : `<span class="formula-video-icon faded" title="Video coming soon">🎥</span>`;
+      li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>${videoIcon}`;
       li.addEventListener('click', () => {
         currentFormula = f;
         renderList();
