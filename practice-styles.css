@@ -175,48 +175,31 @@
   border-color: var(--excel-green);
 }
 
-.practice-layout-outer {
+.nav-quicklinks-strip {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-.practice-layout-outer .practice-layout {
-  flex: 1;
-  min-width: 0;
-}
-
-.practice-side-links {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 190px;
-  flex-shrink: 0;
-}
-
-.practice-side-links a {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  padding: 12px 16px;
-  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-quicklinks-strip a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 16px;
   background: var(--excel-green);
   color: #fff;
   text-decoration: none;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 3px 10px rgba(28,107,65,0.2);
+  box-shadow: 0 2px 8px rgba(28,107,65,0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
-.practice-side-links a:hover {
-  transform: translateX(-3px);
+.nav-quicklinks-strip a:hover {
+  transform: translateY(-2px);
   background: var(--amber);
-  box-shadow: 0 6px 14px rgba(201,151,30,0.3);
-}
-
-@media (max-width: 900px) {
-  .practice-layout-outer { flex-direction: column; }
-  .practice-side-links { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  box-shadow: 0 5px 12px rgba(201,151,30,0.3);
 }
 
 .about-excel-btn {

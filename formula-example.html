@@ -24,6 +24,12 @@
 </div>
 
 <div class="hero" style="padding-bottom:10px;">
+  <div class="nav-quicklinks-strip" id="quickLinksRow" style="margin-bottom:12px;">
+    <a href="excel-guide.html" data-page="excel-guide.html">📘 About Excel</a>
+    <a href="shortcuts.html" data-page="shortcuts.html">⌨️ Shortcuts</a>
+    <a href="formula-example.html" data-page="formula-example.html">📖 All Formulas</a>
+    <a href="interview-prep.html" data-page="interview-prep.html">🎯 Interview Prep</a>
+  </div>
   <h1 style="font-size:32px;">The formula reference.</h1>
   <p class="lede" style="margin-bottom:14px;">Browse by category. Click any formula to see how it works and jump straight into practicing it.</p>
   <a href="shortcuts.html" style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border-bottom:2px solid var(--amber);">⌨️ View all keyboard shortcuts &rarr;</a>
@@ -70,6 +76,22 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="auth-nav.js"></script>
+<script>
+  (function() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('#quickLinksRow a').forEach(a => {
+      if (a.dataset.page === currentPage) {
+        a.style.transition = 'opacity 0.3s ease, max-width 0.3s ease, margin 0.3s ease, padding 0.3s ease';
+        a.style.opacity = '0';
+        a.style.maxWidth = '0';
+        a.style.margin = '0';
+        a.style.padding = '0';
+        a.style.overflow = 'hidden';
+        a.style.pointerEvents = 'none';
+      }
+    });
+  })();
+</script>
 
 </body>
 </html>
