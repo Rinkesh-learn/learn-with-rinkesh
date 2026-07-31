@@ -94,9 +94,8 @@ nav.mainnav {
 /* ---------- Shared sub-nav bar (identical on every page) ---------- */
 
 .subnav-bar {
-  background: #fff;
-  border-bottom: 1px solid var(--grid-line);
-  padding: 10px 0;
+  background: var(--excel-green-deep);
+  padding: 6px 0;
 }
 
 .subnav-inner {
@@ -104,21 +103,22 @@ nav.mainnav {
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .subnav-inner a {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: 16px;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
   background: var(--excel-green);
   color: #fff;
   text-decoration: none;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   transition: background 0.2s ease, transform 0.15s ease;
 }
