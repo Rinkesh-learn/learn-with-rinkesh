@@ -144,6 +144,37 @@
   box-shadow: 0 8px 18px rgba(201,151,30,0.3);
 }
 
+.task-chip-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  color: var(--ink);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.task-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(28,35,33,0.1);
+}
+.task-chip.selected {
+  background: var(--excel-green);
+  color: #fff;
+  border-color: var(--excel-green);
+}
+
 .about-excel-btn {
   display: flex;
   align-items: center;
