@@ -175,6 +175,50 @@
   border-color: var(--excel-green);
 }
 
+.practice-layout-outer {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.practice-layout-outer .practice-layout {
+  flex: 1;
+  min-width: 0;
+}
+
+.practice-side-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 190px;
+  flex-shrink: 0;
+}
+
+.practice-side-links a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--excel-green);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(28,107,65,0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.practice-side-links a:hover {
+  transform: translateX(-3px);
+  background: var(--amber);
+  box-shadow: 0 6px 14px rgba(201,151,30,0.3);
+}
+
+@media (max-width: 900px) {
+  .practice-layout-outer { flex-direction: column; }
+  .practice-side-links { flex-direction: row; flex-wrap: wrap; width: 100%; }
+}
+
 .about-excel-btn {
   display: flex;
   align-items: center;

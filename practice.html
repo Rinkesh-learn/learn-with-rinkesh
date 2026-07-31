@@ -27,43 +27,45 @@
   </div>
 </div>
 
-<div class="hero" style="padding-bottom:20px;">
-  <div class="practice-quicklinks">
-    <a href="excel-guide.html">📘 About Excel</a>
-    <a href="shortcuts.html">⌨️ Excel Shortcuts</a>
-    <a href="formula-example.html">📖 Check All Formulas</a>
-    <a href="interview-prep.html">🎯 Interview Prep</a>
-    <a href="charts-pivots.html">📊 Charts & PivotTables</a>
-  </div>
-  <h1 style="font-size:32px; margin-top:22px;">Pick a formula, practice it live.</h1>
-  <p class="lede" style="margin-bottom:0;">Click any formula on the list for a task to solve, or just start typing below — it's a real, free-to-use spreadsheet.</p>
+<div class="hero" style="padding-bottom:8px; padding-top:20px;">
+  <h1 style="font-size:24px; margin-bottom:4px;">Pick a formula, practice it live.</h1>
+  <p class="lede" style="margin-bottom:0; font-size:14px;">Click any formula for a task to solve, or just start typing — it's a real, free-to-use spreadsheet.</p>
 </div>
 
-<div class="sheet" style="margin-top:0;">
-  <div class="practice-layout" id="practiceLayout">
+<div class="sheet" style="margin-top:10px;">
+  <div class="practice-layout-outer">
+    <div class="practice-layout" id="practiceLayout">
 
-    <div class="formula-list-panel">
-      <div class="formula-list-header">
-        <h3>Formulas</h3>
-        <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
+      <div class="formula-list-panel">
+        <div class="formula-list-header">
+          <h3>Formulas</h3>
+          <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
+        </div>
+        <div style="padding:0 12px 10px;">
+          <input type="text" id="formulaSearch" placeholder="🔍 Search formulas..." style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--grid-line); border-radius:20px; font-family:'IBM Plex Sans',sans-serif; font-size:13px;">
+        </div>
+        <ul class="formula-list" id="formulaList"></ul>
       </div>
-      <div style="padding:0 12px 10px;">
-        <input type="text" id="formulaSearch" placeholder="🔍 Search formulas..." style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--grid-line); border-radius:20px; font-family:'IBM Plex Sans',sans-serif; font-size:13px;">
-      </div>
-      <ul class="formula-list" id="formulaList"></ul>
-    </div>
 
-    <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
-      <div class="practice-active" style="width:100%;">
-        <h2 id="activeTitle">Free Practice</h2>
-        <p class="target-label" id="activeTask">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
-        <div id="luckysheetContainer" style="width:100%; height:620px; position:relative; border:1px solid var(--grid-line);"></div>
-        <div class="practice-input-row" id="checkRow" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0; display:none;">
-          <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
+      <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
+        <div class="practice-active" style="width:100%;">
+          <h2 id="activeTitle">Free Practice</h2>
+          <p class="target-label" id="activeTask" style="margin-bottom:8px;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
+          <div id="luckysheetContainer" style="width:100%; height:760px; position:relative; border:1px solid var(--grid-line);"></div>
+          <div class="practice-input-row" id="checkRow" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0; display:none;">
+            <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
+          </div>
         </div>
       </div>
+
     </div>
 
+    <div class="practice-side-links">
+      <a href="excel-guide.html">📘 About Excel</a>
+      <a href="shortcuts.html">⌨️ Excel Shortcuts</a>
+      <a href="formula-example.html">📖 Check All Formulas</a>
+      <a href="interview-prep.html">🎯 Interview Prep</a>
+    </div>
   </div>
 </div>
 
