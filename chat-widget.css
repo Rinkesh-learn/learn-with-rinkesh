@@ -73,6 +73,15 @@
 }
 .chat-window.open { display: flex; animation: fbPop 0.3s cubic-bezier(.34,1.56,.64,1); }
 
+.chat-window.maximized {
+  bottom: 20px;
+  right: 20px;
+  left: 20px;
+  top: 20px;
+  width: auto;
+  height: auto;
+}
+
 .chat-header {
   background: var(--sky, #2F80C9);
   color: #fff;
@@ -177,6 +186,56 @@
 }
 .chat-image-preview-row img { height: 40px; border-radius: 6px; }
 #chatRemoveImageBtn { background: none; border: none; font-size: 16px; color: var(--ink-soft); cursor: pointer; }
+
+/* ---------- Emoji picker (composing) ---------- */
+.chat-emoji-panel {
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px;
+  border-top: 1px solid var(--grid-line);
+  background: #F9F8F3;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.chat-emoji-panel.open { display: flex; }
+.chat-emoji-option {
+  font-size: 18px;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.chat-emoji-option:hover { background: #fff; transform: scale(1.2); }
+
+/* ---------- Message reactions ---------- */
+.chat-reaction-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  min-height: 18px;
+}
+.chat-reaction-counts { display: flex; gap: 4px; flex-wrap: wrap; }
+.chat-reaction-pill {
+  background: #fff;
+  border: 1px solid var(--grid-line);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+.chat-react-picker {
+  display: none;
+  gap: 4px;
+}
+.chat-msg:hover .chat-react-picker { display: flex; }
+.chat-react-option {
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.chat-react-option:hover { opacity: 1; transform: scale(1.3); }
 
 @media (max-width: 480px) {
   .chat-window { width: calc(100vw - 32px); right: 16px; }
