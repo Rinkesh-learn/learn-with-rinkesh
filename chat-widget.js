@@ -6,6 +6,8 @@
 
 (function () {
   const GUEST_NAME_KEY = 'lwr_chat_guest_name';
+  const OPEN_STATE_KEY = 'lwr_chat_open_state';
+  const ANON_DISCLAIMER_KEY = 'lwr_chat_anon_disclaimer_seen';
 
   // ---------- Inject floating icon ----------
   const btn = document.createElement('button');
@@ -100,7 +102,7 @@
         id: null,
         isLoggedIn: false,
         displayName: guestName,
-        disclaimerSeen: false, // anonymous users always see the disclaimer
+        disclaimerSeen: sessionStorage.getItem(ANON_DISCLAIMER_KEY) === '1',
         rawName: guestName,
         hideNameSetting: false
       };
@@ -120,15 +122,21 @@
 
   function showChatWindow() {
     chatWindow.classList.add('open');
+    sessionStorage.setItem(OPEN_STATE_KEY, '1');
     document.getElementById('chatNameInput').value = currentUser.rawName || '';
     document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
     loadMessages();
     subscribeRealtime();
   }
 
+  function closeChatWindow() {
+    chatWindow.classList.remove('open');
+    sessionStorage.setItem(OPEN_STATE_KEY, '0');
+  }
+
   btn.addEventListener('click', () => {
     if (chatWindow.classList.contains('open')) {
-      chatWindow.classList.remove('open');
+      closeChatWindow();
     } else {
       openChat();
     }
@@ -141,13 +149,22 @@
       try {
         await supabaseClient.from('profiles').update({ chat_disclaimer_seen: true }).eq('id', currentUser.id);
       } catch (e) {}
+    } else {
+      currentUser.disclaimerSeen = true;
+      sessionStorage.setItem(ANON_DISCLAIMER_KEY, '1');
     }
     showChatWindow();
   });
 
-  document.getElementById('chatMinimizeBtn').addEventListener('click', () => {
-    chatWindow.classList.remove('open');
-  });
+  document.getElementById('chatMinimizeBtn').addEventListener('click', closeChatWindow);
+
+  // Stay open across page navigation — if it was open on the last page
+  // (and not explicitly minimized), reopen it automatically here too.
+  // Anonymous users still see the disclaimer if it hasn't been accepted
+  // this tab session (handled inside openChat/resolveIdentity already).
+  if (sessionStorage.getItem(OPEN_STATE_KEY) === '1') {
+    openChat();
+  }
 
   // ---------- Settings panel ----------
   document.getElementById('chatSettingsBtn').addEventListener('click', () => {
