@@ -31,7 +31,11 @@
   <label for="avatarPreview">Profile photo</label>
   <div style="display:flex; align-items:center; gap:14px; margin-bottom:6px;">
     <span class="nav-avatar-initial" id="avatarPreview" style="width:52px; height:52px; font-size:20px;"></span>
-    <input type="text" id="avatarUrl" placeholder="Paste an image URL" style="flex:1;">
+    <div>
+      <input type="file" id="avatarFile" accept="image/*" style="display:none;">
+      <button type="button" class="btn btn-ghost" id="avatarUploadBtn">Upload Photo</button>
+      <div id="avatarUploadStatus" style="font-size:12px; color:var(--ink-soft); margin-top:4px;"></div>
+    </div>
   </div>
 
   <label for="name">Name</label>
@@ -72,18 +76,6 @@
 </div>
 
 <div class="setup-box">
-  <h1>Change Password</h1>
-  <p class="hint">Only applies if you signed up with email/password — Google accounts manage their password through Google.</p>
-
-  <label for="newPassword">New password</label>
-  <input type="password" id="newPassword" placeholder="At least 6 characters">
-
-  <button class="btn btn-primary" id="passwordBtn">Update Password</button>
-
-  <div id="passwordMessage"></div>
-</div>
-
-<div class="setup-box">
   <h1>Chat Preferences</h1>
   <p class="hint">Controls how you appear in the community chat.</p>
 
@@ -106,14 +98,12 @@
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
 <script>
+  let currentAvatarUrl = '';
+
   function refreshAvatarPreview() {
-    const url = document.getElementById('avatarUrl').value.trim();
     const preview = document.getElementById('avatarPreview');
-    if (url) {
-      preview.style.backgroundImage = `url('${url}')`;
-      preview.style.backgroundSize = 'cover';
-      preview.style.backgroundPosition = 'center';
-      preview.style.background = `url('${url}') center/cover`;
+    if (currentAvatarUrl) {
+      preview.style.background = `url('${currentAvatarUrl}') center/cover`;
       preview.style.color = 'transparent';
       preview.textContent = '';
     } else {
@@ -141,7 +131,7 @@
     if (profile) {
       document.getElementById('name').value = profile.name || '';
       document.getElementById('username').value = profile.username || '';
-      document.getElementById('avatarUrl').value = profile.avatar_url || '';
+      currentAvatarUrl = profile.avatar_url || '';
       document.getElementById('age').value = profile.age || '';
       document.getElementById('profession').value = profile.profession || '';
       document.getElementById('goal').value = profile.goal || '';
@@ -153,8 +143,38 @@
 
   loadAccount();
 
-  document.getElementById('avatarUrl').addEventListener('input', refreshAvatarPreview);
   document.getElementById('name').addEventListener('input', refreshAvatarPreview);
+
+  document.getElementById('avatarUploadBtn').addEventListener('click', () => {
+    document.getElementById('avatarFile').click();
+  });
+
+  document.getElementById('avatarFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('avatarUploadStatus');
+    status.textContent = 'Uploading...';
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const fileName = `${session.user.id}_${Date.now()}_${file.name}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true });
+
+    if (uploadError) {
+      status.textContent = 'Upload failed: ' + uploadError.message;
+      return;
+    }
+
+    const { data } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+    currentAvatarUrl = data.publicUrl;
+    refreshAvatarPreview();
+    status.textContent = 'Photo updated — click Save Changes to confirm.';
+  });
 
   document.getElementById('saveBtn').addEventListener('click', async () => {
     const msg = document.getElementById('message');
@@ -167,7 +187,7 @@
     const { error } = await supabaseClient.from('profiles').update({
       name: document.getElementById('name').value,
       username: document.getElementById('username').value,
-      avatar_url: document.getElementById('avatarUrl').value || null,
+      avatar_url: currentAvatarUrl || null,
       age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
       profession: document.getElementById('profession').value,
       goal: document.getElementById('goal').value
@@ -181,30 +201,6 @@
 
     msg.textContent = 'Saved!';
     msg.className = 'success';
-  });
-
-  document.getElementById('passwordBtn').addEventListener('click', async () => {
-    const msg = document.getElementById('passwordMessage');
-    msg.className = '';
-    const newPassword = document.getElementById('newPassword').value;
-
-    if (!newPassword || newPassword.length < 6) {
-      msg.textContent = 'Password must be at least 6 characters.';
-      msg.className = 'error';
-      return;
-    }
-
-    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-
-    if (error) {
-      msg.textContent = error.message;
-      msg.className = 'error';
-      return;
-    }
-
-    msg.textContent = 'Password updated!';
-    msg.className = 'success';
-    document.getElementById('newPassword').value = '';
   });
 
   document.getElementById('chatPrefsBtn').addEventListener('click', async () => {
