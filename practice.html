@@ -358,7 +358,7 @@ function openModal(formula) {
   const box = document.getElementById('modalBox');
   const hasPractice = !!(formula.questions && formula.questions.length);
 
-  const paramsSection = formula.params
+  const paramsSection = (formula.params && formula.params.length)
     ? `<h4>Parameters</h4><table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}</table>`
     : '';
   const useCaseSection = formula.useCase
