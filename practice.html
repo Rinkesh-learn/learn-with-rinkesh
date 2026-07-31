@@ -42,7 +42,7 @@
   <p class="lede" style="margin-bottom:0; font-size:12px;">Click any formula for a task to solve, or just start typing — it's a real, free-to-use spreadsheet.</p>
 </div>
 
-<div class="sheet" style="margin-top:6px; padding-left:8px; padding-right:8px;">
+<div class="sheet" style="margin-top:6px; padding-left:8px; padding-right:8px; max-width:1600px;">
   <div class="practice-layout" id="practiceLayout">
 
     <div class="formula-list-panel">
@@ -366,6 +366,7 @@ function openModal(formula) {
     : '';
 
   box.innerHTML = `
+    <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close">&times;</button>
     <div class="formula-title">${formula.syntax}</div>
     <span class="formula-category">${CATEGORY_ICONS[formula.category] || ''} ${formula.category}</span>
     <h4>What it does</h4>
@@ -374,6 +375,10 @@ function openModal(formula) {
     ${useCaseSection}
     <button class="btn btn-primary modal-ready-btn" id="readyBtn">${hasPractice ? "Ready — let's practice" : "Ready — try it freely"}</button>
   `;
+
+  document.getElementById('modalCloseBtn').addEventListener('click', () => {
+    overlay.classList.remove('open');
+  });
 
   document.getElementById('readyBtn').addEventListener('click', () => {
     overlay.classList.remove('open');
@@ -473,8 +478,8 @@ function createSheet(name, celldata) {
     data: [{
       name: name,
       celldata: celldata,
-      row: 60,
-      column: 26,
+      row: 1000,
+      column: 100,
       status: 1,
       config: { columnlen: { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 } }
     }]
