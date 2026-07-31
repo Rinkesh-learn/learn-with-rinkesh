@@ -91,6 +91,46 @@ nav.mainnav {
   align-items: flex-end;
 }
 
+/* ---------- Shared sub-nav bar (identical on every page) ---------- */
+
+.subnav-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--grid-line);
+  padding: 10px 0;
+}
+
+.subnav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.subnav-inner a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: var(--excel-green);
+  color: #fff;
+  text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.subnav-inner a:hover {
+  transform: translateY(-2px);
+}
+
+.subnav-inner a.current-page {
+  background: var(--amber);
+}
+
 nav.mainnav a {
   text-decoration: none;
   color: rgba(255,255,255,0.82);

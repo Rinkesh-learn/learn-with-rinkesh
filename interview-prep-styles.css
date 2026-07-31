@@ -5,13 +5,13 @@
 .ip-hero {
   max-width: 900px;
   margin: 0 auto;
-  padding: 54px 24px 20px;
+  padding: 18px 24px 10px;
   text-align: center;
 }
 
 .ip-hero-icon {
-  font-size: 44px;
-  margin-bottom: 10px;
+  font-size: 28px;
+  margin-bottom: 4px;
   display: inline-block;
   animation: ipIconPop 0.55s cubic-bezier(.34,1.56,.64,1);
 }
@@ -20,10 +20,10 @@
   to { opacity: 1; transform: scale(1) rotate(0); }
 }
 
-.ip-hero h1 { font-size: 36px; margin: 0 0 12px; }
+.ip-hero h1 { font-size: 22px; margin: 0 0 6px; }
 .ip-hero p {
   color: var(--ink-soft);
-  font-size: 16px;
+  font-size: 13px;
   max-width: 560px;
   margin: 0 auto;
 }
@@ -32,15 +32,15 @@
 
 .ip-tips-shell {
   max-width: 1000px;
-  margin: 40px auto;
+  margin: 16px auto;
   padding: 0 24px;
 }
 
 .ip-tips-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .ip-tip-card {
@@ -48,7 +48,7 @@
   border: 1px solid var(--grid-line);
   border-top: 3px solid var(--excel-green);
   border-radius: var(--radius);
-  padding: 18px;
+  padding: 12px 14px;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -58,9 +58,9 @@
 .ip-tip-card:nth-child(3) { border-top-color: var(--sky); }
 .ip-tip-card:nth-child(4) { border-top-color: var(--amber); }
 
-.ip-tip-card .icon { font-size: 22px; margin-bottom: 8px; }
-.ip-tip-card h3 { font-size: 14px; margin: 0 0 6px; }
-.ip-tip-card p { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.5; }
+.ip-tip-card .icon { font-size: 16px; margin-bottom: 4px; }
+.ip-tip-card h3 { font-size: 12px; margin: 0 0 4px; }
+.ip-tip-card p { font-size: 11px; color: var(--ink-soft); margin: 0; line-height: 1.4; }
 
 @media (max-width: 720px) {
   .ip-tips-grid { grid-template-columns: 1fr 1fr; }
@@ -70,24 +70,24 @@
 
 .ip-shell {
   max-width: 800px;
-  margin: 0 auto 60px;
+  margin: 0 auto 40px;
   padding: 0 24px;
 }
 
 .ip-level-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 6px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 
 .ip-level-tab {
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 5px 12px;
+  border-radius: 16px;
   border: 1px solid var(--grid-line);
   background: #fff;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink-soft);
   cursor: pointer;
@@ -104,8 +104,8 @@
   border: 1px solid var(--grid-line);
   border-left: 4px solid var(--excel-green);
   border-radius: var(--radius);
-  margin-bottom: 14px;
-  padding: 20px 22px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.4s ease, transform 0.4s ease;
@@ -116,17 +116,17 @@
 .ip-qa-item.advanced { border-left-color: var(--coral); }
 
 .ip-qa-question {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--ink);
-  margin-bottom: 8px;
-  line-height: 1.5;
+  margin-bottom: 4px;
+  line-height: 1.4;
 }
 
 .ip-qa-answer {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--ink-soft);
-  line-height: 1.65;
+  line-height: 1.5;
 }
 
 .ip-qa-badge {

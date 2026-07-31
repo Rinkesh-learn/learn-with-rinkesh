@@ -24,8 +24,9 @@
   </div>
 </div>
 
-<div style="max-width:900px; margin:16px auto 0; padding:0 24px;">
-  <div class="nav-quicklinks-strip" id="quickLinksRow">
+<div class="subnav-bar">
+  <div class="subnav-inner" id="quickLinksRow">
+    <a href="practice.html" data-page="practice.html">✏️ Practice</a>
     <a href="excel-guide.html" data-page="excel-guide.html">📘 About Excel</a>
     <a href="shortcuts.html" data-page="shortcuts.html">⌨️ Shortcuts</a>
     <a href="formula-example.html" data-page="formula-example.html">📖 All Formulas</a>
@@ -229,13 +230,7 @@ document.querySelectorAll('.ip-tip-card').forEach((el, i) => {
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     document.querySelectorAll('#quickLinksRow a').forEach(a => {
       if (a.dataset.page === currentPage) {
-        a.style.transition = 'opacity 0.3s ease, max-width 0.3s ease, margin 0.3s ease, padding 0.3s ease';
-        a.style.opacity = '0';
-        a.style.maxWidth = '0';
-        a.style.margin = '0';
-        a.style.padding = '0';
-        a.style.overflow = 'hidden';
-        a.style.pointerEvents = 'none';
+        a.classList.add('current-page');
       }
     });
   })();
