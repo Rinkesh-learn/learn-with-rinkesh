@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Excel Keyboard Shortcuts — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
 <link rel="stylesheet" href="shortcuts-styles.css">
 <link rel="stylesheet" href="practice-styles.css">
 </head>
@@ -150,7 +151,19 @@ const SHORTCUTS = [
   { cat: "Find & Other", keys: ["Alt", "F1"], desc: "Insert a chart on the current sheet" },
   { cat: "Find & Other", keys: ["F11"], desc: "Create a chart on a new sheet" },
   { cat: "Find & Other", keys: ["Ctrl", ";"], desc: "Insert today's date" },
-  { cat: "Find & Other", keys: ["Ctrl", "Shift", ";"], desc: "Insert the current time" }
+  { cat: "Find & Other", keys: ["Ctrl", "Shift", ";"], desc: "Insert the current time" },
+
+  // Paste Special
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Open the Paste Special dialog" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press V — paste values only, no formulas or formatting" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press F — paste formulas only" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press T — paste formatting only" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press W — paste column widths only" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press E — transpose rows and columns while pasting" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press N — paste data validation rules only" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press D — add copied values to existing values" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press S — subtract copied values from existing values" },
+  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press B — skip blank cells while pasting" }
 ];
 
 const CATEGORY_ICONS = {
@@ -161,7 +174,8 @@ const CATEGORY_ICONS = {
   "Formulas & Data": "🧮",
   "Rows & Columns": "📐",
   "File & View": "🗂️",
-  "Find & Other": "🔎"
+  "Find & Other": "🔎",
+  "Paste Special": "📋"
 };
 
 function render(filterText) {
@@ -228,6 +242,7 @@ render('');
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="feedback-widget.js"></script>
 <script src="auth-nav.js"></script>
 <script>
   (function() {

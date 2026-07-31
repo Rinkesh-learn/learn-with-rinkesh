@@ -9,6 +9,7 @@
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
 <link rel="stylesheet" href="practice-styles.css">
 </head>
 <body>
@@ -63,11 +64,11 @@
     <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
       <div class="practice-active" style="width:100%;">
         <h2 id="activeTitle">Free Practice</h2>
-        <p class="target-label" id="activeTask" style="margin-bottom:8px;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
-        <div id="luckysheetContainer" style="width:100%; height:800px; position:relative; border:1px solid var(--grid-line);"></div>
-        <div class="practice-input-row" id="checkRow" style="justify-content:flex-end; border-top:none; background:transparent; padding-left:0; padding-right:0; display:none;">
-          <button class="btn btn-primary" id="checkBtn">Check My Answer</button>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
+          <p class="target-label" id="activeTask" style="margin-bottom:0;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
+          <button class="btn btn-primary" id="checkBtn" style="display:none; flex-shrink:0; padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
         </div>
+        <div id="luckysheetContainer" style="width:100%; height:800px; position:relative; border:1px solid var(--grid-line);"></div>
       </div>
     </div>
 
@@ -357,6 +358,7 @@ function renderList() {
       li.className = 'formula-list-item'
         + (isSelected ? ' selected' : '')
         + (isPracticed && !isSelected ? ' practiced' : '');
+      li.dataset.formulaId = f.id;
       const hasVideo = !!f.videoUrl;
       const playIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="11" fill="${hasVideo ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>`;
       const videoIcon = hasVideo
@@ -531,7 +533,7 @@ function startBlankSheet() {
   currentFormula = null;
   document.getElementById('activeTitle').textContent = 'Free Practice';
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
-  document.getElementById('checkRow').style.display = 'none';
+  document.getElementById('checkBtn').style.display = 'none';
   createSheet('Free Practice', []);
 }
 
@@ -539,7 +541,7 @@ function startFreePractice(formula) {
   currentFormula = formula;
   document.getElementById('activeTitle').textContent = formula.name;
   document.getElementById('activeTask').innerHTML = `Try <strong>${formula.name}</strong> freely below — real Excel engine, no pre-set answer to check against yet. Syntax: <code>${formula.syntax}</code>`;
-  document.getElementById('checkRow').style.display = 'none';
+  document.getElementById('checkBtn').style.display = 'none';
   createSheet(formula.name, []);
 }
 
@@ -553,7 +555,7 @@ function startPractice(formula, qIndex) {
 
   document.getElementById('activeTitle').textContent = formula.name;
   document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
-  document.getElementById('checkRow').style.display = 'flex';
+  document.getElementById('checkBtn').style.display = 'inline-block';
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
@@ -634,7 +636,13 @@ window.addEventListener('load', () => {
     const requested = params.get('formula');
     const match = requested ? FORMULAS.find(f => f.id === requested) : null;
     if (match) {
+      currentFormula = match;
+      renderList();
       openModal(match);
+      setTimeout(() => {
+        const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
+        if (targetLi) targetLi.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 100);
     } else {
       startBlankSheet();
     }
@@ -644,6 +652,7 @@ window.addEventListener('load', () => {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="feedback-widget.js"></script>
 <script src="auth-nav.js"></script>
 
 </body>

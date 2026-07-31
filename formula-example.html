@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Formulas — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
 <link rel="stylesheet" href="practice-styles.css">
 </head>
 <body>
@@ -37,9 +38,13 @@
   <h1 style="font-size:32px;">The formula reference.</h1>
   <p class="lede" style="margin-bottom:14px;">Browse by category. Click any formula to see how it works and jump straight into practicing it.</p>
   <a href="shortcuts.html" style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border-bottom:2px solid var(--amber);">⌨️ View all keyboard shortcuts &rarr;</a>
+  <div style="max-width:420px; margin-top:16px;">
+    <input type="text" id="allFormulaSearch" placeholder="🔍 Search all 444 formulas..." style="width:100%; box-sizing:border-box; padding:10px 16px; border:1px solid var(--grid-line); border-radius:22px; font-family:'IBM Plex Sans',sans-serif; font-size:14px; box-shadow:0 3px 10px rgba(28,35,33,0.06);">
+  </div>
 </div>
 
 <div class="sheet" id="formulaCategories" style="margin-top:10px;"></div>
+<div class="sheet" id="noFormulaResults" style="display:none; text-align:center; color:var(--ink-soft); padding:40px;">No formulas match that search.</div>
 
 <footer>
   Learn With Rinkesh — built one cell at a time.
@@ -54,31 +59,54 @@
   });
 
   const container = document.getElementById('formulaCategories');
-  CATEGORY_ORDER.forEach(cat => {
-    if (!categories[cat]) return;
-    const section = document.createElement('div');
-    section.style.marginBottom = '36px';
-    section.innerHTML = `
-      <div class="sheet-header">
-        <span class="colletter">${CATEGORY_ICONS[cat] || ''}</span>
-        <h2>${cat}</h2>
-      </div>
-      <div class="formula-card-grid">
-        ${categories[cat].map(f => `
-          <a class="formula-card" href="practice.html?formula=${f.id}">
-            <div class="formula-card-name">${f.name}${PRACTICE_ENABLED_IDS.includes(f.id) ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</div>
-            <div class="formula-card-desc">${f.description}</div>
-            <div class="formula-card-cta">${PRACTICE_ENABLED_IDS.includes(f.id) ? 'Practice this' : 'Try it freely'} &rarr;</div>
-          </a>
-        `).join('')}
-      </div>
-    `;
-    container.appendChild(section);
+  const noResults = document.getElementById('noFormulaResults');
+
+  function renderFormulas(term) {
+    term = (term || '').trim().toLowerCase();
+    container.innerHTML = '';
+    let anyMatch = false;
+
+    CATEGORY_ORDER.forEach(cat => {
+      if (!categories[cat]) return;
+      const matches = categories[cat].filter(f =>
+        !term || f.name.toLowerCase().includes(term) || f.description.toLowerCase().includes(term)
+      );
+      if (matches.length === 0) return;
+      anyMatch = true;
+
+      const section = document.createElement('div');
+      section.style.marginBottom = '36px';
+      section.innerHTML = `
+        <div class="sheet-header">
+          <span class="colletter">${CATEGORY_ICONS[cat] || ''}</span>
+          <h2>${cat}</h2>
+        </div>
+        <div class="formula-card-grid">
+          ${matches.map(f => `
+            <a class="formula-card" href="practice.html?formula=${f.id}">
+              <div class="formula-card-name">${f.name}${PRACTICE_ENABLED_IDS.includes(f.id) ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</div>
+              <div class="formula-card-desc">${f.description}</div>
+              <div class="formula-card-cta">${PRACTICE_ENABLED_IDS.includes(f.id) ? 'Practice this' : 'Try it freely'} &rarr;</div>
+            </a>
+          `).join('')}
+        </div>
+      `;
+      container.appendChild(section);
+    });
+
+    noResults.style.display = anyMatch ? 'none' : 'block';
+  }
+
+  renderFormulas('');
+
+  document.getElementById('allFormulaSearch').addEventListener('input', (e) => {
+    renderFormulas(e.target.value);
   });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="feedback-widget.js"></script>
 <script src="auth-nav.js"></script>
 <script>
   (function() {
