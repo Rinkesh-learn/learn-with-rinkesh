@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charts & PivotTables — Learn With Rinkesh</title>
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="practice-styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="hero" style="padding-bottom:20px;">
+  <h1 style="font-size:32px;">Charts &amp; PivotTables — build the real thing.</h1>
+  <p class="lede" style="margin-bottom:0;">Pick a task, get real raw data, and build the chart or PivotTable yourself in a genuine spreadsheet — using Excel's own Insert and Data menus.</p>
+</div>
+
+<div class="sheet" style="margin-top:0;">
+  <div class="practice-layout" id="practiceLayout">
+
+    <div class="formula-list-panel">
+      <div class="formula-list-header">
+        <h3>Tasks</h3>
+        <button class="swap-btn" id="swapBtn">&#8646; Swap side</button>
+      </div>
+      <ul class="formula-list" id="taskList"></ul>
+    </div>
+
+    <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
+      <div class="practice-active" style="width:100%;">
+        <h2 id="activeTitle">Pick a task to begin</h2>
+        <p class="target-label" id="activeTask">Choose any task from the list — you'll get real data loaded into a live spreadsheet, plus the requirement to build. No auto-checking here; build it, then compare your result against the requirement yourself, just like at work.</p>
+        <div id="luckysheetContainer" style="width:100%; height:600px; position:relative; border:1px solid var(--grid-line); display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  Learn With Rinkesh — built one cell at a time.
+</footer>
+
+<script>
+const TASKS = [
+  {
+    id: 'sales-by-region',
+    title: 'Sales by Region — PivotTable',
+    icon: '📊',
+    requirement: 'Build a PivotTable showing Total Sales for each Region.',
+    grid: [
+      ["Region","Product","Month","Sales"],
+      ["North","Widget A","Jan",1200],["South","Widget A","Jan",900],["East","Widget B","Jan",1500],
+      ["West","Widget A","Jan",800],["North","Widget B","Feb",1100],["South","Widget B","Feb",950],
+      ["East","Widget A","Feb",1300],["West","Widget B","Feb",700],["North","Widget A","Mar",1400],
+      ["South","Widget A","Mar",1000],["East","Widget B","Mar",1600],["West","Widget A","Mar",850],
+      ["North","Widget B","Apr",1250],["South","Widget B","Apr",980],["East","Widget A","Apr",1350],
+      ["West","Widget B","Apr",760]
+    ]
+  },
+  {
+    id: 'revenue-trend',
+    title: 'Revenue Trend — Line Chart',
+    icon: '📈',
+    requirement: 'Create a line chart showing Revenue over the 12 months, so the trend is easy to see at a glance.',
+    grid: [
+      ["Month","Revenue"],
+      ["Jan",42000],["Feb",45500],["Mar",39800],["Apr",51200],["May",48700],["Jun",53000],
+      ["Jul",49500],["Aug",56200],["Sep",52800],["Oct",58900],["Nov",61200],["Dec",67000]
+    ]
+  },
+  {
+    id: 'headcount-pivot',
+    title: 'Department Headcount — PivotTable',
+    icon: '👥',
+    requirement: 'Build a PivotTable that counts how many employees are in each Department.',
+    grid: [
+      ["Employee","Department","Status"],
+      ["Aman","Finance","Active"],["Riya","HR","Active"],["Karan","IT","Active"],["Simran","Finance","Active"],
+      ["Neha","Marketing","Active"],["Aditya","IT","Active"],["Priya","HR","Active"],["Vikram","Finance","Active"],
+      ["Anjali","IT","Active"],["Rohan","Marketing","Active"],["Sonal","Finance","Active"],["Manish","HR","Active"]
+    ]
+  },
+  {
+    id: 'product-units-chart',
+    title: 'Units Sold by Product — Bar Chart',
+    icon: '📊',
+    requirement: 'Create a bar chart comparing Units Sold across each Product.',
+    grid: [
+      ["Product","Units Sold"],
+      ["Widget A",1240],["Widget B",980],["Widget C",1560],["Widget D",720],["Widget E",1100]
+    ]
+  },
+  {
+    id: 'quarterly-comparison',
+    title: 'Quarterly Sales — Cross-tab PivotTable',
+    icon: '🧮',
+    requirement: 'Build a PivotTable with Region in rows and Quarter in columns, showing total Sales in each cell.',
+    grid: [
+      ["Region","Quarter","Sales"],
+      ["North","Q1",42000],["South","Q1",31000],["East","Q1",38500],["West","Q1",27000],
+      ["North","Q2",45500],["South","Q2",33200],["East","Q2",40100],["West","Q2",29500],
+      ["North","Q3",48000],["South","Q3",35000],["East","Q3",41800],["West","Q3",31200],
+      ["North","Q4",52500],["South","Q4",37800],["East","Q4",44200],["West","Q4",33900]
+    ]
+  },
+  {
+    id: 'mini-dashboard',
+    title: 'Mini Dashboard — PivotTable + Chart',
+    icon: '🖥️',
+    requirement: 'Build a PivotTable summarizing Sales by Region, then create a chart from that PivotTable — arrange both together like a simple dashboard.',
+    grid: [
+      ["Region","Product","Sales"],
+      ["North","Widget A",1200],["South","Widget A",900],["East","Widget B",1500],["West","Widget A",800],
+      ["North","Widget B",1100],["South","Widget B",950],["East","Widget A",1300],["West","Widget B",700],
+      ["North","Widget A",1400],["South","Widget A",1000],["East","Widget B",1600],["West","Widget A",850]
+    ]
+  }
+];
+
+let sheetReady = false;
+let currentTaskId = null;
+
+function renderList() {
+  const list = document.getElementById('taskList');
+  list.innerHTML = '';
+  TASKS.forEach(t => {
+    const li = document.createElement('li');
+    li.className = 'formula-list-item' + (currentTaskId === t.id ? ' selected' : '');
+    li.innerHTML = `<span class="flname">${t.icon} ${t.title}</span>`;
+    li.addEventListener('click', () => startTask(t));
+    list.appendChild(li);
+  });
+}
+
+function buildCelldata(grid) {
+  const cells = [];
+  grid.forEach((row, r) => {
+    row.forEach((val, c) => {
+      if (val !== null && val !== '') {
+        cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
+      }
+    });
+  });
+  return cells;
+}
+
+function startTask(task) {
+  currentTaskId = task.id;
+  renderList();
+
+  document.getElementById('activeTitle').textContent = task.title;
+  document.getElementById('activeTask').innerHTML = `<strong>Requirement:</strong> ${task.requirement}<br><span style="font-size:12px; color:var(--ink-soft);">Use the sheet's own Insert menu (for charts) or Data menu (for PivotTable) — same as real Excel.</span>`;
+
+  const container = document.getElementById('luckysheetContainer');
+  container.style.display = 'block';
+
+  if (sheetReady && window.luckysheet && window.luckysheet.destroy) {
+    try { luckysheet.destroy(); } catch (e) {}
+  }
+
+  luckysheet.create({
+    container: 'luckysheetContainer',
+    lang: 'en',
+    showinfobar: false,
+    showsheetbar: true,
+    data: [{
+      name: task.title,
+      celldata: buildCelldata(task.grid),
+      row: 60,
+      column: 26,
+      status: 1,
+      config: { columnlen: { 0: 120, 1: 120, 2: 100, 3: 100 } }
+    }]
+  });
+  sheetReady = true;
+}
+
+renderList();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
