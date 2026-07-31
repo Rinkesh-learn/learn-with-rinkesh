@@ -206,7 +206,8 @@
       if (error) throw error;
       (data || []).forEach(renderMessage);
     } catch (e) {
-      container.innerHTML = '<div class="chat-loading">Couldn\'t load chat history.</div>';
+      const detail = (e && e.message) ? e.message : 'Unknown error';
+      container.innerHTML = `<div class="chat-loading">Couldn't load chat history.<br><span style="font-size:11px; opacity:0.7;">${detail}</span></div>`;
     }
   }
 
@@ -260,15 +261,26 @@
       } catch (e) { console.error('Image upload failed', e); }
     }
 
+    let sendError = null;
     try {
-      await supabaseClient.from('chat_messages').insert({
+      const { error } = await supabaseClient.from('chat_messages').insert({
         user_id: currentUser.id,
         display_name: currentUser.displayName,
         message: text || null,
         image_url: imageUrl
       });
+      if (error) sendError = error;
     } catch (e) {
-      console.error('Send failed', e);
+      sendError = e;
+    }
+
+    if (sendError) {
+      const container = document.getElementById('chatMessages');
+      const errDiv = document.createElement('div');
+      errDiv.className = 'chat-loading';
+      errDiv.innerHTML = `Message failed to send.<br><span style="font-size:11px; opacity:0.7;">${sendError.message || 'Unknown error'}</span>`;
+      container.appendChild(errDiv);
+      container.scrollTop = container.scrollHeight;
     }
 
     textInput.value = '';
