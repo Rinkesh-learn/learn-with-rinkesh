@@ -6,6 +6,7 @@
 <title>Account Settings — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
 </head>
 <body>
 
@@ -82,9 +83,27 @@
   <div id="passwordMessage"></div>
 </div>
 
+<div class="setup-box">
+  <h1>Chat Preferences</h1>
+  <p class="hint">Controls how you appear in the community chat.</p>
+
+  <label for="chatDisplayName">Chat display name</label>
+  <input type="text" id="chatDisplayName" placeholder="How you appear in chat">
+
+  <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+    <input type="checkbox" id="chatHideNameCheckbox" style="width:auto;">
+    Hide my name in chat (show as "Anonymous")
+  </label>
+
+  <button class="btn btn-primary" id="chatPrefsBtn" style="width:100%; margin-top:16px;">Save Chat Preferences</button>
+
+  <div id="chatPrefsMessage"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="feedback-widget.js"></script>
+<script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
 <script>
   function refreshAvatarPreview() {
@@ -126,6 +145,8 @@
       document.getElementById('age').value = profile.age || '';
       document.getElementById('profession').value = profile.profession || '';
       document.getElementById('goal').value = profile.goal || '';
+      document.getElementById('chatDisplayName').value = profile.chat_display_name || '';
+      document.getElementById('chatHideNameCheckbox').checked = !!profile.chat_hide_name;
     }
     refreshAvatarPreview();
   }
@@ -184,6 +205,26 @@
     msg.textContent = 'Password updated!';
     msg.className = 'success';
     document.getElementById('newPassword').value = '';
+  });
+
+  document.getElementById('chatPrefsBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('chatPrefsMessage');
+    msg.className = '';
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const { error } = await supabaseClient.from('profiles').update({
+      chat_display_name: document.getElementById('chatDisplayName').value.trim() || null,
+      chat_hide_name: document.getElementById('chatHideNameCheckbox').checked
+    }).eq('id', session.user.id);
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.className = 'error';
+      return;
+    }
+    msg.textContent = 'Saved!';
+    msg.className = 'success';
   });
 </script>
 

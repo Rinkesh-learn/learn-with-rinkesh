@@ -124,7 +124,9 @@ nav.mainnav {
 }
 
 .subnav-inner a:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.12);
+  z-index: 2;
+  position: relative;
 }
 
 .subnav-inner a.current-page {
@@ -504,9 +506,9 @@ nav.mainnav .nav-account-menu a {
   background: #fff;
 }
 .setup-box button { width: 100%; margin-top: 26px; }
-.setup-box #message { margin-top: 14px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
-.setup-box #message.error { color: #B3261E; }
-.setup-box #message.success { color: var(--excel-green-deep); }
+.setup-box #message, .setup-box #passwordMessage, .setup-box #chatPrefsMessage { margin-top: 14px; font-size: 13px; font-family: 'IBM Plex Mono', monospace; }
+.setup-box #message.error, .setup-box #passwordMessage.error, .setup-box #chatPrefsMessage.error { color: #B3261E; }
+.setup-box #message.success, .setup-box #passwordMessage.success, .setup-box #chatPrefsMessage.success { color: var(--excel-green-deep); }
 
 /* ---------- Practice grid ---------- */
 
