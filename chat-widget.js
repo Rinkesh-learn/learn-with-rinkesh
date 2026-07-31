@@ -102,7 +102,7 @@
         id: null,
         isLoggedIn: false,
         displayName: guestName,
-        disclaimerSeen: sessionStorage.getItem(ANON_DISCLAIMER_KEY) === '1',
+        disclaimerSeen: localStorage.getItem(ANON_DISCLAIMER_KEY) === '1',
         rawName: guestName,
         hideNameSetting: false
       };
@@ -151,7 +151,7 @@
       } catch (e) {}
     } else {
       currentUser.disclaimerSeen = true;
-      sessionStorage.setItem(ANON_DISCLAIMER_KEY, '1');
+      localStorage.setItem(ANON_DISCLAIMER_KEY, '1');
     }
     showChatWindow();
   });
@@ -221,7 +221,10 @@
         .limit(100);
       container.innerHTML = '';
       if (error) throw error;
-      (data || []).forEach(renderMessage);
+      (data || []).forEach(msg => {
+        renderedMessageIds.add(msg.id);
+        renderMessage(msg);
+      });
     } catch (e) {
       const detail = (e && e.message) ? e.message : 'Unknown error';
       container.innerHTML = `<div class="chat-loading">Couldn't load chat history.<br><span style="font-size:11px; opacity:0.7;">${detail}</span></div>`;
@@ -229,12 +232,16 @@
   }
 
   let realtimeSubscribed = false;
+  const renderedMessageIds = new Set();
+
   function subscribeRealtime() {
     if (realtimeSubscribed) return;
     realtimeSubscribed = true;
     supabaseClient
       .channel('public:chat_messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+        if (renderedMessageIds.has(payload.new.id)) return; // already shown optimistically
+        renderedMessageIds.add(payload.new.id);
         renderMessage(payload.new);
       })
       .subscribe();
@@ -280,13 +287,22 @@
 
     let sendError = null;
     try {
-      const { error } = await supabaseClient.from('chat_messages').insert({
-        user_id: currentUser.id,
-        display_name: currentUser.displayName,
-        message: text || null,
-        image_url: imageUrl
-      });
-      if (error) sendError = error;
+      const { data: inserted, error } = await supabaseClient
+        .from('chat_messages')
+        .insert({
+          user_id: currentUser.id,
+          display_name: currentUser.displayName,
+          message: text || null,
+          image_url: imageUrl
+        })
+        .select()
+        .single();
+      if (error) {
+        sendError = error;
+      } else if (inserted) {
+        renderedMessageIds.add(inserted.id);
+        renderMessage(inserted);
+      }
     } catch (e) {
       sendError = e;
     }
