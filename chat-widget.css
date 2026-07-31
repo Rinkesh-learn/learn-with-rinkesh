@@ -6,7 +6,7 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 9998;
+  z-index: 1000000;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -37,7 +37,7 @@
   background: rgba(28,35,33,0.6);
   align-items: center;
   justify-content: center;
-  z-index: 10001;
+  z-index: 1000001;
   padding: 20px;
 }
 .chat-overlay.open { display: flex; }
@@ -67,19 +67,23 @@
   border-radius: var(--radius);
   border: 1px solid var(--grid-line);
   box-shadow: 0 16px 40px rgba(0,0,0,0.2);
-  z-index: 9998;
+  z-index: 1000000;
   flex-direction: column;
   overflow: hidden;
 }
 .chat-window.open { display: flex; animation: fbPop 0.3s cubic-bezier(.34,1.56,.64,1); }
 
 .chat-window.maximized {
-  bottom: 20px;
-  right: 20px;
-  left: 20px;
-  top: 20px;
+  bottom: 40px;
+  top: 40px;
+  right: 10%;
+  left: 10%;
   width: auto;
   height: auto;
+}
+
+@media (max-width: 900px) {
+  .chat-window.maximized { left: 20px; right: 20px; }
 }
 
 .chat-header {

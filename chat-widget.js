@@ -15,7 +15,7 @@
 
 (function () {
   const OPEN_STATE_KEY = 'lwr_chat_open_state';
-  const REACTION_EMOJIS = ['❤️', '😂', '😢', '😮', '🙏'];
+  const REACTION_EMOJIS = ['👍', '❤️', '😂', '😢', '😮', '🙏'];
   const COMPOSE_EMOJIS = ['😀','😂','😍','😎','🤔','😢','😮','🙏','👍','👎','🔥','🎉','❤️','💡','✅','❌','😅','🙌','👏','🤝'];
 
   // ---------- Shared disclaimer content ----------
@@ -33,19 +33,6 @@
   btn.id = 'chatFloatBtn';
   btn.innerHTML = '💬';
   document.body.appendChild(btn);
-
-  // ---------- First-time accept overlay (logged-in users only, once ever) ----------
-  const disclaimerOverlay = document.createElement('div');
-  disclaimerOverlay.id = 'chatDisclaimerOverlay';
-  disclaimerOverlay.className = 'chat-overlay';
-  disclaimerOverlay.innerHTML = `
-    <div class="chat-disclaimer-box">
-      <h3>Before you join the chat</h3>
-      ${DISCLAIMER_HTML}
-      <button class="btn btn-primary" id="chatAgreeBtn" style="width:100%;">I Understand — Start Chatting</button>
-    </div>
-  `;
-  document.body.appendChild(disclaimerOverlay);
 
   // ---------- Read-only viewer (anyone, anytime, no login needed) ----------
   const disclaimerViewOverlay = document.createElement('div');
@@ -151,10 +138,6 @@
       loginPromptOverlay.classList.add('open');
       return;
     }
-    if (!currentUser.disclaimerSeen) {
-      disclaimerOverlay.classList.add('open');
-      return;
-    }
     showChatWindow();
   }
 
@@ -191,15 +174,6 @@
     }
   });
 
-  document.getElementById('chatAgreeBtn').addEventListener('click', async () => {
-    disclaimerOverlay.classList.remove('open');
-    currentUser.disclaimerSeen = true;
-    try {
-      await supabaseClient.from('profiles').update({ chat_disclaimer_seen: true }).eq('id', currentUser.id);
-    } catch (e) {}
-    showChatWindow();
-  });
-
   document.getElementById('chatLoginCloseBtn').addEventListener('click', () => {
     loginPromptOverlay.classList.remove('open');
   });
@@ -217,9 +191,12 @@
     chatWindow.classList.toggle('maximized');
   });
 
-  // Stay open across page navigation until explicitly minimized
+  // Stay open across page navigation until explicitly minimized.
+  // Small delay so Supabase's auth session has time to fully restore
+  // from storage on this fresh page load before we check it — otherwise
+  // an already-logged-in user can be briefly, incorrectly seen as logged out.
   if (sessionStorage.getItem(OPEN_STATE_KEY) === '1') {
-    openChat();
+    setTimeout(openChat, 300);
   }
 
   // ---------- Settings panel ----------
