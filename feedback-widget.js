@@ -18,11 +18,9 @@
   const SESSION_KEY = 'lwr_feedback_shown_this_visit';
 
   // ---------- Inject markup ----------
-  const btn = document.createElement('button');
-  btn.id = 'feedbackFloatBtn';
-  btn.innerHTML = '💬 <span>Feedback</span>';
-  document.body.appendChild(btn);
-
+  // Note: no persistent floating button — feedback is now only triggered
+  // from the "Share Your Feedback" section at the end of the homepage,
+  // plus the 2-minute auto-popup timer below.
   const overlay = document.createElement('div');
   overlay.id = 'feedbackOverlay';
   overlay.className = 'fb-overlay';
@@ -80,7 +78,7 @@
     overlay.classList.remove('open');
   }
 
-  btn.addEventListener('click', openFeedback);
+  window.openFeedbackPopup = openFeedback;
   document.getElementById('fbCloseBtn').addEventListener('click', closeFeedback);
   document.getElementById('fbDoneBtn').addEventListener('click', closeFeedback);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeFeedback(); });

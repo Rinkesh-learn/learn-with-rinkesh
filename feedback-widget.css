@@ -2,42 +2,6 @@
    Learn With Rinkesh — Feedback widget styles
    =========================================================== */
 
-#feedbackFloatBtn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 18px;
-  border-radius: 30px;
-  background: var(--excel-green);
-  color: #fff;
-  border: none;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(28,107,65,0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: fbFloat 3s ease-in-out infinite;
-}
-#feedbackFloatBtn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 10px 26px rgba(28,107,65,0.4);
-}
-@keyframes fbFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-#feedbackFloatBtn:hover { animation-play-state: paused; }
-
-@media (max-width: 640px) {
-  #feedbackFloatBtn span { display: none; }
-  #feedbackFloatBtn { padding: 14px; border-radius: 50%; }
-}
-
 .fb-overlay {
   display: none;
   position: fixed;
