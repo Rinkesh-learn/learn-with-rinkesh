@@ -94,7 +94,7 @@ nav.mainnav {
 /* ---------- Shared sub-nav bar (identical on every page) ---------- */
 
 .subnav-bar {
-  background: var(--excel-green-deep);
+  background: var(--paper);
   padding: 6px 0;
 }
 
