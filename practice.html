@@ -53,6 +53,10 @@
       <div style="padding:0 12px 10px;">
         <input type="text" id="formulaSearch" placeholder="🔍 Search formulas..." style="width:100%; box-sizing:border-box; padding:8px 12px; border:1px solid var(--grid-line); border-radius:20px; font-family:'IBM Plex Sans',sans-serif; font-size:13px;">
       </div>
+      <div style="padding:0 12px 10px; display:flex; gap:6px;">
+        <button class="formula-filter-btn active" id="filterAllBtn">All</button>
+        <button class="formula-filter-btn" id="filterPopularBtn">⭐ Popular</button>
+      </div>
       <ul class="formula-list" id="formulaList"></ul>
     </div>
 
@@ -294,17 +298,35 @@ let sheetReady = false;
 
 // ---------- Sidebar ----------
 let formulaSearchTerm = '';
+let formulaFilterMode = 'all';
+const practicedFormulas = new Set(); // resets on page refresh — intentionally not persisted
+
+// The ~50 formulas people actually use day to day at work
+const POPULAR_FORMULA_IDS = new Set([
+  'vlookup','hlookup','xlookup','index','match','choose',
+  'sum','sumif','sumifs','average','averageif','averageifs',
+  'count','counta','countif','countifs','max','min',
+  'round','roundup','rounddown',
+  'if','ifs','and','or','not','iferror','ifna',
+  'concatenate','concat','textjoin','left','right','mid','len','trim','upper','lower','proper','substitute','find',
+  'today','now','date','datedif','day','month','year','networkdays','workday',
+  'isblank','iserror','isnumber'
+]);
 
 function renderList() {
   const list = document.getElementById('formulaList');
   list.innerHTML = '';
 
   const term = formulaSearchTerm.trim().toLowerCase();
-  const visibleFormulas = term
-    ? FORMULAS.filter(f => f.name.toLowerCase().includes(term))
-    : FORMULAS;
+  let visibleFormulas = FORMULAS;
+  if (formulaFilterMode === 'popular') {
+    visibleFormulas = visibleFormulas.filter(f => POPULAR_FORMULA_IDS.has(f.id));
+  }
+  if (term) {
+    visibleFormulas = visibleFormulas.filter(f => f.name.toLowerCase().includes(term));
+  }
 
-  if (term && visibleFormulas.length === 0) {
+  if (visibleFormulas.length === 0) {
     const empty = document.createElement('li');
     empty.style.padding = '16px 12px';
     empty.style.fontSize = '13px';
@@ -330,7 +352,11 @@ function renderList() {
     byCategory[cat].forEach(f => {
       const hasPractice = !!(f.questions && f.questions.length);
       const li = document.createElement('li');
-      li.className = 'formula-list-item' + (currentFormula && currentFormula.id === f.id ? ' selected' : '');
+      const isSelected = currentFormula && currentFormula.id === f.id;
+      const isPracticed = practicedFormulas.has(f.id);
+      li.className = 'formula-list-item'
+        + (isSelected ? ' selected' : '')
+        + (isPracticed && !isSelected ? ' practiced' : '');
       const hasVideo = !!f.videoUrl;
       const playIcon = `<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="11" fill="${hasVideo ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>`;
       const videoIcon = hasVideo
@@ -346,6 +372,20 @@ function renderList() {
     });
   });
 }
+
+document.getElementById('filterAllBtn').addEventListener('click', () => {
+  formulaFilterMode = 'all';
+  document.getElementById('filterAllBtn').classList.add('active');
+  document.getElementById('filterPopularBtn').classList.remove('active');
+  renderList();
+});
+
+document.getElementById('filterPopularBtn').addEventListener('click', () => {
+  formulaFilterMode = 'popular';
+  document.getElementById('filterPopularBtn').classList.add('active');
+  document.getElementById('filterAllBtn').classList.remove('active');
+  renderList();
+});
 
 document.getElementById('formulaSearch').addEventListener('input', (e) => {
   formulaSearchTerm = e.target.value;
@@ -560,6 +600,10 @@ function checkAnswer(question) {
     : String(value).trim().toLowerCase() === String(question.expectedValue).trim().toLowerCase();
 
   if (isCorrect) {
+    if (currentFormula) {
+      practicedFormulas.add(currentFormula.id);
+      renderList();
+    }
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
