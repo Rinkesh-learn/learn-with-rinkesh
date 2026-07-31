@@ -15,6 +15,7 @@
 
 (function () {
   const OPEN_STATE_KEY = 'lwr_chat_open_state';
+  const THEME_KEY = 'lwr_chat_theme';
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '😢', '😮', '🙏'];
   const COMPOSE_EMOJIS = ['😀','😂','😍','😎','🤔','😢','😮','🙏','👍','👎','🔥','🎉','❤️','💡','✅','❌','😅','🙌','👏','🤝'];
 
@@ -80,6 +81,15 @@
       <label>Your display name</label>
       <input type="text" id="chatNameInput" placeholder="How you appear in chat">
       <label class="chat-checkbox-row"><input type="checkbox" id="chatHideNameToggle"> Hide my name (show as "Anonymous")</label>
+      <label>Chat window color</label>
+      <div class="chat-theme-swatches" id="chatThemeSwatches">
+        <span class="chat-swatch" data-color="#2F80C9" style="background:#2F80C9;" title="Blue"></span>
+        <span class="chat-swatch" data-color="#1C6B41" style="background:#1C6B41;" title="Green"></span>
+        <span class="chat-swatch" data-color="#C9971E" style="background:#C9971E;" title="Amber"></span>
+        <span class="chat-swatch" data-color="#D9534F" style="background:#D9534F;" title="Coral"></span>
+        <span class="chat-swatch" data-color="#7C5CBF" style="background:#7C5CBF;" title="Purple"></span>
+        <span class="chat-swatch" data-color="#2B2E33" style="background:#2B2E33;" title="Dark"></span>
+      </div>
       <button class="btn btn-primary" id="chatSaveSettingsBtn" style="width:100%; margin-top:8px;">Save</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
@@ -146,6 +156,7 @@
     sessionStorage.setItem(OPEN_STATE_KEY, '1');
     document.getElementById('chatNameInput').value = currentUser.rawName || '';
     document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
+    applyTheme();
 
     const inputRow = document.querySelector('.chat-input-row');
     if (currentUser.banned) {
@@ -163,6 +174,8 @@
   function closeChatWindow() {
     chatWindow.classList.remove('open');
     chatWindow.classList.remove('maximized');
+    const maxBtn = document.getElementById('chatMaximizeBtn');
+    if (maxBtn) { maxBtn.innerHTML = '⛶'; maxBtn.title = 'Maximize'; }
     sessionStorage.setItem(OPEN_STATE_KEY, '0');
   }
 
@@ -188,7 +201,15 @@
   document.getElementById('chatMinimizeBtn').addEventListener('click', closeChatWindow);
 
   document.getElementById('chatMaximizeBtn').addEventListener('click', () => {
-    chatWindow.classList.toggle('maximized');
+    const isMaximized = chatWindow.classList.toggle('maximized');
+    const maxBtn = document.getElementById('chatMaximizeBtn');
+    maxBtn.innerHTML = isMaximized ? '&#10530;' : '⛶'; // shrink icon vs maximize icon
+    maxBtn.title = isMaximized ? 'Shrink back down' : 'Maximize';
+    // Reset any manual resize so it starts clean each time you maximize
+    if (isMaximized) {
+      chatWindow.style.width = '';
+      chatWindow.style.height = '';
+    }
   });
 
   // Stay open across page navigation until explicitly minimized.
@@ -200,6 +221,24 @@
   }
 
   // ---------- Settings panel ----------
+  // ---------- Theme color ----------
+  let selectedTheme = localStorage.getItem(THEME_KEY) || '#2F80C9';
+
+  function applyTheme() {
+    chatWindow.style.setProperty('--chat-theme', selectedTheme);
+    document.querySelectorAll('.chat-swatch').forEach(sw => {
+      sw.classList.toggle('selected', sw.dataset.color === selectedTheme);
+    });
+  }
+
+  document.querySelectorAll('.chat-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      selectedTheme = sw.dataset.color;
+      localStorage.setItem(THEME_KEY, selectedTheme);
+      applyTheme();
+    });
+  });
+
   document.getElementById('chatSettingsBtn').addEventListener('click', () => {
     document.getElementById('chatSettingsPanel').classList.toggle('open');
   });

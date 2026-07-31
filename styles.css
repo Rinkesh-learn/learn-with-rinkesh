@@ -411,17 +411,18 @@ footer {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: none;
+  background: rgba(255,255,255,0.12);
   border: none;
   cursor: pointer;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
   color: #fff;
-  padding: 4px 6px;
-  border-radius: var(--radius);
+  padding: 4px 10px 4px 4px;
+  border-radius: 20px;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
-.nav-account-btn:hover { background: rgba(255,255,255,0.15); }
+.nav-account-btn:hover { background: rgba(255,255,255,0.22); }
 
 .nav-avatar-img {
   width: 26px;
