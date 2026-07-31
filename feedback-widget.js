@@ -168,5 +168,7 @@
     }
   }
 
-  maybeAutoTrigger();
+  // Auto-trigger disabled — feedback is now only opened manually,
+  // via the "Share Your Feedback" button at the bottom of the homepage.
+  // maybeAutoTrigger();
 })();

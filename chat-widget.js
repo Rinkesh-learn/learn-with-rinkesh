@@ -102,7 +102,7 @@
         id: null,
         isLoggedIn: false,
         displayName: guestName,
-        disclaimerSeen: localStorage.getItem(ANON_DISCLAIMER_KEY) === '1',
+        disclaimerSeen: sessionStorage.getItem(ANON_DISCLAIMER_KEY) === '1',
         rawName: guestName,
         hideNameSetting: false
       };
@@ -151,7 +151,7 @@
       } catch (e) {}
     } else {
       currentUser.disclaimerSeen = true;
-      localStorage.setItem(ANON_DISCLAIMER_KEY, '1');
+      sessionStorage.setItem(ANON_DISCLAIMER_KEY, '1');
     }
     showChatWindow();
   });
