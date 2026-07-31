@@ -6,6 +6,7 @@
 <title>About Excel — Learn With Rinkesh</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="practice-styles.css">
+<link rel="stylesheet" href="excel-hub-styles.css">
 <style>
   .guide-shell {
     max-width: 900px;
@@ -223,8 +224,6 @@
   </div>
 </div>
 
-<a href="practice.html" class="btn btn-primary guide-topbtn">Start Practicing &rarr;</a>
-
 <div class="subnav-bar">
   <div class="subnav-inner" id="quickLinksRow">
     <a href="practice.html" data-page="practice.html">✏️ Practice</a>
@@ -235,19 +234,108 @@
   </div>
 </div>
 
-<div class="guide-shell">
-  <div class="guide-progress" id="guideProgress"></div>
-  <div class="guide-card" id="guideCard"></div>
-  <div class="guide-nav-row">
-    <button class="btn btn-ghost" id="prevBtn">&larr; Back</button>
-    <span id="slideCounter" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);"></span>
-    <button class="btn btn-primary" id="nextBtn">Next &rarr;</button>
+<div class="hub-hero">
+  <h1>Learn Excel — the knowledge hub</h1>
+  <p>Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
+  <div class="hub-search-wrap">
+    <span class="hub-search-icon">🔍</span>
+    <input type="text" id="hubSearch" placeholder="Search articles or keywords...">
   </div>
+</div>
+
+<div class="hub-presentation-toggle">
+  <button class="hub-presentation-btn" id="togglePresentationBtn">▶ Open the Excel Basics Presentation</button>
+</div>
+
+<div id="presentationWrap">
+  <a href="practice.html" class="btn btn-primary guide-topbtn">Start Practicing &rarr;</a>
+
+  <div class="guide-shell">
+    <div class="guide-progress" id="guideProgress"></div>
+    <div class="guide-card" id="guideCard"></div>
+    <div class="guide-nav-row">
+      <button class="btn btn-ghost" id="prevBtn">&larr; Back</button>
+      <span id="slideCounter" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);"></span>
+      <button class="btn btn-primary" id="nextBtn">Next &rarr;</button>
+    </div>
+</div>
+</div>
+
+<div class="hub-layout">
+  <div class="hub-sidebar" id="hubSidebar"></div>
+  <div class="hub-main" id="hubMain"></div>
 </div>
 
 <footer>
   Learn With Rinkesh — built one cell at a time.
 </footer>
+
+<script src="excel-articles-data.js"></script>
+<script>
+  document.getElementById('togglePresentationBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('presentationWrap');
+    const btn = document.getElementById('togglePresentationBtn');
+    wrap.classList.toggle('open');
+    btn.textContent = wrap.classList.contains('open') ? '▲ Hide the Presentation' : '▶ Open the Excel Basics Presentation';
+    if (wrap.classList.contains('open')) render();
+  });
+
+  let currentArticleId = ARTICLES[0].id;
+
+  function renderHubSidebar(term) {
+    term = (term || '').trim().toLowerCase();
+    const sidebar = document.getElementById('hubSidebar');
+    const filtered = ARTICLES.filter(a =>
+      !term || a.title.toLowerCase().includes(term) || a.shortDesc.toLowerCase().includes(term) || a.keywords.toLowerCase().includes(term)
+    );
+
+    if (filtered.length === 0) {
+      sidebar.innerHTML = '<div style="padding:20px; font-size:13px; color:var(--ink-soft);">No articles match that search.</div>';
+      return;
+    }
+
+    sidebar.innerHTML = filtered.map(a => `
+      <div class="hub-article-item ${a.id === currentArticleId ? 'active' : ''}" data-article-id="${a.id}">
+        <span class="icon">${a.icon}</span>
+        <div>
+          <h4>${a.title.split(':')[0].split(',')[0].slice(0, 44)}</h4>
+          <p>${a.shortDesc}</p>
+        </div>
+        <span class="hub-article-video" title="${a.videoUrl ? 'Watch tutorial' : 'Video coming soon'}">
+          <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="11" fill="${a.videoUrl ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>
+        </span>
+      </div>
+    `).join('');
+
+    sidebar.querySelectorAll('.hub-article-item').forEach(el => {
+      el.addEventListener('click', () => {
+        currentArticleId = el.dataset.articleId;
+        renderHubArticle();
+        renderHubSidebar(document.getElementById('hubSearch').value);
+        document.getElementById('hubMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
+
+  function renderHubArticle() {
+    const article = ARTICLES.find(a => a.id === currentArticleId) || ARTICLES[0];
+    const main = document.getElementById('hubMain');
+    main.innerHTML = `
+      <h1 class="hub-article-title">${article.title}</h1>
+      <p class="hub-article-keywords">${article.keywords}</p>
+      <div class="hub-visual-block">${article.visual1}</div>
+      <div class="hub-article-body">${article.content}</div>
+      <div class="hub-visual-block">${article.visual2}</div>
+    `;
+  }
+
+  document.getElementById('hubSearch').addEventListener('input', (e) => {
+    renderHubSidebar(e.target.value);
+  });
+
+  renderHubSidebar('');
+  renderHubArticle();
+</script>
 
 <script>
 const ILLUS = {
