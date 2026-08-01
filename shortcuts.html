@@ -44,8 +44,8 @@
       <span class="keycap">Shift</span>
     </div>
     <div class="sc-hero-text">
-      <h1>Every shortcut, in one place.</h1>
-      <p>Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.</p>
+      <h1 id="pc-shortcuts-hero-title">Every shortcut, in one place.</h1>
+      <p id="pc-shortcuts-hero-subtitle">Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.</p>
     </div>
     <div class="sc-keys-side right">
       <span class="keycap">Alt</span>
@@ -244,6 +244,20 @@ render('');
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'shortcuts');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (!el) return;
+        if (el.tagName === 'IMG') el.src = row.content;
+        else if (el.tagName === 'A') el.href = row.content;
+        else el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep default text */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>

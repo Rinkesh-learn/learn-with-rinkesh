@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel Basics — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="excel-basics-styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="formula-example.html">Formulas</a>
+      <a href="practice.html">Practice</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<!-- Progress dots -->
+<div class="deck-dots" id="deckDots"></div>
+
+<!-- Floating practice CTA -->
+<a href="practice.html" class="floating-cta">Start Excel Practice &rarr;</a>
+
+<div class="deck" id="deck">
+
+  <section class="slide slide-cover" data-slide="0">
+    <div class="slide-grid-bg"></div>
+    <div class="slide-content">
+      <span class="slide-kicker">EXCEL BASICS · 0 to job-ready</span>
+      <h1 id="pc-excel_basics-hero-title">What even <span class="hl">is</span> Excel?</h1>
+      <p class="slide-lede" id="pc-excel_basics-hero-subtitle">Before you touch a single formula, let's build the mental model. This won't take long — but it's the difference between memorizing tricks and actually understanding the tool.</p>
+      <div class="scroll-hint">Scroll to begin ↓</div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="1">
+    <div class="slide-content">
+      <span class="slide-num">01</span>
+      <h2>It's a giant grid of boxes.</h2>
+      <p>That's really it at the core. Excel is a grid of <strong>cells</strong>, each one addressed by a column letter and a row number — like <code>B4</code> or <code>F12</code>. Every single thing Excel does — every chart, every formula, every dashboard — happens inside these little boxes.</p>
+      <div class="mini-grid-demo">
+        <div class="mg-row mg-head"><div></div><div>A</div><div>B</div><div>C</div></div>
+        <div class="mg-row"><div>1</div><div></div><div class="mg-hl">B1</div><div></div></div>
+        <div class="mg-row"><div>2</div><div></div><div></div><div></div></div>
+        <div class="mg-row"><div>3</div><div></div><div></div><div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="2">
+    <div class="slide-content">
+      <span class="slide-num">02</span>
+      <h2>Every cell holds one of a few things.</h2>
+      <p>Understanding what's <em>in</em> a cell matters more than people think — it's why formulas break in confusing ways.</p>
+      <div class="chip-row">
+        <div class="chip"><strong>Numbers</strong><span>42, 3.14, -8</span></div>
+        <div class="chip"><strong>Text</strong><span>"Finance", "Aman"</span></div>
+        <div class="chip"><strong>Dates</strong><span>Secretly just numbers</span></div>
+        <div class="chip"><strong>Formulas</strong><span>Start with =</span></div>
+      </div>
+      <p class="slide-note">That "dates are secretly numbers" line isn't a joke — Excel stores every date as a number counting from Jan 1, 1900. That's <em>why</em> you can subtract two dates and get a number of days back.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="3">
+    <div class="slide-content">
+      <span class="slide-num">03</span>
+      <h2>The <span class="hl">=</span> sign changes everything.</h2>
+      <p>Type <code>55000</code> into a cell, and it's just a number sitting there. Type <code>=55000*0.1</code>, and Excel calculates it live. The equals sign is the switch that turns a cell from "static text" into "a living calculation."</p>
+      <div class="formula-bar-demo">
+        <span class="fx">fx</span>
+        <span class="content" id="basicsTyping"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="4">
+    <div class="slide-content">
+      <span class="slide-num">04</span>
+      <h2>Cell references: the real superpower.</h2>
+      <p>Instead of writing <code>=55000*0.1</code>, you write <code>=B2*0.1</code>. Now if B2 changes, your formula updates automatically. This one habit — referencing cells instead of typing numbers — is what separates a spreadsheet from a calculator.</p>
+      <div class="ref-demo">
+        <div class="ref-cell">B2 = <strong>55000</strong></div>
+        <div class="ref-arrow">→</div>
+        <div class="ref-cell ref-formula">=B2*0.1</div>
+        <div class="ref-arrow">=</div>
+        <div class="ref-cell ref-result">5500</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="5">
+    <div class="slide-content">
+      <span class="slide-num">05</span>
+      <h2>Relative vs. Absolute — where beginners get stuck.</h2>
+      <p>Drag a formula with <code>B2</code> down a column, and Excel shifts it to <code>B3</code>, <code>B4</code>... That's <strong>relative</strong> — usually what you want. Lock it with dollar signs — <code>$B$2</code> — and it stays put no matter where you drag it. That's <strong>absolute</strong>.</p>
+      <div class="chip-row">
+        <div class="chip"><strong>B2</strong><span>Relative — shifts when copied</span></div>
+        <div class="chip"><strong>$B$2</strong><span>Absolute — never shifts</span></div>
+        <div class="chip"><strong>$B2</strong><span>Mixed — column locked, row shifts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="6">
+    <div class="slide-content">
+      <span class="slide-num">06</span>
+      <h2>A "function" is just a named shortcut.</h2>
+      <p><code>=SUM(A1:A10)</code> is shorthand for <code>=A1+A2+A3+...+A10</code>. Every function follows the same shape: a name, then parentheses holding the ingredients (called <strong>arguments</strong>) it needs to do its job.</p>
+      <div class="anatomy-demo">
+        <span class="anatomy-part anatomy-name">SUM</span><span class="anatomy-paren">(</span><span class="anatomy-part anatomy-arg">A1:A10</span><span class="anatomy-paren">)</span>
+      </div>
+      <div class="anatomy-labels">
+        <span>↑ the function name</span>
+        <span>↑ its argument(s)</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="7">
+    <div class="slide-content">
+      <span class="slide-num">07</span>
+      <h2>There are hundreds of functions. They fall into a handful of families.</h2>
+      <p>You don't need to memorize 500 formulas. You need to recognize <em>which family</em> solves your problem — the exact function is easy to look up once you know that.</p>
+      <div class="family-grid">
+        <div class="family-card">🔍<strong>Lookup & Reference</strong><span>Find and pull data</span></div>
+        <div class="family-card">➕<strong>Math & Trig</strong><span>Calculate and total</span></div>
+        <div class="family-card">🔤<strong>Text</strong><span>Clean and reshape text</span></div>
+        <div class="family-card">⚡<strong>Logic</strong><span>Make decisions</span></div>
+        <div class="family-card">📅<strong>Date & Time</strong><span>Work with dates</span></div>
+        <div class="family-card">📊<strong>Statistical</strong><span>Count and summarize</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-slide="8">
+    <div class="slide-content">
+      <span class="slide-num">08</span>
+      <h2>Why this actually matters at work.</h2>
+      <p>Nobody hires you to "know Excel." They hire you because Excel is how real decisions get made — the sales dashboard the VP checks every Monday, the payroll sheet that has to be exactly right, the model that decides whether a project gets funded. The formulas are just the language that work runs on.</p>
+    </div>
+  </section>
+
+  <section class="slide slide-final" data-slide="9">
+    <div class="slide-grid-bg"></div>
+    <div class="slide-content">
+      <span class="slide-kicker">YOU'RE READY</span>
+      <h2>That's the whole foundation.</h2>
+      <p class="slide-lede">Everything else — VLOOKUP, IF, SUMIFS, all 500+ formulas — is just variations on what you just read. Time to make it real.</p>
+      <a href="practice.html" class="btn btn-primary" style="font-size:16px; padding:16px 32px;">Start Excel Practice &rarr;</a>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Typewriter for the formula bar slide
+  const basicsLines = ['=55000*0.1', '="It\'s alive now"', '=B2*0.1'];
+  let bIdx = 0;
+  const bEl = document.getElementById('basicsTyping');
+  function typeB(text, i, cb) {
+    bEl.textContent = text.slice(0, i);
+    if (i <= text.length) setTimeout(() => typeB(text, i + 1, cb), 40);
+    else setTimeout(cb, 1600);
+  }
+  function eraseB(text, i, cb) {
+    bEl.textContent = text.slice(0, i);
+    if (i >= 0) setTimeout(() => eraseB(text, i - 1, cb), 20);
+    else cb();
+  }
+  function cycleB() {
+    const line = basicsLines[bIdx];
+    typeB(line, 0, () => eraseB(line, line.length, () => {
+      bIdx = (bIdx + 1) % basicsLines.length;
+      cycleB();
+    }));
+  }
+  cycleB();
+
+  // Progress dots
+  const slides = document.querySelectorAll('.slide');
+  const dotsContainer = document.getElementById('deckDots');
+  slides.forEach((s, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'deck-dot';
+    dot.title = 'Slide ' + (i + 1);
+    dot.addEventListener('click', () => s.scrollIntoView({ behavior: 'smooth' }));
+    dotsContainer.appendChild(dot);
+  });
+
+  const dots = document.querySelectorAll('.deck-dot');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target);
+        dots.forEach(d => d.classList.remove('active'));
+        if (dots[idx]) dots[idx].classList.add('active');
+        entry.target.classList.add('in-view');
+      }
+    });
+  }, { threshold: 0.4 });
+  slides.forEach(s => observer.observe(s));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'excel_basics');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (!el) return;
+        if (el.tagName === 'IMG') el.src = row.content;
+        else if (el.tagName === 'A') el.href = row.content;
+        else el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep default text */ }
+  })();
+</script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>

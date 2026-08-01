@@ -1101,7 +1101,29 @@ criteria: The condition to match"></textarea>
   // already show up in their list (so the full site is visible here)
   // but display a "not wired up yet" message until their blocks are added.
   const PAGE_BLOCKS = {
-    home: { label: 'Home', file: 'index.html', icon: '🏠', group: 'site', blocks: [] },
+    home: {
+      label: 'Home',
+      file: 'index.html',
+      icon: '🏠',
+      group: 'site',
+      blocks: [
+        { id: 'pc-home-hero-title', label: 'Hero heading' },
+        { id: 'pc-home-hero-subtitle', label: 'Hero subheading' },
+        { id: 'pc-home-btn1-label', label: 'Hero button 1 label', type: 'text' },
+        { id: 'pc-home-btn2-label', label: 'Hero button 2 label', type: 'text' },
+        { id: 'pc-home-btn3-label', label: 'Hero button 3 label', type: 'text' },
+        { id: 'pc-home-box1-title', label: '"Take it further" box 1 — title', type: 'text' },
+        { id: 'pc-home-box1-desc', label: '"Take it further" box 1 — description' },
+        { id: 'pc-home-box2-title', label: '"Take it further" box 2 — title', type: 'text' },
+        { id: 'pc-home-box2-desc', label: '"Take it further" box 2 — description' },
+        { id: 'pc-home-box3-title', label: '"Take it further" box 3 — title', type: 'text' },
+        { id: 'pc-home-box3-desc', label: '"Take it further" box 3 — description' },
+        { id: 'pc-home-box4-title', label: '"Take it further" box 4 — title', type: 'text' },
+        { id: 'pc-home-box4-desc', label: '"Take it further" box 4 — description' },
+        { id: 'pc-home-feedback-title', label: '"Got feedback?" title', type: 'text' },
+        { id: 'pc-home-feedback-text', label: '"Got feedback?" text', type: 'text' }
+      ]
+    },
     about: {
       label: 'About',
       file: 'about.html',
@@ -1116,15 +1138,47 @@ criteria: The condition to match"></textarea>
         { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text' }
       ]
     },
-    formulas_list: { label: 'Formulas List', file: 'formula-example.html', icon: '📋', group: 'site', blocks: [] },
-    practice: { label: 'Practice', file: 'practice.html', icon: '📝', group: 'site', blocks: [] },
-    excel_basics: { label: 'Excel Basics', file: 'excel-basics.html', icon: '📗', group: 'site', blocks: [] },
-    excel_guide: { label: 'Excel Guide', file: 'excel-guide.html', icon: '📘', group: 'site', blocks: [] },
+    excel_basics: {
+      label: 'Excel Basics',
+      file: 'excel-basics.html',
+      icon: '📗',
+      group: 'site',
+      blocks: [
+        { id: 'pc-excel_basics-hero-title', label: 'Cover slide heading' },
+        { id: 'pc-excel_basics-hero-subtitle', label: 'Cover slide subtext' }
+      ]
+    },
+    excel_guide: {
+      label: 'Excel Guide',
+      file: 'excel-guide.html',
+      icon: '📘',
+      group: 'site',
+      blocks: [
+        { id: 'pc-excel_guide-hero-title', label: 'Knowledge Hub heading' },
+        { id: 'pc-excel_guide-hero-subtitle', label: 'Knowledge Hub subtext' }
+      ]
+    },
     interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', icon: '🎯', group: 'site', custom: 'interview_practical', blocks: [] },
-    shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', icon: '⌨️', group: 'site', blocks: [] },
-    charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', icon: '📈', group: 'site', blocks: [] },
+    shortcuts: {
+      label: 'Shortcuts',
+      file: 'shortcuts.html',
+      icon: '⌨️',
+      group: 'site',
+      blocks: [
+        { id: 'pc-shortcuts-hero-title', label: 'Hero heading' },
+        { id: 'pc-shortcuts-hero-subtitle', label: 'Hero subtext' }
+      ]
+    },
     account: { label: 'Account', file: 'account.html', icon: '👤', group: 'account', blocks: [] },
-    purchases: { label: 'Purchases', file: 'purchases.html', icon: '🛒', group: 'site', blocks: [] },
+    purchases: {
+      label: 'Purchases',
+      file: 'purchases.html',
+      icon: '🛒',
+      group: 'site',
+      blocks: [
+        { id: 'pc-purchases-empty-message', label: 'Empty-state message' }
+      ]
+    },
     login: { label: 'Login', file: 'login.html', icon: '🔑', group: 'account', blocks: [] },
     signup: { label: 'Sign Up', file: 'signup.html', icon: '✍️', group: 'account', blocks: [] },
     forgot_password: { label: 'Forgot Password', file: 'forgot-password.html', icon: '🔓', group: 'account', blocks: [] },

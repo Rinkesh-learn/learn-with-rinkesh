@@ -26,11 +26,22 @@
 
 <div class="setup-box" style="text-align:center;">
   <h1>Purchases</h1>
-  <p class="hint">Nothing here yet — once certification and exams go live, your purchase history will show up here.</p>
+  <p class="hint" id="pc-purchases-empty-message">Nothing here yet — once certification and exams go live, your purchase history will show up here.</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'purchases');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (el) el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep default text */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>

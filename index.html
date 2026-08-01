@@ -38,25 +38,25 @@
     <span class="sticker s3" id="sticker3">🏆 real spreadsheet</span>
   </div>
 
-  <h1>Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
+  <h1 id="pc-home-hero-title">Learn Excel the way<br>you'll actually <span class="cellref">use</span> it.</h1>
 
-  <p class="lede">500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional.</p>
+  <p class="lede" id="pc-home-hero-subtitle">500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional.</p>
 
   <div class="cta-row">
     <a href="practice.html" class="btn btn-primary btn-bounce">
-      Start Excel Practice &rarr;
+      <span id="pc-home-btn1-label">Start Excel Practice &rarr;</span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
     </a>
     <a href="excel-guide.html" class="btn btn-primary btn-bounce" style="animation-delay: 0.4s;">
-      About Excel
+      <span id="pc-home-btn2-label">About Excel</span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
     </a>
     <a href="shortcuts.html" class="btn btn-primary btn-bounce" style="animation-delay: 0.8s;">
-      Excel Shortcuts
+      <span id="pc-home-btn3-label">Excel Shortcuts</span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
       <span class="confetti-dot"></span>
@@ -72,23 +72,23 @@
 
   <div class="cell-grid">
     <div class="cell">
-      <h3>Prepare for an Interview</h3>
-      <p>Real questions asked in reporting and analyst interviews, plus how to actually talk through your answers.</p>
+      <h3 id="pc-home-box1-title">Prepare for an Interview</h3>
+      <p id="pc-home-box1-desc">Real questions asked in reporting and analyst interviews, plus how to actually talk through your answers.</p>
       <a href="interview-prep.html" class="cell-cta">Start Prepping &rarr;</a>
     </div>
     <div class="cell">
-      <h3>Case Study Assignments</h3>
-      <p>Build a real sales dashboard or payroll model — the kind of work you'll actually be asked to do.</p>
+      <h3 id="pc-home-box2-title">Case Study Assignments</h3>
+      <p id="pc-home-box2-desc">Build a real sales dashboard or payroll model — the kind of work you'll actually be asked to do.</p>
       <a href="#" class="cell-cta" onclick="event.preventDefault();">Start an Assignment &rarr;</a>
     </div>
     <div class="cell">
-      <h3>Get Excel Certification</h3>
-      <p>Clear the exam, get a certificate with a QR code employers can verify — no guesswork.</p>
+      <h3 id="pc-home-box3-title">Get Excel Certification</h3>
+      <p id="pc-home-box3-desc">Clear the exam, get a certificate with a QR code employers can verify — no guesswork.</p>
       <a href="#" class="cell-cta" onclick="event.preventDefault();">Take the Exam &rarr;</a>
     </div>
     <div class="cell">
-      <h3>1-on-1 Career Guidance</h3>
-      <p>Feeling stuck in the same job or designation?<br>Get clarity on what to do next — book a 1-on-1 session.</p>
+      <h3 id="pc-home-box4-title">1-on-1 Career Guidance</h3>
+      <p id="pc-home-box4-desc">Feeling stuck in the same job or designation?<br>Get clarity on what to do next — book a 1-on-1 session.</p>
       <a href="about.html" class="cell-cta">Book a Slot &rarr;</a>
     </div>
   </div>
@@ -145,8 +145,8 @@
 <div class="sheet reveal" style="text-align:center; padding-bottom:10px;">
   <div style="background:#fff; border:1px solid var(--grid-line); border-top:4px solid var(--sky); border-radius:var(--radius); padding:36px 24px; max-width:560px; margin:0 auto;">
     <div style="font-size:32px; margin-bottom:8px;">💬</div>
-    <h2 style="font-size:20px; margin:0 0 8px;">Got feedback?</h2>
-    <p style="color:var(--ink-soft); font-size:14px; margin:0 0 18px;">Give your feedback to help us improve.</p>
+    <h2 style="font-size:20px; margin:0 0 8px;" id="pc-home-feedback-title">Got feedback?</h2>
+    <p style="color:var(--ink-soft); font-size:14px; margin:0 0 18px;" id="pc-home-feedback-text">Give your feedback to help us improve.</p>
     <button class="btn btn-primary" id="homeFeedbackBtn">Share Your Feedback</button>
   </div>
 </div>
@@ -251,6 +251,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  // Pull in any edits made from Master Control's Page Editor.
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'home');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (!el) return;
+        if (el.tagName === 'IMG') el.src = row.content;
+        else if (el.tagName === 'A') el.href = row.content;
+        else el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep the default text on any failure */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>

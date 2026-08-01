@@ -238,8 +238,8 @@
 </div>
 
 <div class="hub-hero">
-  <h1>Learn Excel — the knowledge hub</h1>
-  <p>Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
+  <h1 id="pc-excel_guide-hero-title">Learn Excel — the knowledge hub</h1>
+  <p id="pc-excel_guide-hero-subtitle">Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
   <div class="hub-search-wrap">
     <span class="hub-search-icon">🔍</span>
     <input type="text" id="hubSearch" placeholder="Search articles or keywords...">
@@ -806,6 +806,20 @@ render();
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'excel_guide');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (!el) return;
+        if (el.tagName === 'IMG') el.src = row.content;
+        else if (el.tagName === 'A') el.href = row.content;
+        else el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep default text */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
