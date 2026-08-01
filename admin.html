@@ -151,8 +151,8 @@
     <a data-view="users">👥 Users</a>
     <a data-view="formulas">🧮 Formulas</a>
     <div id="pagesFlatNav"></div>
-    <a class="disabled">📘 Articles (soon)</a>
-    <a class="disabled">💬 Chat Moderation (soon)</a>
+    <a data-view="articles">📘 Articles</a>
+    <a data-view="chat_moderation">💬 Chat Moderation</a>
     <a class="disabled">📁 Case Studies (soon)</a>
     <a class="disabled">📅 1-on-1 Bookings (soon)</a>
   </div>
@@ -340,12 +340,96 @@ criteria: The condition to match"></textarea>
 
     <div id="view-pages" style="display:none;">
       <h1>Pages</h1>
-      <p class="sub">Edit the actual text on each page. Blank fields keep the site's current default text.</p>
+      <p class="sub">Every field below shows the text that's currently live on the site — edit it directly and click Save.</p>
       <div class="admin-panel">
         <h3 id="pcActivePageLabel" style="margin-top:0;">About</h3>
         <div id="pcBlocksList"></div>
         <button class="btn btn-primary" id="pcSaveAllBtn" style="margin-top:10px;">Save Changes</button>
         <div id="pcMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-articles" style="display:none;">
+      <h1>Articles</h1>
+      <p class="sub">Manage the Excel Knowledge Hub — add, edit, enable/disable, or delete articles.</p>
+
+      <div class="admin-panel">
+        <div class="admin-panel-header">
+          <input type="text" id="articleSearchAdmin" placeholder="🔍 Search articles...">
+          <div style="display:flex; gap:8px;">
+            <button class="admin-mini-btn" id="importArticlesBtn">🔄 One-time Import from Knowledge Hub</button>
+            <button class="btn btn-primary" id="addArticleBtn" style="padding:8px 16px; font-size:12px;">+ Add Article</button>
+          </div>
+        </div>
+        <div id="importArticlesStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead><tr><th>Icon</th><th>Title</th><th>Category</th><th>Video</th><th>Status</th><th></th></tr></thead>
+            <tbody id="articlesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="articleEditorPanel" class="admin-panel" style="display:none; margin-top:16px;">
+        <h3 id="articleEditorTitle" style="margin-top:0;">Add Article</h3>
+        <input type="hidden" id="aeId">
+
+        <label>Title</label>
+        <input type="text" id="aeTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+
+        <label>Icon (a single emoji)</label>
+        <input type="text" id="aeIcon" value="📄" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+
+        <label>Category (optional)</label>
+        <input type="text" id="aeCategory" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="e.g. Macros, Formatting, Data Types">
+
+        <label>Short description (shown in the article list)</label>
+        <textarea id="aeShortDesc" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
+
+        <label>Keywords (SEO, comma-separated — optional)</label>
+        <input type="text" id="aeKeywords" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+
+        <label>Video URL (optional)</label>
+        <input type="text" id="aeVideoUrl" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="https://youtu.be/...">
+
+        <label>Full article content (HTML — use &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;/&lt;li&gt;, etc.)</label>
+        <textarea id="aeContent" rows="12" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;"></textarea>
+
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="aeEnabled" style="width:auto;" checked> Enabled (visible on the live site)</label>
+
+        <div style="margin-top:14px; display:flex; gap:8px;">
+          <button class="btn btn-primary" id="aeSaveBtn">Save Article</button>
+          <button class="admin-mini-btn" id="aeCancelBtn">Cancel</button>
+        </div>
+        <div id="aeMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-chat_moderation" style="display:none;">
+      <h1>Chat Moderation</h1>
+      <p class="sub">Review reported messages and control how long chat history is kept.</p>
+
+      <div class="admin-panel">
+        <h3 style="margin-top:0;">Reported messages</h3>
+        <table class="admin-table">
+          <thead><tr><th>Message</th><th>Reported by</th><th>Reason</th><th>Reported</th><th></th></tr></thead>
+          <tbody id="chatReportsTableBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Chat history retention</h3>
+        <p class="sub" style="margin-top:-6px;">How long to keep chat messages before they're automatically deleted. Runs once a day.</p>
+        <select id="chatRetentionSelect" style="width:100%; max-width:280px; padding:8px; margin-bottom:14px;">
+          <option value="7">1 week</option>
+          <option value="30">1 month</option>
+          <option value="60">2 months</option>
+          <option value="90">3 months</option>
+          <option value="">Never (keep forever)</option>
+        </select>
+        <br>
+        <button class="btn btn-primary" id="chatRetentionSaveBtn" style="padding:8px 16px; font-size:12px;">Save Retention Setting</button>
+        <div id="chatRetentionMessage" style="margin-top:10px; font-size:13px;"></div>
       </div>
     </div>
   </div>
@@ -356,6 +440,7 @@ criteria: The condition to match"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="formulas-data.js"></script>
+<script src="excel-articles-data.js"></script>
 <script>
   let allUsers = [];
 
@@ -1107,21 +1192,21 @@ criteria: The condition to match"></textarea>
       icon: '🏠',
       group: 'site',
       blocks: [
-        { id: 'pc-home-hero-title', label: 'Hero heading' },
-        { id: 'pc-home-hero-subtitle', label: 'Hero subheading' },
-        { id: 'pc-home-btn1-label', label: 'Hero button 1 label', type: 'text' },
-        { id: 'pc-home-btn2-label', label: 'Hero button 2 label', type: 'text' },
-        { id: 'pc-home-btn3-label', label: 'Hero button 3 label', type: 'text' },
-        { id: 'pc-home-box1-title', label: '"Take it further" box 1 — title', type: 'text' },
-        { id: 'pc-home-box1-desc', label: '"Take it further" box 1 — description' },
-        { id: 'pc-home-box2-title', label: '"Take it further" box 2 — title', type: 'text' },
-        { id: 'pc-home-box2-desc', label: '"Take it further" box 2 — description' },
-        { id: 'pc-home-box3-title', label: '"Take it further" box 3 — title', type: 'text' },
-        { id: 'pc-home-box3-desc', label: '"Take it further" box 3 — description' },
-        { id: 'pc-home-box4-title', label: '"Take it further" box 4 — title', type: 'text' },
-        { id: 'pc-home-box4-desc', label: '"Take it further" box 4 — description' },
-        { id: 'pc-home-feedback-title', label: '"Got feedback?" title', type: 'text' },
-        { id: 'pc-home-feedback-text', label: '"Got feedback?" text', type: 'text' }
+        { id: 'pc-home-hero-title', label: 'Hero heading', default: 'Learn Excel the way<br>you\'ll actually <span class="cellref">use</span> it.' },
+        { id: 'pc-home-hero-subtitle', label: 'Hero subheading', default: '500+ formulas explained with real corporate use cases, practice grading that checks your work, and a certificate that proves it — built by a working data professional.' },
+        { id: 'pc-home-btn1-label', label: 'Hero button 1 label', type: 'text', default: 'Start Excel Practice &rarr;' },
+        { id: 'pc-home-btn2-label', label: 'Hero button 2 label', type: 'text', default: 'About Excel' },
+        { id: 'pc-home-btn3-label', label: 'Hero button 3 label', type: 'text', default: 'Excel Shortcuts' },
+        { id: 'pc-home-box1-title', label: '"Take it further" box 1 — title', type: 'text', default: 'Prepare for an Interview' },
+        { id: 'pc-home-box1-desc', label: '"Take it further" box 1 — description', default: 'Real questions asked in reporting and analyst interviews, plus how to actually talk through your answers.' },
+        { id: 'pc-home-box2-title', label: '"Take it further" box 2 — title', type: 'text', default: 'Case Study Assignments' },
+        { id: 'pc-home-box2-desc', label: '"Take it further" box 2 — description', default: 'Build a real sales dashboard or payroll model — the kind of work you\'ll actually be asked to do.' },
+        { id: 'pc-home-box3-title', label: '"Take it further" box 3 — title', type: 'text', default: 'Get Excel Certification' },
+        { id: 'pc-home-box3-desc', label: '"Take it further" box 3 — description', default: 'Clear the exam, get a certificate with a QR code employers can verify — no guesswork.' },
+        { id: 'pc-home-box4-title', label: '"Take it further" box 4 — title', type: 'text', default: '1-on-1 Career Guidance' },
+        { id: 'pc-home-box4-desc', label: '"Take it further" box 4 — description', default: 'Feeling stuck in the same job or designation?<br>Get clarity on what to do next — book a 1-on-1 session.' },
+        { id: 'pc-home-feedback-title', label: '"Got feedback?" title', type: 'text', default: 'Got feedback?' },
+        { id: 'pc-home-feedback-text', label: '"Got feedback?" text', type: 'text', default: 'Give your feedback to help us improve.' }
       ]
     },
     about: {
@@ -1130,12 +1215,12 @@ criteria: The condition to match"></textarea>
       icon: 'ℹ️',
       group: 'site',
       blocks: [
-        { id: 'pc-about-hero-title', label: 'Hero title' },
-        { id: 'pc-about-why-text', label: '"Why this exists" paragraph' },
-        { id: 'pc-about-bio-text', label: 'Developer bio paragraph' },
+        { id: 'pc-about-hero-title', label: 'Hero title', default: 'Meet Rinkesh Shah.' },
+        { id: 'pc-about-why-text', label: '"Why this exists" paragraph', default: 'Most Excel content either stays too basic to matter at work, or jumps into advanced tricks nobody explains properly. This platform was built to close that gap — real formulas, real corporate scenarios, and an actual spreadsheet to practice in, not a multiple-choice quiz. The goal is simple: get comfortable enough to open a blank sheet at work and actually build something.' },
+        { id: 'pc-about-bio-text', label: 'Developer bio paragraph', default: 'Behind Learn With Rinkesh is Rinkesh Shah, a Business Analyst with 5+ years of experience in the data industry across US Logistics, Healthcare Revenue Cycle Management (RCM), and Legal &amp; Business Process Automation. With expertise in Microsoft Excel, Power BI, SQL, Excel Reporting, Dashboard Development, Report Automation, Data Analysis, MIS Reporting, MS Power Apps, and MS Power Automate, Rinkesh has worked on streamlining business processes, building interactive reports and dashboards, automating workflows, and delivering data-driven solutions that improve efficiency and support better business decisions.' },
         { id: 'pc-about-photo', label: 'Developer photo', type: 'image', fallback: 'rinkesh-photo.jpg' },
-        { id: 'pc-about-youtube-link', label: 'YouTube link', type: 'text' },
-        { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text' }
+        { id: 'pc-about-youtube-link', label: 'YouTube link', type: 'text', default: 'https://www.youtube.com/@LearnWithRinkesh' },
+        { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text', default: 'https://www.instagram.com/learnwithrinkesh/' }
       ]
     },
     excel_basics: {
@@ -1144,8 +1229,8 @@ criteria: The condition to match"></textarea>
       icon: '📗',
       group: 'site',
       blocks: [
-        { id: 'pc-excel_basics-hero-title', label: 'Cover slide heading' },
-        { id: 'pc-excel_basics-hero-subtitle', label: 'Cover slide subtext' }
+        { id: 'pc-excel_basics-hero-title', label: 'Cover slide heading', default: 'What even <span class="hl">is</span> Excel?' },
+        { id: 'pc-excel_basics-hero-subtitle', label: 'Cover slide subtext', default: 'Before you touch a single formula, let\'s build the mental model. This won\'t take long — but it\'s the difference between memorizing tricks and actually understanding the tool.' }
       ]
     },
     excel_guide: {
@@ -1154,8 +1239,8 @@ criteria: The condition to match"></textarea>
       icon: '📘',
       group: 'site',
       blocks: [
-        { id: 'pc-excel_guide-hero-title', label: 'Knowledge Hub heading' },
-        { id: 'pc-excel_guide-hero-subtitle', label: 'Knowledge Hub subtext' }
+        { id: 'pc-excel_guide-hero-title', label: 'Knowledge Hub heading', default: 'Learn Excel — the knowledge hub' },
+        { id: 'pc-excel_guide-hero-subtitle', label: 'Knowledge Hub subtext', default: 'Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.' }
       ]
     },
     interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', icon: '🎯', group: 'site', custom: 'interview_practical', blocks: [] },
@@ -1165,8 +1250,8 @@ criteria: The condition to match"></textarea>
       icon: '⌨️',
       group: 'site',
       blocks: [
-        { id: 'pc-shortcuts-hero-title', label: 'Hero heading' },
-        { id: 'pc-shortcuts-hero-subtitle', label: 'Hero subtext' }
+        { id: 'pc-shortcuts-hero-title', label: 'Hero heading', default: 'Every shortcut, in one place.' },
+        { id: 'pc-shortcuts-hero-subtitle', label: 'Hero subtext', default: 'Stop reaching for the mouse. These are the same shortcuts working data professionals use every day — search or browse by category.' }
       ]
     },
     account: { label: 'Account', file: 'account.html', icon: '👤', group: 'account', blocks: [] },
@@ -1176,7 +1261,7 @@ criteria: The condition to match"></textarea>
       icon: '🛒',
       group: 'site',
       blocks: [
-        { id: 'pc-purchases-empty-message', label: 'Empty-state message' }
+        { id: 'pc-purchases-empty-message', label: 'Empty-state message', default: 'Nothing here yet — once certification and exams go live, your purchase history will show up here.' }
       ]
     },
     login: { label: 'Login', file: 'login.html', icon: '🔑', group: 'account', blocks: [] },
@@ -1240,7 +1325,7 @@ criteria: The condition to match"></textarea>
     (data || []).forEach(row => { existing[row.id] = row.content; });
 
     wrap.innerHTML = blocks.map(block => {
-      const current = existing[block.id] || '';
+      const current = existing[block.id] || block.default || '';
       if (block.type === 'image') {
         return `
           <label>${block.label}</label>
@@ -1257,12 +1342,12 @@ criteria: The condition to match"></textarea>
       if (block.type === 'text') {
         return `
           <label>${block.label}</label>
-          <input type="text" data-block-id="${block.id}" value="${current}" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site value">
+          <input type="text" data-block-id="${block.id}" value="${current}" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;">
         `;
       }
       return `
         <label>${block.label}</label>
-        <textarea data-block-id="${block.id}" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site text">${current}</textarea>
+        <textarea data-block-id="${block.id}" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;">${current}</textarea>
       `;
     }).join('');
 
@@ -1457,6 +1542,237 @@ criteria: The condition to match"></textarea>
     msg.style.color = 'var(--excel-green-deep)';
   });
 
+  // ---------- Articles (Knowledge Hub) ----------
+  let allArticlesAdmin = [];
+
+  async function loadArticlesAdmin() {
+    const { data, error } = await supabaseClient.from('articles').select('*').order('order_index');
+    if (error) {
+      document.getElementById('articlesTableBody').innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    allArticlesAdmin = data || [];
+    renderArticlesAdminTable(allArticlesAdmin);
+  }
+
+  function renderArticlesAdminTable(list) {
+    const body = document.getElementById('articlesTableBody');
+    if (list.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No articles yet — use "One-time Import from Knowledge Hub" to bring in the existing 11, or add one manually.</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(a => `
+      <tr>
+        <td>${a.icon || '📄'}</td>
+        <td><strong>${a.title}</strong></td>
+        <td>${a.category || '—'}</td>
+        <td>${a.video_url ? '🎥' : '—'}</td>
+        <td>${a.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="admin-mini-btn" data-edit-article="${a.id}">Edit</button>
+          <button class="admin-mini-btn" data-toggle-article="${a.id}" data-current="${a.enabled}">${a.enabled ? 'Disable' : 'Enable'}</button>
+          <button class="admin-mini-btn danger" data-delete-article="${a.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-edit-article]').forEach(btn => {
+      btn.addEventListener('click', () => openArticleEditor(btn.dataset.editArticle));
+    });
+    body.querySelectorAll('[data-toggle-article]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('articles').update({ enabled: !current }).eq('id', btn.dataset.toggleArticle);
+        loadArticlesAdmin();
+      });
+    });
+    body.querySelectorAll('[data-delete-article]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this article? This cannot be undone.')) return;
+        await supabaseClient.from('articles').delete().eq('id', btn.dataset.deleteArticle);
+        loadArticlesAdmin();
+      });
+    });
+  }
+
+  document.getElementById('articleSearchAdmin').addEventListener('input', (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    const filtered = !term ? allArticlesAdmin : allArticlesAdmin.filter(a =>
+      a.title.toLowerCase().includes(term) || (a.category || '').toLowerCase().includes(term)
+    );
+    renderArticlesAdminTable(filtered);
+  });
+
+  function slugify(title) {
+    return title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  function openArticleEditor(id) {
+    const a = id ? allArticlesAdmin.find(x => x.id == id) : null;
+    document.getElementById('articleEditorTitle').textContent = a ? 'Edit Article' : 'Add Article';
+    document.getElementById('aeId').value = a ? a.id : '';
+    document.getElementById('aeTitle').value = a ? a.title : '';
+    document.getElementById('aeIcon').value = a ? (a.icon || '📄') : '📄';
+    document.getElementById('aeCategory').value = a ? (a.category || '') : '';
+    document.getElementById('aeShortDesc').value = a ? a.short_desc : '';
+    document.getElementById('aeKeywords').value = a ? (a.keywords || '') : '';
+    document.getElementById('aeVideoUrl').value = a ? (a.video_url || '') : '';
+    document.getElementById('aeContent').value = a ? a.content : '';
+    document.getElementById('aeEnabled').checked = a ? a.enabled : true;
+    document.getElementById('aeMessage').textContent = '';
+    document.getElementById('articleEditorPanel').style.display = 'block';
+    document.getElementById('articleEditorPanel').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('addArticleBtn').addEventListener('click', () => openArticleEditor(null));
+  document.getElementById('aeCancelBtn').addEventListener('click', () => {
+    document.getElementById('articleEditorPanel').style.display = 'none';
+  });
+
+  document.getElementById('aeSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('aeMessage');
+    const id = document.getElementById('aeId').value;
+    const title = document.getElementById('aeTitle').value.trim();
+    const shortDesc = document.getElementById('aeShortDesc').value.trim();
+    const content = document.getElementById('aeContent').value.trim();
+
+    if (!title || !shortDesc || !content) {
+      msg.textContent = 'Title, short description, and content are all required.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const row = {
+      title,
+      icon: document.getElementById('aeIcon').value.trim() || '📄',
+      category: document.getElementById('aeCategory').value.trim() || null,
+      short_desc: shortDesc,
+      keywords: document.getElementById('aeKeywords').value.trim() || null,
+      video_url: document.getElementById('aeVideoUrl').value.trim() || null,
+      content,
+      enabled: document.getElementById('aeEnabled').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await supabaseClient.from('articles').update(row).eq('id', id));
+    } else {
+      row.slug = slugify(title);
+      const { count } = await supabaseClient.from('articles').select('*', { count: 'exact', head: true });
+      row.order_index = count || 0;
+      ({ error } = await supabaseClient.from('articles').insert(row));
+    }
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    msg.textContent = 'Saved!';
+    msg.style.color = 'var(--excel-green-deep)';
+    loadArticlesAdmin();
+    setTimeout(() => { document.getElementById('articleEditorPanel').style.display = 'none'; }, 600);
+  });
+
+  document.getElementById('importArticlesBtn').addEventListener('click', async () => {
+    const status = document.getElementById('importArticlesStatus');
+    if (typeof ARTICLES === 'undefined') {
+      status.textContent = 'Could not find the existing article data on this page.';
+      return;
+    }
+    status.textContent = 'Importing...';
+
+    const rows = ARTICLES.map((a, i) => ({
+      slug: a.id,
+      title: a.title,
+      icon: a.icon || '📄',
+      category: null,
+      short_desc: a.shortDesc,
+      keywords: a.keywords || null,
+      video_url: a.videoUrl || null,
+      content: a.content,
+      visual1: a.visual1 || null,
+      visual2: a.visual2 || null,
+      order_index: i,
+      enabled: true
+    }));
+
+    const { error } = await supabaseClient.from('articles').upsert(rows, { onConflict: 'slug' });
+    status.textContent = error ? `Import failed: ${error.message}` : `Imported ${rows.length} articles!`;
+    loadArticlesAdmin();
+  });
+
+  // ---------- Chat Moderation ----------
+  async function loadChatReports() {
+    const body = document.getElementById('chatReportsTableBody');
+    const { data, error } = await supabaseClient
+      .from('chat_reports')
+      .select('id, reason, created_at, status, message_id, chat_messages(message, display_name)')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      body.innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.chat_messages ? `<strong>${r.chat_messages.display_name}:</strong> ${r.chat_messages.message || '(image)'}` : '(message already deleted)'}</td>
+        <td>—</td>
+        <td>${r.reason || '—'}</td>
+        <td>${new Date(r.created_at).toLocaleDateString()}</td>
+        <td style="white-space:nowrap;">
+          <button class="admin-mini-btn" data-dismiss-report="${r.id}">Dismiss</button>
+          <button class="admin-mini-btn danger" data-delete-report="${r.id}" data-message-id="${r.message_id}">Delete Message</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-dismiss-report]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('chat_reports').update({ status: 'dismissed' }).eq('id', btn.dataset.dismissReport);
+        loadChatReports();
+      });
+    });
+    body.querySelectorAll('[data-delete-report]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this message from chat? This cannot be undone.')) return;
+        if (btn.dataset.messageId) {
+          await supabaseClient.from('chat_messages').delete().eq('id', btn.dataset.messageId);
+        }
+        await supabaseClient.from('chat_reports').update({ status: 'reviewed' }).eq('id', btn.dataset.deleteReport);
+        loadChatReports();
+      });
+    });
+  }
+
+  async function loadChatSettings() {
+    const { data } = await supabaseClient.from('chat_settings').select('retention_days').eq('id', 1).maybeSingle();
+    const select = document.getElementById('chatRetentionSelect');
+    select.value = (data && data.retention_days != null) ? String(data.retention_days) : '';
+  }
+
+  document.getElementById('chatRetentionSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('chatRetentionMessage');
+    const val = document.getElementById('chatRetentionSelect').value;
+    const days = val === '' ? null : parseInt(val, 10);
+
+    const { error } = await supabaseClient.from('chat_settings').update({ retention_days: days, updated_at: new Date().toISOString() }).eq('id', 1);
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+    msg.textContent = 'Saved! The daily cleanup will use this from now on.';
+    msg.style.color = 'var(--excel-green-deep)';
+  });
+
   // ---------- Init ----------
   (async function init() {
     const ok = await checkAdminAccess();
@@ -1464,6 +1780,9 @@ criteria: The condition to match"></textarea>
     loadDashboard();
     loadUsers();
     loadFormulasAdmin();
+    loadArticlesAdmin();
+    loadChatReports();
+    loadChatSettings();
     populatePageSelect();
     selectPage('about', false);
   })();
