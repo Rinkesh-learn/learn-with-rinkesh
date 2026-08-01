@@ -336,6 +336,8 @@
     `;
   }
 
+  const myPendingReactions = new Set(); // "messageId:emoji" — reactions we've already counted locally
+
   function attachReactionHandlers(div, messageId) {
     div.querySelectorAll('.chat-react-option').forEach(el => {
       el.addEventListener('click', async () => {
@@ -350,6 +352,12 @@
             user_id: currentUser.id,
             emoji: emoji
           });
+          // Show it on screen right away instead of waiting on the
+          // realtime channel — mark it so the realtime echo of this
+          // same insert (which still arrives a moment later) doesn't
+          // count it a second time.
+          myPendingReactions.add(`${messageId}:${emoji}`);
+          bumpReactionCount(messageId, emoji);
         } catch (e) { /* likely a duplicate reaction, ignore */ }
       });
     });
@@ -432,6 +440,11 @@
     supabaseClient
       .channel('public:chat_reactions')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_reactions' }, (payload) => {
+        const key = `${payload.new.message_id}:${payload.new.emoji}`;
+        if (myPendingReactions.has(key)) {
+          myPendingReactions.delete(key);
+          return; // already counted instantly when we clicked
+        }
         bumpReactionCount(payload.new.message_id, payload.new.emoji);
       })
       .subscribe();
