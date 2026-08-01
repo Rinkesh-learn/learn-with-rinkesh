@@ -1026,32 +1026,62 @@ criteria: The condition to match"></textarea>
   });
 
   // ---------- Pages (page content editing) ----------
-  // Registry of every editable block, per page. To make another page
-  // editable later: give the text an id="pc-<page>-<name>" in its HTML,
-  // add a matching entry here, and it shows up automatically — no other
-  // code changes needed.
+  // Registry of every real page on the site, with its actual page name
+  // (not an auto-capitalized code key) and its editable blocks. To wire
+  // up a page's content for editing: give the text an
+  // id="pc-<page>-<name>" in its HTML, add a matching entry to that
+  // page's blocks array here, and it shows up automatically — no other
+  // code changes needed. Pages with an empty blocks array already show
+  // up in the dropdown (so the full site is visible here) but display
+  // a "not wired up yet" message until their blocks are added.
   const PAGE_BLOCKS = {
-    about: [
-      { id: 'pc-about-hero-title', label: 'Hero title' },
-      { id: 'pc-about-why-text', label: '"Why this exists" paragraph' },
-      { id: 'pc-about-bio-text', label: 'Developer bio paragraph' }
-    ]
+    home: { label: 'Home', file: 'index.html', blocks: [] },
+    about: {
+      label: 'About',
+      file: 'about.html',
+      blocks: [
+        { id: 'pc-about-hero-title', label: 'Hero title' },
+        { id: 'pc-about-why-text', label: '"Why this exists" paragraph' },
+        { id: 'pc-about-bio-text', label: 'Developer bio paragraph' }
+      ]
+    },
+    formulas_list: { label: 'Formulas List', file: 'formula-example.html', blocks: [] },
+    practice: { label: 'Practice', file: 'practice.html', blocks: [] },
+    excel_basics: { label: 'Excel Basics', file: 'excel-basics.html', blocks: [] },
+    excel_guide: { label: 'Excel Guide', file: 'excel-guide.html', blocks: [] },
+    interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', blocks: [] },
+    shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', blocks: [] },
+    charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', blocks: [] },
+    account: { label: 'Account', file: 'account.html', blocks: [] },
+    purchases: { label: 'Purchases', file: 'purchases.html', blocks: [] },
+    login: { label: 'Login', file: 'login.html', blocks: [] },
+    signup: { label: 'Sign Up', file: 'signup.html', blocks: [] },
+    forgot_password: { label: 'Forgot Password', file: 'forgot-password.html', blocks: [] },
+    update_password: { label: 'Set New Password', file: 'update-password.html', blocks: [] },
+    profile_setup: { label: 'Complete Profile', file: 'profile-setup.html', blocks: [] }
   };
 
   function populatePageSelect() {
     const select = document.getElementById('pcPageSelect');
-    select.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<option value="${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</option>`).join('');
+    select.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<option value="${p}">${PAGE_BLOCKS[p].label}</option>`).join('');
   }
 
   async function loadPageBlocks(page) {
     const wrap = document.getElementById('pcBlocksList');
+    const blocks = PAGE_BLOCKS[page].blocks;
+
+    if (blocks.length === 0) {
+      wrap.innerHTML = `<p class="sub" style="margin:0;">This page isn't wired up for editing yet — ask to have it added and it'll appear here.</p>`;
+      return;
+    }
+
     wrap.innerHTML = 'Loading...';
 
     const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', page);
     const existing = {};
     (data || []).forEach(row => { existing[row.id] = row.content; });
 
-    wrap.innerHTML = PAGE_BLOCKS[page].map(block => `
+    wrap.innerHTML = blocks.map(block => `
       <label>${block.label}</label>
       <textarea data-block-id="${block.id}" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site text">${existing[block.id] || ''}</textarea>
     `).join('');
@@ -1070,7 +1100,7 @@ criteria: The condition to match"></textarea>
     textareas.forEach(ta => {
       const content = ta.value.trim();
       if (content) {
-        const blockDef = PAGE_BLOCKS[page].find(b => b.id === ta.dataset.blockId);
+        const blockDef = PAGE_BLOCKS[page].blocks.find(b => b.id === ta.dataset.blockId);
         rows.push({ id: ta.dataset.blockId, page, label: blockDef.label, content });
       }
     });
