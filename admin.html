@@ -6,6 +6,10 @@
 <title>Master Control — Learn With Rinkesh</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="styles.css">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
 <style>
   body { background: #F4F3EE; }
 
@@ -144,7 +148,7 @@
   <div class="admin-sidebar">
     <a data-view="dashboard" class="active">📊 Dashboard</a>
     <a data-view="users">👥 Users</a>
-    <a class="disabled">🧮 Formulas (soon)</a>
+    <a data-view="formulas">🧮 Formulas</a>
     <a class="disabled">📘 Articles (soon)</a>
     <a class="disabled">💬 Chat Moderation (soon)</a>
     <a class="disabled">📁 Case Studies (soon)</a>
@@ -178,11 +182,125 @@
         </div>
       </div>
     </div>
+
+    <div id="view-formulas" style="display:none;">
+      <h1>Formulas</h1>
+      <p class="sub">Add, edit, and manage formulas — plus build graded practice questions.</p>
+
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button class="admin-mini-btn" id="subTabFormulasBtn" style="background:var(--excel-green); color:#fff;">Manage Formulas</button>
+        <button class="admin-mini-btn" id="subTabQuestionsBtn">Question Builder</button>
+      </div>
+
+      <!-- ===== Manage Formulas sub-view ===== -->
+      <div id="subview-formulas">
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <input type="text" id="formulaSearchAdmin" placeholder="🔍 Search formulas...">
+            <div style="display:flex; gap:8px;">
+              <button class="admin-mini-btn" id="importFormulasBtn">🔄 One-time Import from Site Data</button>
+              <button class="btn btn-primary" id="addFormulaBtn" style="padding:8px 16px; font-size:12px;">+ Add Formula</button>
+            </div>
+          </div>
+          <div id="importStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
+          <div style="overflow-x:auto;">
+            <table class="admin-table">
+              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Status</th><th></th></tr></thead>
+              <tbody id="formulasTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Formula editor (add/edit) ===== -->
+      <div id="formulaEditorPanel" class="admin-panel" style="display:none; margin-top:16px;">
+        <h3 id="formulaEditorTitle" style="margin-top:0;">Add Formula</h3>
+        <input type="hidden" id="feId">
+        <label>Formula ID (lowercase, no spaces — e.g. "sumif")</label>
+        <input type="text" id="feFormId" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+        <label>Name (e.g. SUMIF)</label>
+        <input type="text" id="feName" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+        <label>Category</label>
+        <input type="text" id="feCategory" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="e.g. Math & Trig">
+        <label>Syntax</label>
+        <input type="text" id="feSyntax" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="=SUMIF(range, criteria, [sum_range])">
+        <label>What it does (description)</label>
+        <textarea id="feDescription" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
+        <label>Parameters — one per line, as "name: meaning"</label>
+        <textarea id="feParams" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="range: The cells to check
+criteria: The condition to match"></textarea>
+        <label>Corporate use case</label>
+        <textarea id="feUseCase" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
+        <label>Video URL (optional)</label>
+        <input type="text" id="feVideoUrl" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="https://youtu.be/...">
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="feEnabled" style="width:auto;" checked> Enabled (visible on the live site)</label>
+        <div style="margin-top:14px; display:flex; gap:8px;">
+          <button class="btn btn-primary" id="feSaveBtn">Save Formula</button>
+          <button class="admin-mini-btn" id="feCancelBtn">Cancel</button>
+        </div>
+        <div id="feMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+
+      <!-- ===== Question Builder sub-view ===== -->
+      <div id="subview-questions" style="display:none;">
+        <div class="admin-panel">
+          <label>Pick a formula</label>
+          <select id="qbFormulaSelect" style="width:100%; max-width:320px; padding:8px; margin-bottom:16px;"></select>
+
+          <div id="qbQuestionsListWrap">
+            <h3 style="margin-top:0;">Existing questions</h3>
+            <table class="admin-table" style="margin-bottom:20px;">
+              <thead><tr><th>#</th><th>Task</th><th>Answer</th><th>Status</th><th></th></tr></thead>
+              <tbody id="qbQuestionsTableBody"></tbody>
+            </table>
+            <button class="btn btn-primary" id="qbNewQuestionBtn" style="padding:8px 16px; font-size:12px;">+ Build New Question</button>
+          </div>
+
+          <div id="qbBuilder" style="display:none; margin-top:20px; border-top:1px solid var(--grid-line); padding-top:20px;">
+            <h3 style="margin-top:0;">Build a Question</h3>
+            <label>Task instructions (what the user is asked to do)</label>
+            <textarea id="qbTask" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;" placeholder="Find total sales where Region is North."></textarea>
+
+            <p class="sub" style="margin-bottom:8px;">Type your sample data directly into the sheet below — exactly like building the exercise in Excel.</p>
+            <div id="qbSheetContainer" style="width:100%; height:420px; border:1px solid var(--grid-line); position:relative; margin-bottom:14px;"></div>
+
+            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px;">
+              <div>
+                <label>Answer cell — Row (as shown in sheet, e.g. 2)</label>
+                <input type="number" id="qbAnswerRow" style="width:120px; padding:8px;" min="1">
+              </div>
+              <div>
+                <label>Answer cell — Column letter (e.g. D)</label>
+                <input type="text" id="qbAnswerCol" style="width:120px; padding:8px; text-transform:uppercase;" maxlength="2">
+              </div>
+              <div>
+                <label>Expected answer</label>
+                <input type="text" id="qbExpectedValue" style="width:160px; padding:8px;">
+              </div>
+              <div>
+                <label>Answer type</label>
+                <select id="qbExpectedType" style="padding:8px;">
+                  <option value="number">Number</option>
+                  <option value="text">Text</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" id="qbSaveQuestionBtn">Save Question</button>
+            <button class="admin-mini-btn" id="qbCancelBtn">Cancel</button>
+            <div id="qbMessage" style="margin-top:10px; font-size:13px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="formulas-data.js"></script>
 <script>
   let allUsers = [];
 
@@ -315,12 +433,375 @@
     URL.revokeObjectURL(url);
   });
 
+  // ---------- Sub-tabs within Formulas view ----------
+  document.getElementById('subTabFormulasBtn').addEventListener('click', () => {
+    document.getElementById('subTabFormulasBtn').style.background = 'var(--excel-green)';
+    document.getElementById('subTabFormulasBtn').style.color = '#fff';
+    document.getElementById('subTabQuestionsBtn').style.background = '';
+    document.getElementById('subTabQuestionsBtn').style.color = '';
+    document.getElementById('subview-formulas').style.display = 'block';
+    document.getElementById('subview-questions').style.display = 'none';
+    document.getElementById('formulaEditorPanel').style.display = 'none';
+  });
+  document.getElementById('subTabQuestionsBtn').addEventListener('click', () => {
+    document.getElementById('subTabQuestionsBtn').style.background = 'var(--excel-green)';
+    document.getElementById('subTabQuestionsBtn').style.color = '#fff';
+    document.getElementById('subTabFormulasBtn').style.background = '';
+    document.getElementById('subTabFormulasBtn').style.color = '';
+    document.getElementById('subview-questions').style.display = 'block';
+    document.getElementById('subview-formulas').style.display = 'none';
+    loadFormulaDropdown();
+  });
+
+  // ---------- Manage Formulas ----------
+  let allFormulasAdmin = [];
+
+  async function loadFormulasAdmin() {
+    const { data, error } = await supabaseClient.from('formulas').select('*').order('name');
+    if (error) {
+      document.getElementById('formulasTableBody').innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    allFormulasAdmin = data || [];
+    renderFormulasAdminTable(allFormulasAdmin);
+  }
+
+  function renderFormulasAdminTable(list) {
+    const body = document.getElementById('formulasTableBody');
+    if (list.length === 0) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(f => `
+      <tr>
+        <td><strong>${f.name}</strong></td>
+        <td>${f.category}</td>
+        <td>${f.video_url ? '🎥' : '—'}</td>
+        <td>${f.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="admin-mini-btn" data-edit-formula="${f.id}">Edit</button>
+          <button class="admin-mini-btn" data-toggle-formula="${f.id}" data-current="${f.enabled}">${f.enabled ? 'Disable' : 'Enable'}</button>
+          <button class="admin-mini-btn danger" data-delete-formula="${f.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-edit-formula]').forEach(btn => {
+      btn.addEventListener('click', () => openFormulaEditor(btn.dataset.editFormula));
+    });
+    body.querySelectorAll('[data-toggle-formula]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('formulas').update({ enabled: !current }).eq('id', btn.dataset.toggleFormula);
+        loadFormulasAdmin();
+      });
+    });
+    body.querySelectorAll('[data-delete-formula]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this formula and all its questions? This cannot be undone.')) return;
+        await supabaseClient.from('formulas').delete().eq('id', btn.dataset.deleteFormula);
+        loadFormulasAdmin();
+      });
+    });
+  }
+
+  document.getElementById('formulaSearchAdmin').addEventListener('input', (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    const filtered = !term ? allFormulasAdmin : allFormulasAdmin.filter(f =>
+      f.name.toLowerCase().includes(term) || f.category.toLowerCase().includes(term)
+    );
+    renderFormulasAdminTable(filtered);
+  });
+
+  function openFormulaEditor(id) {
+    document.getElementById('formulaEditorPanel').style.display = 'block';
+    document.getElementById('feMessage').textContent = '';
+    const f = id ? allFormulasAdmin.find(x => x.id === id) : null;
+
+    document.getElementById('formulaEditorTitle').textContent = f ? 'Edit Formula' : 'Add Formula';
+    document.getElementById('feId').value = f ? f.id : '';
+    document.getElementById('feFormId').value = f ? f.id : '';
+    document.getElementById('feFormId').disabled = !!f;
+    document.getElementById('feName').value = f ? f.name : '';
+    document.getElementById('feCategory').value = f ? f.category : '';
+    document.getElementById('feSyntax').value = f ? f.syntax : '';
+    document.getElementById('feDescription').value = f ? f.description : '';
+    document.getElementById('feParams').value = f && f.params
+      ? f.params.map(p => `${p[0]}: ${p[1]}`).join('\n') : '';
+    document.getElementById('feUseCase').value = f ? (f.use_case || '') : '';
+    document.getElementById('feVideoUrl').value = f ? (f.video_url || '') : '';
+    document.getElementById('feEnabled').checked = f ? f.enabled : true;
+
+    document.getElementById('formulaEditorPanel').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('addFormulaBtn').addEventListener('click', () => openFormulaEditor(null));
+  document.getElementById('feCancelBtn').addEventListener('click', () => {
+    document.getElementById('formulaEditorPanel').style.display = 'none';
+  });
+
+  document.getElementById('feSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('feMessage');
+    const id = document.getElementById('feFormId').value.trim().toLowerCase().replace(/\s+/g, '-');
+    const name = document.getElementById('feName').value.trim();
+    const category = document.getElementById('feCategory').value.trim();
+    const syntax = document.getElementById('feSyntax').value.trim();
+    const description = document.getElementById('feDescription').value.trim();
+    const paramsText = document.getElementById('feParams').value.trim();
+    const params = paramsText ? paramsText.split('\n').filter(l => l.includes(':')).map(l => {
+      const idx = l.indexOf(':');
+      return [l.slice(0, idx).trim(), l.slice(idx + 1).trim()];
+    }) : [];
+    const useCase = document.getElementById('feUseCase').value.trim();
+    const videoUrl = document.getElementById('feVideoUrl').value.trim();
+    const enabled = document.getElementById('feEnabled').checked;
+
+    if (!id || !name || !category || !syntax || !description) {
+      msg.textContent = 'ID, name, category, syntax, and description are all required.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const { error } = await supabaseClient.from('formulas').upsert({
+      id, name, category, syntax, description, params,
+      use_case: useCase || null, video_url: videoUrl || null, enabled
+    });
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    msg.textContent = 'Saved!';
+    msg.style.color = 'var(--excel-green-deep)';
+    loadFormulasAdmin();
+    setTimeout(() => { document.getElementById('formulaEditorPanel').style.display = 'none'; }, 700);
+  });
+
+  // ---------- One-time import from existing site data ----------
+  document.getElementById('importFormulasBtn').addEventListener('click', async () => {
+    if (typeof FORMULA_META === 'undefined') {
+      document.getElementById('importStatus').textContent = 'Could not find the site\u2019s formula data to import.';
+      return;
+    }
+    if (!confirm(`Import all ${FORMULA_META.length} formulas from the site's current data? Existing entries with the same ID will be overwritten.`)) return;
+
+    const status = document.getElementById('importStatus');
+    const rows = FORMULA_META.map(f => ({
+      id: f.id,
+      name: f.name,
+      category: f.category,
+      syntax: f.syntax,
+      description: f.description,
+      params: f.params || [],
+      use_case: f.useCase || null,
+      video_url: f.videoUrl || null,
+      enabled: true
+    }));
+
+    const chunkSize = 50;
+    let done = 0;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+      const { error } = await supabaseClient.from('formulas').upsert(chunk);
+      if (error) {
+        status.textContent = `Stopped at ${done} imported — error: ${error.message}`;
+        return;
+      }
+      done += chunk.length;
+      status.textContent = `Imported ${done} of ${rows.length}...`;
+    }
+    status.textContent = `Done — imported ${done} formulas.`;
+    loadFormulasAdmin();
+  });
+
+  // ---------- Question Builder ----------
+  async function loadFormulaDropdown() {
+    if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
+    const select = document.getElementById('qbFormulaSelect');
+    select.innerHTML = allFormulasAdmin.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+    if (allFormulasAdmin.length > 0) loadQuestionsForFormula(select.value);
+  }
+
+  document.getElementById('qbFormulaSelect').addEventListener('change', (e) => {
+    loadQuestionsForFormula(e.target.value);
+  });
+
+  function colLetterToIndex(letters) {
+    let result = 0;
+    for (let i = 0; i < letters.length; i++) {
+      result = result * 26 + (letters.toUpperCase().charCodeAt(i) - 64);
+    }
+    return result - 1;
+  }
+  function colIndexToLetter(index) {
+    let s = '';
+    index += 1;
+    while (index > 0) {
+      const rem = (index - 1) % 26;
+      s = String.fromCharCode(65 + rem) + s;
+      index = Math.floor((index - 1) / 26);
+    }
+    return s;
+  }
+
+  async function loadQuestionsForFormula(formulaId) {
+    const body = document.getElementById('qbQuestionsTableBody');
+    body.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
+    const { data, error } = await supabaseClient
+      .from('formula_questions')
+      .select('*')
+      .eq('formula_id', formulaId)
+      .order('order_index');
+
+    if (error) {
+      body.innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:16px;">No questions yet for this formula.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = data.map((q, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${q.task.length > 60 ? q.task.slice(0, 60) + '...' : q.task}</td>
+        <td>${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}</td>
+        <td>${q.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+        <td>
+          <button class="admin-mini-btn" data-toggle-q="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
+          <button class="admin-mini-btn danger" data-delete-q="${q.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-toggle-q]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('formula_questions').update({ enabled: !current }).eq('id', btn.dataset.toggleQ);
+        loadQuestionsForFormula(document.getElementById('qbFormulaSelect').value);
+      });
+    });
+    body.querySelectorAll('[data-delete-q]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this question?')) return;
+        await supabaseClient.from('formula_questions').delete().eq('id', btn.dataset.deleteQ);
+        loadQuestionsForFormula(document.getElementById('qbFormulaSelect').value);
+      });
+    });
+  }
+
+  let qbSheetReady = false;
+
+  document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
+    document.getElementById('qbBuilder').style.display = 'block';
+    document.getElementById('qbTask').value = '';
+    document.getElementById('qbAnswerRow').value = '';
+    document.getElementById('qbAnswerCol').value = '';
+    document.getElementById('qbExpectedValue').value = '';
+    document.getElementById('qbMessage').textContent = '';
+
+    if (qbSheetReady && window.luckysheet && window.luckysheet.destroy) {
+      try { luckysheet.destroy(); } catch (e) {}
+    }
+    luckysheet.create({
+      container: 'qbSheetContainer',
+      lang: 'en',
+      showinfobar: false,
+      data: [{ name: 'Sheet1', celldata: [], row: 40, column: 20, status: 1 }]
+    });
+    qbSheetReady = true;
+    document.getElementById('qbBuilder').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('qbCancelBtn').addEventListener('click', () => {
+    document.getElementById('qbBuilder').style.display = 'none';
+  });
+
+  document.getElementById('qbSaveQuestionBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('qbMessage');
+    const formulaId = document.getElementById('qbFormulaSelect').value;
+    const task = document.getElementById('qbTask').value.trim();
+    const rowInput = parseInt(document.getElementById('qbAnswerRow').value, 10);
+    const colLetters = document.getElementById('qbAnswerCol').value.trim();
+    const expectedValue = document.getElementById('qbExpectedValue').value.trim();
+    const expectedType = document.getElementById('qbExpectedType').value;
+
+    if (!task || !rowInput || !colLetters || !expectedValue) {
+      msg.textContent = 'Fill in the task, answer cell, and expected answer.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const targetRow = rowInput - 1;
+    const targetCol = colLetterToIndex(colLetters);
+
+    // Extract everything typed into the sheet as a simple grid
+    try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
+
+    const maxRows = 30, maxCols = 15;
+    const grid = [];
+    let lastRowWithData = -1;
+    for (let r = 0; r < maxRows; r++) {
+      const row = [];
+      let rowHasData = false;
+      for (let c = 0; c < maxCols; c++) {
+        let v = null;
+        try {
+          v = luckysheet.getCellValue(r, c);
+          if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+        } catch (e) {}
+        row.push(v === undefined ? null : v);
+        if (v !== null && v !== undefined && v !== '') { rowHasData = true; lastRowWithData = r; }
+      }
+      grid.push(row);
+    }
+    const trimmedGrid = grid.slice(0, lastRowWithData + 1);
+
+    if (trimmedGrid.length === 0) {
+      msg.textContent = 'The sheet is empty — type some sample data first.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const { data: existing } = await supabaseClient
+      .from('formula_questions')
+      .select('id')
+      .eq('formula_id', formulaId);
+    const orderIndex = existing ? existing.length : 0;
+
+    const { error } = await supabaseClient.from('formula_questions').insert({
+      formula_id: formulaId,
+      task, grid: trimmedGrid,
+      target_row: targetRow, target_col: targetCol,
+      expected_value: expectedValue, expected_type: expectedType,
+      order_index: orderIndex, enabled: true
+    });
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    msg.textContent = 'Question saved!';
+    msg.style.color = 'var(--excel-green-deep)';
+    setTimeout(() => {
+      document.getElementById('qbBuilder').style.display = 'none';
+      loadQuestionsForFormula(formulaId);
+    }, 700);
+  });
+
   // ---------- Init ----------
   (async function init() {
     const ok = await checkAdminAccess();
     if (!ok) return;
     loadDashboard();
     loadUsers();
+    loadFormulasAdmin();
   })();
 </script>
 
