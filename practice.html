@@ -70,6 +70,7 @@
           <p class="target-label" id="activeTask" style="margin-bottom:0;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
           <button class="btn btn-primary" id="checkBtn" style="display:none; flex-shrink:0; padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
         </div>
+        <div id="sheetInstructionBanner" style="display:none; text-align:center; padding:7px 12px; background:#FFF6C9; border:1px solid var(--grid-line); border-bottom:none; font-size:13px; font-weight:600;"></div>
         <div id="luckysheetContainer" style="width:100%; height:800px; position:relative; border:1px solid var(--grid-line);"></div>
       </div>
     </div>
@@ -443,7 +444,7 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 });
 
 // ---------- Result modal (icon buttons with hover tooltips) ----------
-function showResultModal({ correct, html }) {
+function showResultModal({ correct, html, answerHtml }) {
   const overlay = document.getElementById('resultOverlay');
   const box = document.getElementById('resultBox');
 
@@ -457,6 +458,10 @@ function showResultModal({ correct, html }) {
   box.innerHTML = `
     <div class="result-icon">${icon}</div>
     <div class="result-message">${html}</div>
+    ${!correct && answerHtml ? `
+      <button class="admin-mini-btn" id="resultSeeAnswerBtn" style="margin:6px 0;">👁 See Answer</button>
+      <div id="resultAnswerReveal" style="display:none; font-size:13px; background:#F5F0DC; border-radius:8px; padding:10px; margin-bottom:6px;">${answerHtml}</div>
+    ` : ''}
     <div class="icon-btn-row">
       <button class="icon-btn" id="resultAgainBtn" title="Practice Again">🔁</button>
       ${hasNextQuestion ? `<button class="icon-btn primary" id="resultNextQBtn" title="Next Question">➡️</button>` : ''}
@@ -464,6 +469,13 @@ function showResultModal({ correct, html }) {
       <button class="icon-btn" id="resultCloseBtn" title="Close">✕</button>
     </div>
   `;
+
+  if (!correct && answerHtml) {
+    document.getElementById('resultSeeAnswerBtn').addEventListener('click', () => {
+      document.getElementById('resultAnswerReveal').style.display = 'block';
+      document.getElementById('resultSeeAnswerBtn').style.display = 'none';
+    });
+  }
 
   document.getElementById('resultCloseBtn').addEventListener('click', () => overlay.classList.remove('open'));
 
@@ -545,6 +557,7 @@ function startBlankSheet() {
   document.getElementById('activeTitle').textContent = 'Free Practice';
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
   document.getElementById('checkBtn').style.display = 'none';
+  document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet('Free Practice', []);
 }
 
@@ -553,6 +566,7 @@ function startFreePractice(formula) {
   document.getElementById('activeTitle').textContent = formula.name;
   document.getElementById('activeTask').innerHTML = `Try <strong>${formula.name}</strong> freely below — real Excel engine, no pre-set answer to check against yet. Syntax: <code>${formula.syntax}</code>`;
   document.getElementById('checkBtn').style.display = 'none';
+  document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet(formula.name, []);
 }
 
@@ -562,14 +576,14 @@ function startPractice(formula, qIndex) {
   renderList();
 
   const question = formula.questions[qIndex];
-  const isRangeQ = question.answerMode === 'range' && question.expectedCells && question.expectedCells.length;
-  const targetLabel = isRangeQ
-    ? `the ${question.expectedCells.length} highlighted cells`
-    : colLetter(question.targetCol) + (question.targetRow + 1);
 
   document.getElementById('activeTitle').textContent = formula.name;
-  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong> Write your formula in ${isRangeQ ? targetLabel : 'the yellow cell (' + targetLabel + ')'}.`;
+  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong>`;
   document.getElementById('checkBtn').style.display = 'inline-block';
+
+  const banner = document.getElementById('sheetInstructionBanner');
+  banner.textContent = 'Start your formula in the highlighted cell.';
+  banner.style.display = 'block';
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
@@ -626,7 +640,11 @@ function checkAnswer(question) {
       const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
       showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Every cell matches!` });
     } else {
-      showResultModal({ correct: false, html: "Not quite — one or more of the highlighted cells doesn't match yet. Try again!" });
+      showResultModal({
+        correct: false,
+        html: "Not quite — one or more of the highlighted cells doesn't match yet. Try again!",
+        answerHtml: question.expectedCells.map(c => `${colLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>')
+      });
     }
     return;
   }
@@ -667,7 +685,11 @@ function checkAnswer(question) {
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
-    showResultModal({ correct: false, html: `Result: <strong>${value}</strong> — not quite.<br>Expected ${question.expectedValue}. Try again!` });
+    showResultModal({
+      correct: false,
+      html: `Result: <strong>${value}</strong> — not quite. Try again!`,
+      answerHtml: `Expected answer: <strong>${question.expectedValue}</strong>`
+    });
   }
 }
 
