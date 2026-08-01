@@ -607,7 +607,7 @@ criteria: The condition to match"></textarea>
           ${u.email ? `<button class="admin-mini-btn" data-reset-pw="${u.id}" data-email="${u.email}">🔑 Send Reset Link</button><div data-reset-status="${u.id}" style="font-size:11px; color:var(--ink-soft); margin-top:4px;"></div>` : '—'}
         </td>
         <td>
-          ${!u.is_admin ? `<button class="admin-mini-btn danger" data-toggle-ban="${u.id}" data-current="${u.chat_banned}">${u.chat_banned ? 'Unban' : 'Ban from Chat'}</button>` : ''}
+          <button class="admin-mini-btn danger" data-toggle-ban="${u.id}" data-current="${u.chat_banned}">${u.chat_banned ? 'Unban' : 'Ban from Chat'}</button>
         </td>
       </tr>
     `).join('');

@@ -180,6 +180,16 @@
   border-top: 1px solid var(--grid-line);
 }
 
+.chat-banned-notice {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8A2A22;
+  background: #FBE6E2;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--grid-line);
+  line-height: 1.4;
+}
+
 .chat-report-panel {
   display: none;
   padding: 14px;

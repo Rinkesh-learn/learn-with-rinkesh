@@ -134,6 +134,7 @@
       </div>
       <button class="btn btn-primary" id="chatSaveSettingsBtn" style="width:100%; margin-top:8px;">Save</button>
     </div>
+    <div id="chatBannedNotice" class="chat-banned-notice" style="display:none;"></div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-report-panel" id="chatReportPanel">
       <div class="chat-report-header">
@@ -202,6 +203,7 @@
       displayName: name,
       disclaimerSeen: !!(profile && profile.chat_disclaimer_seen),
       banned: isBanned,
+      bannedUntil: (profile && profile.chat_banned_until) || null,
       rawName: profile ? profile.chat_display_name : '',
       hideNameSetting: !!(profile && profile.chat_hide_name)
     };
@@ -226,12 +228,19 @@
     applyTheme();
 
     const inputRow = document.querySelector('.chat-input-row');
+    const bannedNotice = document.getElementById('chatBannedNotice');
     if (currentUser.banned) {
       inputRow.style.display = 'none';
-      const container = document.getElementById('chatMessages');
-      container.insertAdjacentHTML('afterbegin', '<div class="chat-loading">You have been restricted from posting in chat.</div>');
+      bannedNotice.style.display = 'block';
+      if (currentUser.bannedUntil) {
+        const untilDate = new Date(currentUser.bannedUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+        bannedNotice.textContent = `You are banned from chat for violation of community guidelines. You can chat again from ${untilDate}.`;
+      } else {
+        bannedNotice.textContent = 'You are permanently banned from chat for violation of community guidelines.';
+      }
     } else {
       inputRow.style.display = 'flex';
+      bannedNotice.style.display = 'none';
     }
 
     loadMessages();
