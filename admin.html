@@ -251,88 +251,95 @@ criteria: The condition to match"></textarea>
 
       <!-- ===== Question Builder sub-view ===== -->
       <div id="subview-questions" style="display:none;">
-        <div class="admin-panel">
-          <label>Pick a formula</label>
-          <select id="qbFormulaSelect" style="width:100%; max-width:320px; padding:8px; margin-bottom:16px;"></select>
+        <div style="display:flex; gap:16px; align-items:flex-start;">
 
-          <div id="qbQuestionsListWrap">
-            <h3 style="margin-top:0;">Existing questions</h3>
-            <table class="admin-table" style="margin-bottom:20px;">
-              <thead><tr><th>#</th><th>Task</th><th>Answer</th><th>Status</th><th></th></tr></thead>
-              <tbody id="qbQuestionsTableBody"></tbody>
-            </table>
-            <button class="btn btn-primary" id="qbNewQuestionBtn" style="padding:8px 16px; font-size:12px;">+ Build New Question</button>
-          </div>
+          <!-- LEFT: persistent controls sidebar -->
+          <div style="width:290px; flex-shrink:0;">
+            <div class="admin-panel">
+              <label>Search formulas</label>
+              <input type="text" id="qbFormulaSearch" placeholder="🔍 Type to filter..." style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+              <label>Pick a formula</label>
+              <select id="qbFormulaSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
 
-          <div id="qbBuilder" style="display:none; margin-top:20px; border-top:1px solid var(--grid-line); padding-top:20px;">
-            <h3 style="margin-top:0;">Build a Question</h3>
-
-            <!-- ===== Phase 1: Question Sheet ===== -->
-            <div id="qbPhase1" style="display:flex; gap:16px; align-items:flex-start;">
-              <div style="width:280px; flex-shrink:0;">
-                <label>Task instructions (what the user is asked to do)</label>
-                <textarea id="qbTask" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;" placeholder="Find total sales where Region is North."></textarea>
-                <p class="sub" style="margin-bottom:14px;">Step 1 — type your sample data directly into the sheet, exactly like building the exercise in Excel.</p>
-                <button class="btn btn-primary" id="qbNextToAnswerBtn" style="width:100%; margin-bottom:8px;">Next: Build the Answer &rarr;</button>
-                <button class="admin-mini-btn" id="qbCancelBtn" style="width:100%;">Cancel</button>
+              <button type="button" class="admin-mini-btn" id="qbToggleExistingBtn" style="width:100%; text-align:left; margin-bottom:8px;">📋 Existing Questions &nbsp;▾</button>
+              <div id="qbQuestionsListWrap" style="display:none; margin-bottom:14px; max-height:240px; overflow-y:auto;">
+                <table class="admin-table" style="font-size:11px;">
+                  <thead><tr><th>#</th><th>Task</th><th>Answer</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="qbQuestionsTableBody"></tbody>
+                </table>
               </div>
-              <div style="flex:1; min-width:0;">
-                <div id="qbSheetContainer" style="width:100%; height:560px; border:1px solid var(--grid-line); position:relative;"></div>
-              </div>
+
+              <button class="btn btn-primary" id="qbNewQuestionBtn" style="width:100%; padding:8px 16px; font-size:12px;">+ Build New Question</button>
             </div>
 
-            <!-- ===== Phase 2: Answer Sheet ===== -->
-            <div id="qbPhase2" style="display:none; gap:16px; align-items:flex-start;">
-              <div style="width:280px; flex-shrink:0;">
-                <p class="sub" style="margin-bottom:14px;">Step 2 — same data. Type the <strong>real, correct formula</strong> here. This becomes the answer key.</p>
+            <!-- Phase 1 controls -->
+            <div id="qbPhase1Controls" class="admin-panel" style="display:none; margin-top:16px;">
+              <h3 style="margin-top:0;">Build a Question</h3>
+              <label>Task instructions (what the user is asked to do)</label>
+              <textarea id="qbTask" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;" placeholder="Find total sales where Region is North."></textarea>
+              <p class="sub" style="margin-bottom:14px;">Step 1 — type your sample data directly into the sheet, exactly like building the exercise in Excel.</p>
+              <button class="btn btn-primary" id="qbNextToAnswerBtn" style="width:100%; margin-bottom:8px;">Next: Build the Answer &rarr;</button>
+              <button class="admin-mini-btn" id="qbCancelBtn" style="width:100%;">Cancel</button>
+            </div>
 
-                <label>What kind of answer does this formula give?</label>
-                <div style="margin-bottom:14px;">
-                  <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-bottom:6px;"><input type="radio" name="qbAnswerMode" value="single" checked style="width:auto;"> Single cell (most formulas)</label>
-                  <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbAnswerMode" value="range" style="width:auto;"> A list of cells (UNIQUE, SORT, FILTER, etc.)</label>
-                </div>
+            <!-- Phase 2 controls -->
+            <div id="qbPhase2Controls" class="admin-panel" style="display:none; margin-top:16px;">
+              <h3 style="margin-top:0;">Build a Question</h3>
+              <p class="sub" style="margin-bottom:14px;">Step 2 — same data. Type the <strong>real, correct formula</strong> here. This becomes the answer key.</p>
 
-                <div id="qbSingleModeFields" style="margin-bottom:12px;">
-                  <label>Answer cell — Row (as shown in sheet)</label>
-                  <input type="number" id="qbAnswerRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
-                  <label>Answer cell — Column letter</label>
-                  <input type="text" id="qbAnswerCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase; margin-bottom:8px;" maxlength="2">
-                  <label>Answer type</label>
-                  <select id="qbExpectedType" style="width:100%; padding:8px;">
-                    <option value="number">Number</option>
-                    <option value="text">Text</option>
-                  </select>
-                </div>
-
-                <div id="qbRangeModeFields" style="display:none; margin-bottom:12px;">
-                  <label>How should the range be determined?</label>
-                  <div style="margin-bottom:10px;">
-                    <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-bottom:6px;"><input type="radio" name="qbRangeDetect" value="auto" checked style="width:auto;"> Automatic</label>
-                    <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="manual" style="width:auto;"> I'll set it myself</label>
-                  </div>
-
-                  <label>Start — Row</label>
-                  <input type="number" id="qbRangeStartRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
-                  <label>Start — Column letter</label>
-                  <input type="text" id="qbRangeStartCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase; margin-bottom:8px;" maxlength="2">
-                  <div id="qbRangeEndFields" style="display:none;">
-                    <label>End — Row</label>
-                    <input type="number" id="qbRangeEndRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
-                    <label>End — Column letter</label>
-                    <input type="text" id="qbRangeEndCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase;" maxlength="2">
-                  </div>
-                </div>
-
-                <button class="btn btn-primary" id="qbSaveQuestionBtn" style="width:100%; margin-bottom:8px;">Save Question</button>
-                <button class="admin-mini-btn" id="qbBackBtn" style="width:100%; margin-bottom:8px;">&larr; Back</button>
-                <button class="admin-mini-btn" id="qbCancelBtn2" style="width:100%;">Cancel</button>
-                <div id="qbMessage" style="margin-top:10px; font-size:13px;"></div>
+              <label>What kind of answer does this formula give?</label>
+              <div style="margin-bottom:14px;">
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-bottom:6px;"><input type="radio" name="qbAnswerMode" value="single" checked style="width:auto;"> Single cell (most formulas)</label>
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbAnswerMode" value="range" style="width:auto;"> A list of cells (UNIQUE, SORT, FILTER, etc.)</label>
               </div>
-              <div style="flex:1; min-width:0;">
-                <div id="qbAnswerSheetContainer" style="width:100%; height:560px; border:1px solid var(--grid-line); position:relative;"></div>
+
+              <div id="qbSingleModeFields" style="margin-bottom:12px;">
+                <label>Answer cell — Row (as shown in sheet)</label>
+                <input type="number" id="qbAnswerRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
+                <label>Answer cell — Column letter</label>
+                <input type="text" id="qbAnswerCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase; margin-bottom:8px;" maxlength="2">
+                <label>Answer type</label>
+                <select id="qbExpectedType" style="width:100%; padding:8px;">
+                  <option value="number">Number</option>
+                  <option value="text">Text</option>
+                </select>
               </div>
+
+              <div id="qbRangeModeFields" style="display:none; margin-bottom:12px;">
+                <label>How should the range be determined?</label>
+                <div style="margin-bottom:10px;">
+                  <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-bottom:6px;"><input type="radio" name="qbRangeDetect" value="auto" checked style="width:auto;"> Automatic</label>
+                  <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="manual" style="width:auto;"> I'll set it myself</label>
+                </div>
+
+                <label>Start — Row</label>
+                <input type="number" id="qbRangeStartRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
+                <label>Start — Column letter</label>
+                <input type="text" id="qbRangeStartCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase; margin-bottom:8px;" maxlength="2">
+                <div id="qbRangeEndFields" style="display:none;">
+                  <label>End — Row</label>
+                  <input type="number" id="qbRangeEndRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
+                  <label>End — Column letter</label>
+                  <input type="text" id="qbRangeEndCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase;" maxlength="2">
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="qbSaveQuestionBtn" style="width:100%; margin-bottom:8px;">Save Question</button>
+              <button class="admin-mini-btn" id="qbBackBtn" style="width:100%; margin-bottom:8px;">&larr; Back</button>
+              <button class="admin-mini-btn" id="qbCancelBtn2" style="width:100%;">Cancel</button>
+              <div id="qbMessage" style="margin-top:10px; font-size:13px;"></div>
             </div>
           </div>
+
+          <!-- RIGHT: the spreadsheet, always at the top of the page -->
+          <div style="flex:1; min-width:0;">
+            <div id="qbSheetPlaceholder" class="admin-panel" style="text-align:center; color:var(--ink-soft); padding:100px 20px;">
+              Pick a formula on the left, then click <strong>+ Build New Question</strong> to get started.
+            </div>
+            <div id="qbSheetContainer" style="display:none; width:100%; height:640px; border:1px solid var(--grid-line); position:relative;"></div>
+            <div id="qbAnswerSheetContainer" style="display:none; width:100%; height:640px; border:1px solid var(--grid-line); position:relative;"></div>
+          </div>
+
         </div>
       </div>
 
@@ -699,6 +706,30 @@ criteria: The condition to match"></textarea>
     loadQuestionsForFormula(e.target.value);
   });
 
+  // Search box filters the formula dropdown's options live
+  document.getElementById('qbFormulaSearch').addEventListener('input', (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    const select = document.getElementById('qbFormulaSelect');
+    const matches = allFormulasAdmin.filter(f => f.name.toLowerCase().includes(term));
+    const currentId = select.value;
+    select.innerHTML = (matches.length > 0 ? matches : allFormulasAdmin).map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+    // Keep the current selection if it still matches, otherwise select the first match
+    if (matches.some(f => f.id === currentId)) {
+      select.value = currentId;
+    } else if (matches.length > 0) {
+      loadQuestionsForFormula(select.value);
+    }
+  });
+
+  // Existing Questions collapses by default — click to expand/collapse
+  document.getElementById('qbToggleExistingBtn').addEventListener('click', () => {
+    const wrap = document.getElementById('qbQuestionsListWrap');
+    const btn = document.getElementById('qbToggleExistingBtn');
+    const isOpen = wrap.style.display !== 'none';
+    wrap.style.display = isOpen ? 'none' : 'block';
+    btn.innerHTML = isOpen ? '📋 Existing Questions &nbsp;▾' : '📋 Existing Questions &nbsp;▴';
+  });
+
   function colLetterToIndex(letters) {
     let result = 0;
     for (let i = 0; i < letters.length; i++) {
@@ -804,9 +835,11 @@ criteria: The condition to match"></textarea>
   }
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
-    document.getElementById('qbBuilder').style.display = 'block';
-    document.getElementById('qbPhase1').style.display = 'flex';
-    document.getElementById('qbPhase2').style.display = 'none';
+    document.getElementById('qbSheetPlaceholder').style.display = 'none';
+    document.getElementById('qbAnswerSheetContainer').style.display = 'none';
+    document.getElementById('qbSheetContainer').style.display = 'block';
+    document.getElementById('qbPhase1Controls').style.display = 'block';
+    document.getElementById('qbPhase2Controls').style.display = 'none';
     document.getElementById('qbTask').value = '';
     document.getElementById('qbAnswerRow').value = '';
     document.getElementById('qbAnswerCol').value = '';
@@ -827,7 +860,6 @@ criteria: The condition to match"></textarea>
       data: [{ name: 'Question', celldata: [], row: 40, column: 20, status: 1 }]
     });
     qbSheetReady = true;
-    document.getElementById('qbBuilder').scrollIntoView({ behavior: 'smooth' });
   });
 
   // Phase 1 → Phase 2: capture the question data, then open a matching Answer Sheet
@@ -839,8 +871,10 @@ criteria: The condition to match"></textarea>
     }
     qbQuestionGrid = grid;
 
-    document.getElementById('qbPhase1').style.display = 'none';
-    document.getElementById('qbPhase2').style.display = 'flex';
+    document.getElementById('qbPhase1Controls').style.display = 'none';
+    document.getElementById('qbPhase2Controls').style.display = 'block';
+    document.getElementById('qbSheetContainer').style.display = 'none';
+    document.getElementById('qbAnswerSheetContainer').style.display = 'block';
 
     if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
@@ -855,16 +889,22 @@ criteria: The condition to match"></textarea>
   });
 
   function backToPhase1() {
-    document.getElementById('qbPhase2').style.display = 'none';
-    document.getElementById('qbPhase1').style.display = 'flex';
+    document.getElementById('qbPhase2Controls').style.display = 'none';
+    document.getElementById('qbPhase1Controls').style.display = 'block';
+    document.getElementById('qbAnswerSheetContainer').style.display = 'none';
+    document.getElementById('qbSheetContainer').style.display = 'block';
   }
   document.getElementById('qbBackBtn').addEventListener('click', backToPhase1);
-  document.getElementById('qbCancelBtn').addEventListener('click', () => {
-    document.getElementById('qbBuilder').style.display = 'none';
-  });
-  document.getElementById('qbCancelBtn2').addEventListener('click', () => {
-    document.getElementById('qbBuilder').style.display = 'none';
-  });
+
+  function qbCancelBuilder() {
+    document.getElementById('qbPhase1Controls').style.display = 'none';
+    document.getElementById('qbPhase2Controls').style.display = 'none';
+    document.getElementById('qbSheetContainer').style.display = 'none';
+    document.getElementById('qbAnswerSheetContainer').style.display = 'none';
+    document.getElementById('qbSheetPlaceholder').style.display = 'block';
+  }
+  document.getElementById('qbCancelBtn').addEventListener('click', qbCancelBuilder);
+  document.getElementById('qbCancelBtn2').addEventListener('click', qbCancelBuilder);
 
   // Answer mode toggle (single cell vs range)
   document.querySelectorAll('input[name="qbAnswerMode"]').forEach(radio => {
@@ -1027,7 +1067,7 @@ criteria: The condition to match"></textarea>
     msg.textContent = 'Question saved!';
     msg.style.color = 'var(--excel-green-deep)';
     setTimeout(() => {
-      document.getElementById('qbBuilder').style.display = 'none';
+      qbCancelBuilder();
       loadQuestionsForFormula(formulaId);
     }, 700);
   });
