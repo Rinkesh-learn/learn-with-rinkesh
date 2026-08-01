@@ -291,6 +291,8 @@ criteria: The condition to match"></textarea>
               </div>
 
               <div id="qbSingleModeFields" style="margin-bottom:12px;">
+                <button type="button" class="admin-mini-btn" id="qbAutoDetectBtn" style="width:100%; margin-bottom:12px; background:var(--excel-green); color:#fff;">🔍 Auto-Detect Answer Cell</button>
+                <div id="qbAutoDetectMessage" style="font-size:12px; margin-bottom:10px;"></div>
                 <label>Answer cell — Row (as shown in sheet)</label>
                 <input type="number" id="qbAnswerRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
                 <label>Answer cell — Column letter</label>
@@ -1039,6 +1041,65 @@ criteria: The condition to match"></textarea>
     });
     return cells;
   }
+
+  function colIndexToLetter(index) {
+    let letter = '';
+    index += 1;
+    while (index > 0) {
+      const rem = (index - 1) % 26;
+      letter = String.fromCharCode(65 + rem) + letter;
+      index = Math.floor((index - 1) / 26);
+    }
+    return letter;
+  }
+
+  // Compares the live Answer Sheet against the Question Sheet data captured
+  // in Phase 1, and finds the cell(s) that differ — that's the formula's
+  // result, so the admin doesn't have to manually find and type row/column.
+  document.getElementById('qbAutoDetectBtn').addEventListener('click', () => {
+    const msg = document.getElementById('qbAutoDetectMessage');
+    if (!qbQuestionGrid) {
+      msg.textContent = 'Could not read the question data — try rebuilding this question.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const answerGrid = extractGrid(40, 20);
+    const maxRows = Math.max(qbQuestionGrid.length, answerGrid.length);
+    const diffs = [];
+
+    for (let r = 0; r < maxRows; r++) {
+      const qRow = qbQuestionGrid[r] || [];
+      const aRow = answerGrid[r] || [];
+      const maxCols = Math.max(qRow.length, aRow.length);
+      for (let c = 0; c < maxCols; c++) {
+        const qVal = qRow[c] !== undefined ? qRow[c] : null;
+        const aVal = aRow[c] !== undefined ? aRow[c] : null;
+        // Loose comparison — sheet values often come back as strings vs numbers
+        if (String(qVal ?? '') !== String(aVal ?? '') && aVal !== null && aVal !== '') {
+          diffs.push({ r, c, value: aVal });
+        }
+      }
+    }
+
+    if (diffs.length === 0) {
+      msg.textContent = 'No new value found yet — type your formula into the Answer Sheet first, then click Auto-Detect again.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+    if (diffs.length > 1) {
+      msg.textContent = `Found ${diffs.length} changed cells — if this formula spills into multiple cells, switch to "A list of cells" above instead. Using the first one found for now.`;
+      msg.style.color = '#B3261E';
+    } else {
+      msg.textContent = `Found it — ${colIndexToLetter(diffs[0].c)}${diffs[0].r + 1}, value: ${diffs[0].value}`;
+      msg.style.color = 'var(--excel-green-deep)';
+    }
+
+    const found = diffs[0];
+    document.getElementById('qbAnswerRow').value = found.r + 1;
+    document.getElementById('qbAnswerCol').value = colIndexToLetter(found.c);
+    document.getElementById('qbExpectedType').value = (typeof found.value === 'number' || !isNaN(parseFloat(found.value)) && isFinite(found.value)) ? 'number' : 'text';
+  });
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
     document.getElementById('qbSheetPlaceholder').style.display = 'none';
