@@ -65,12 +65,12 @@
 
     <div class="practice-main" id="practiceMain" style="align-items:stretch; justify-content:flex-start;">
       <div class="practice-active" style="width:100%;">
-        <h2 id="activeTitle">Free Practice</h2>
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;">
-          <p class="target-label" id="activeTask" style="margin-bottom:0;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:2px;">
+          <h2 id="activeTitle" style="margin:0; flex-shrink:0;">Free Practice</h2>
+          <div id="sheetInstructionBanner" style="display:none; flex:1; text-align:center; font-size:13px; font-weight:600; background:#FFF6C9; border-radius:16px; padding:5px 14px;"></div>
           <button class="btn btn-primary" id="checkBtn" style="display:none; flex-shrink:0; padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
         </div>
-        <div id="sheetInstructionBanner" style="display:none; text-align:center; padding:7px 12px; background:#FFF6C9; border:1px solid var(--grid-line); border-bottom:none; font-size:13px; font-weight:600;"></div>
+        <p class="target-label" id="activeTask" style="margin:0 0 4px;">This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.</p>
         <div id="luckysheetContainer" style="width:100%; height:800px; position:relative; border:1px solid var(--grid-line);"></div>
       </div>
     </div>
@@ -601,6 +601,10 @@ function unwrapValue(raw) {
 function checkAnswer(question) {
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
+  const answerHtml = (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length)
+    ? question.expectedCells.map(c => `${colLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>')
+    : `Expected answer: <strong>${question.expectedValue}</strong>`;
+
   if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
     let anyEmpty = false, anyUnconfirmed = false, anyError = false, allMatch = true;
 
@@ -623,15 +627,15 @@ function checkAnswer(question) {
     });
 
     if (anyEmpty) {
-      showResultModal({ correct: false, html: 'Fill in all the highlighted cells first, then click outside before checking.' });
+      showResultModal({ correct: false, html: 'Fill in all the highlighted cells first, then click outside before checking.', answerHtml });
       return;
     }
     if (anyUnconfirmed) {
-      showResultModal({ correct: false, html: 'Click outside the cells (or press Enter) to confirm your formulas, then check again.' });
+      showResultModal({ correct: false, html: 'Click outside the cells (or press Enter) to confirm your formulas, then check again.', answerHtml });
       return;
     }
     if (anyError) {
-      showResultModal({ correct: false, html: "One or more cells show an error — check your formula's cell references and arguments." });
+      showResultModal({ correct: false, html: "One or more cells show an error — check your formula's cell references and arguments.", answerHtml });
       return;
     }
 
@@ -643,7 +647,7 @@ function checkAnswer(question) {
       showResultModal({
         correct: false,
         html: "Not quite — one or more of the highlighted cells doesn't match yet. Try again!",
-        answerHtml: question.expectedCells.map(c => `${colLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>')
+        answerHtml
       });
     }
     return;
@@ -654,22 +658,22 @@ function checkAnswer(question) {
     value = luckysheet.getCellValue(question.targetRow, question.targetCol);
     value = unwrapValue(value);
   } catch (e) {
-    showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again." });
+    showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again.", answerHtml });
     return;
   }
 
   if (value === null || value === undefined || value === '') {
-    showResultModal({ correct: false, html: 'Write a formula in the highlighted cell first, then click outside it before checking.' });
+    showResultModal({ correct: false, html: 'Write a formula in the highlighted cell first, then click outside it before checking.', answerHtml });
     return;
   }
 
   if (typeof value === 'string' && value.trim().startsWith('=')) {
-    showResultModal({ correct: false, html: "Click outside the cell (or press Enter) to confirm your formula, then check again." });
+    showResultModal({ correct: false, html: "Click outside the cell (or press Enter) to confirm your formula, then check again.", answerHtml });
     return;
   }
 
   if (typeof value === 'string' && value.startsWith('#')) {
-    showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>` });
+    showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>`, answerHtml });
     return;
   }
 
@@ -688,7 +692,7 @@ function checkAnswer(question) {
     showResultModal({
       correct: false,
       html: `Result: <strong>${value}</strong> — not quite. Try again!`,
-      answerHtml: `Expected answer: <strong>${question.expectedValue}</strong>`
+      answerHtml
     });
   }
 }
