@@ -275,6 +275,12 @@ criteria: The condition to match"></textarea>
               <label>Task instructions (what the user is asked to do)</label>
               <textarea id="qbTask" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;" placeholder="Find total sales where Region is North."></textarea>
               <p class="sub" style="margin-bottom:14px;">Step 1 — type your sample data directly into the sheet, exactly like building the exercise in Excel.</p>
+
+              <label>Where should the user type their formula? (optional)</label>
+              <p class="sub" style="margin-top:-4px; margin-bottom:8px;">Click a cell in the sheet, then click this button to mark it.</p>
+              <button type="button" class="admin-mini-btn" id="qbMarkInputBtn" style="width:100%; margin-bottom:6px;">🎯 Mark Selected Cell as Input Cell</button>
+              <div id="qbInputCellDisplay" style="font-size:12px; color:var(--ink-soft); margin-bottom:14px;">No input cell marked yet.</div>
+
               <button class="btn btn-primary" id="qbNextToAnswerBtn" style="width:100%; margin-bottom:8px;">Next: Build the Answer &rarr;</button>
               <button class="admin-mini-btn" id="qbCancelBtn" style="width:100%;">Cancel</button>
             </div>
@@ -291,7 +297,8 @@ criteria: The condition to match"></textarea>
               </div>
 
               <div id="qbSingleModeFields" style="margin-bottom:12px;">
-                <button type="button" class="admin-mini-btn" id="qbAutoDetectBtn" style="width:100%; margin-bottom:12px; background:var(--excel-green); color:#fff;">🔍 Auto-Detect Answer Cell</button>
+                <button type="button" class="admin-mini-btn" id="qbUseHighlightSingleBtn" style="width:100%; margin-bottom:8px; background:var(--excel-green); color:#fff;">🎯 Use Highlighted Cell as Answer</button>
+                <button type="button" class="admin-mini-btn" id="qbAutoDetectBtn" style="width:100%; margin-bottom:12px;">🔍 Or Auto-Detect (finds the changed cell for you)</button>
                 <div id="qbAutoDetectMessage" style="font-size:12px; margin-bottom:10px;"></div>
                 <label>Answer cell — Row (as shown in sheet)</label>
                 <input type="number" id="qbAnswerRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
@@ -306,25 +313,10 @@ criteria: The condition to match"></textarea>
               </div>
 
               <div id="qbRangeModeFields" style="display:none; margin-bottom:12px;">
-                <label>How should the range be determined?</label>
-                <div style="margin-bottom:10px;">
-                  <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-bottom:6px;"><input type="radio" name="qbRangeDetect" value="auto" checked style="width:auto;"> Automatic</label>
-                  <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="manual" style="width:auto;"> I'll set it myself</label>
-                </div>
-
-                <button type="button" class="admin-mini-btn" id="qbAutoDetectRangeBtn" style="width:100%; margin-bottom:12px; background:var(--excel-green); color:#fff;">🔍 Auto-Detect Range Start</button>
-                <div id="qbAutoDetectRangeMessage" style="font-size:12px; margin-bottom:10px;"></div>
-
-                <label>Start — Row</label>
-                <input type="number" id="qbRangeStartRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
-                <label>Start — Column letter</label>
-                <input type="text" id="qbRangeStartCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase; margin-bottom:8px;" maxlength="2">
-                <div id="qbRangeEndFields" style="display:none;">
-                  <label>End — Row</label>
-                  <input type="number" id="qbRangeEndRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
-                  <label>End — Column letter</label>
-                  <input type="text" id="qbRangeEndCol" style="width:100%; box-sizing:border-box; padding:8px; text-transform:uppercase;" maxlength="2">
-                </div>
+                <p class="sub" style="margin-top:0; margin-bottom:10px;">Select the answer cell(s) in the sheet — click and drag for a block, or hold Ctrl and click to pick scattered cells that aren't next to each other. Then click below.</p>
+                <button type="button" class="admin-mini-btn" id="qbUseHighlightRangeBtn" style="width:100%; margin-bottom:8px; background:var(--excel-green); color:#fff;">🎯 Use Highlighted Cells as Answer</button>
+                <div id="qbHighlightRangeMessage" style="font-size:12px; margin-bottom:10px;"></div>
+                <div id="qbHighlightRangePreview" style="font-size:12px; color:var(--ink-soft); max-height:120px; overflow-y:auto;"></div>
               </div>
 
               <button class="btn btn-primary" id="qbSaveQuestionBtn" style="width:100%; margin-bottom:8px;">Save Question</button>
@@ -984,7 +976,7 @@ criteria: The condition to match"></textarea>
         <td>${i + 1}</td>
         <td>${q.task.length > 60 ? q.task.slice(0, 60) + '...' : q.task}</td>
         <td>${q.answer_mode === 'range'
-          ? `${colIndexToLetter(q.target_col)}${q.target_row + 1}... (${q.expected_grid ? q.expected_grid.flat().filter(v => v !== null && v !== '').length : '?'} values)`
+          ? `${colIndexToLetter(q.target_col)}${q.target_row + 1}... (${q.expected_cells ? q.expected_cells.length : (q.expected_grid ? q.expected_grid.flat().filter(v => v !== null && v !== '').length : '?')} cells)`
           : `${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}`}</td>
         <td>${q.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
         <td>
@@ -1013,6 +1005,7 @@ criteria: The condition to match"></textarea>
   let qbSheetReady = false;
   let qbAnswerSheetReady = false;
   let qbQuestionGrid = null; // captured after Phase 1
+  let qbInputCell = null; // {r, c} — optionally marked in Phase 1
 
   function extractGrid(maxRows, maxCols) {
     try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
@@ -1120,31 +1113,72 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbExpectedType').value = inferredType;
   });
 
-  document.getElementById('qbAutoDetectRangeBtn').addEventListener('click', () => {
-    const msg = document.getElementById('qbAutoDetectRangeMessage');
-    if (!qbQuestionGrid) {
-      msg.textContent = 'Could not read the question data — try rebuilding this question.';
-      msg.style.color = '#B3261E';
-      return;
-    }
+  // Reads whatever the admin currently has selected/highlighted in the
+  // sheet (supports drag-selected blocks AND Ctrl+click scattered cells)
+  // and returns it as a flat list of {r, c, value}.
+  function readHighlightedCells() {
+    let ranges = null;
+    try { ranges = luckysheet.getRange(); } catch (e) {}
+    if (!ranges || ranges.length === 0) return [];
 
-    const diffs = findChangedCells();
-    if (diffs.length === 0) {
-      msg.textContent = 'No new values found yet — type your formula into the Answer Sheet first, then click Auto-Detect again.';
-      msg.style.color = '#B3261E';
-      return;
-    }
-
-    // The range's start is the top-left-most changed cell.
-    let start = diffs[0];
-    diffs.forEach(d => {
-      if (d.r < start.r || (d.r === start.r && d.c < start.c)) start = d;
+    const cells = [];
+    ranges.forEach(range => {
+      const [r1, r2] = range.row;
+      const [c1, c2] = range.column;
+      for (let r = r1; r <= r2; r++) {
+        for (let c = c1; c <= c2; c++) {
+          let v = null;
+          try {
+            v = luckysheet.getCellValue(r, c);
+            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+          } catch (e) {}
+          if (v !== null && v !== undefined && v !== '') {
+            cells.push({ r, c, value: v });
+          }
+        }
+      }
     });
+    return cells;
+  }
 
-    document.getElementById('qbRangeStartRow').value = start.r + 1;
-    document.getElementById('qbRangeStartCol').value = colIndexToLetter(start.c);
-    msg.textContent = `Found it — starts at ${colIndexToLetter(start.c)}${start.r + 1}. Automatic mode will pick up the rest of the range from there.`;
+  document.getElementById('qbUseHighlightSingleBtn').addEventListener('click', () => {
+    const msg = document.getElementById('qbAutoDetectMessage');
+    const cells = readHighlightedCells();
+    if (cells.length === 0) {
+      msg.textContent = 'Click the answer cell in the sheet to select it first, then click this button.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+    const found = cells[0];
+    document.getElementById('qbAnswerRow').value = found.r + 1;
+    document.getElementById('qbAnswerCol').value = colIndexToLetter(found.c);
+    const detectedVal = String(found.value);
+    const isPureNumber = !isNaN(parseFloat(detectedVal)) && isFinite(detectedVal);
+    const hasLetters = /[a-zA-Z]/.test(detectedVal);
+    const hasDigits = /[0-9]/.test(detectedVal);
+    document.getElementById('qbExpectedType').value = isPureNumber ? 'number' : (hasLetters && hasDigits ? 'alphanumeric' : 'text');
+    msg.textContent = `Using ${colIndexToLetter(found.c)}${found.r + 1} — value: ${found.value}`;
     msg.style.color = 'var(--excel-green-deep)';
+  });
+
+  let qbHighlightedAnswerCells = [];
+
+  document.getElementById('qbUseHighlightRangeBtn').addEventListener('click', () => {
+    const msg = document.getElementById('qbHighlightRangeMessage');
+    const preview = document.getElementById('qbHighlightRangePreview');
+    const cells = readHighlightedCells();
+
+    if (cells.length === 0) {
+      msg.textContent = 'Select the answer cell(s) in the sheet first (drag, or Ctrl+click for scattered cells), then click this button.';
+      msg.style.color = '#B3261E';
+      preview.innerHTML = '';
+      return;
+    }
+
+    qbHighlightedAnswerCells = cells;
+    msg.textContent = `Captured ${cells.length} cell${cells.length === 1 ? '' : 's'} — these are the only ones checked when grading.`;
+    msg.style.color = 'var(--excel-green-deep)';
+    preview.innerHTML = cells.map(c => `${colIndexToLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>');
   });
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
@@ -1156,12 +1190,13 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbTask').value = '';
     document.getElementById('qbAnswerRow').value = '';
     document.getElementById('qbAnswerCol').value = '';
-    document.getElementById('qbRangeStartRow').value = '';
-    document.getElementById('qbRangeStartCol').value = '';
-    document.getElementById('qbRangeEndRow').value = '';
-    document.getElementById('qbRangeEndCol').value = '';
+    document.getElementById('qbInputCellDisplay').textContent = 'No input cell marked yet.';
+    document.getElementById('qbHighlightRangePreview').innerHTML = '';
+    document.getElementById('qbHighlightRangeMessage').textContent = '';
     document.getElementById('qbMessage').textContent = '';
     qbQuestionGrid = null;
+    qbInputCell = null;
+    qbHighlightedAnswerCells = [];
 
     if (qbSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
@@ -1173,6 +1208,19 @@ criteria: The condition to match"></textarea>
       data: [{ name: 'Question', celldata: [], row: 40, column: 20, status: 1 }]
     });
     qbSheetReady = true;
+  });
+
+  document.getElementById('qbMarkInputBtn').addEventListener('click', () => {
+    const display = document.getElementById('qbInputCellDisplay');
+    const cells = readHighlightedCells();
+    if (cells.length === 0) {
+      display.textContent = 'Click a cell in the sheet first, then click this button.';
+      display.style.color = '#B3261E';
+      return;
+    }
+    qbInputCell = { r: cells[0].r, c: cells[0].c };
+    display.textContent = `Marked: ${colIndexToLetter(qbInputCell.c)}${qbInputCell.r + 1}`;
+    display.style.color = 'var(--excel-green-deep)';
   });
 
   // Phase 1 → Phase 2: capture the question data, then open a matching Answer Sheet
@@ -1228,14 +1276,6 @@ criteria: The condition to match"></textarea>
     });
   });
 
-  // Range detect toggle (auto vs manual)
-  document.querySelectorAll('input[name="qbRangeDetect"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const isManual = document.querySelector('input[name="qbRangeDetect"]:checked').value === 'manual';
-      document.getElementById('qbRangeEndFields').style.display = isManual ? 'flex' : 'none';
-    });
-  });
-
   document.getElementById('qbSaveQuestionBtn').addEventListener('click', async () => {
     const msg = document.getElementById('qbMessage');
     const formulaId = document.getElementById('qbFormulaSelect').value;
@@ -1286,80 +1326,25 @@ criteria: The condition to match"></textarea>
       payload.expected_value = String(value);
       payload.expected_type = expectedType;
       payload.expected_grid = null;
+      payload.expected_cells = null;
     } else {
-      const startRowInput = parseInt(document.getElementById('qbRangeStartRow').value, 10);
-      const startColLetters = document.getElementById('qbRangeStartCol').value.trim();
-      const detectMode = document.querySelector('input[name="qbRangeDetect"]:checked').value;
-
-      if (!startRowInput || !startColLetters) {
-        msg.textContent = 'Fill in the starting row and column of the answer range.';
-        msg.style.color = '#B3261E';
-        return;
-      }
-      const startRow = startRowInput - 1;
-      const startCol = colLetterToIndex(startColLetters);
-
-      let endRow, endCol;
-      if (detectMode === 'manual') {
-        const endRowInput = parseInt(document.getElementById('qbRangeEndRow').value, 10);
-        const endColLetters = document.getElementById('qbRangeEndCol').value.trim();
-        if (!endRowInput || !endColLetters) {
-          msg.textContent = 'Fill in the ending row and column, or switch to Automatic.';
-          msg.style.color = '#B3261E';
-          return;
-        }
-        endRow = endRowInput - 1;
-        endCol = colLetterToIndex(endColLetters);
-      } else {
-        // Automatic: scan down and right from the start cell until values stop
-        endRow = startRow;
-        endCol = startCol;
-        for (let r = startRow; r < startRow + 200; r++) {
-          let v = null;
-          try {
-            v = luckysheet.getCellValue(r, startCol);
-            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
-          } catch (e) {}
-          if (v === null || v === undefined || v === '') break;
-          endRow = r;
-        }
-        for (let c = startCol; c < startCol + 100; c++) {
-          let v = null;
-          try {
-            v = luckysheet.getCellValue(startRow, c);
-            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
-          } catch (e) {}
-          if (v === null || v === undefined || v === '') break;
-          endCol = c;
-        }
-      }
-
-      const expectedGrid = [];
-      for (let r = startRow; r <= endRow; r++) {
-        const row = [];
-        for (let c = startCol; c <= endCol; c++) {
-          let v = null;
-          try {
-            v = luckysheet.getCellValue(r, c);
-            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
-          } catch (e) {}
-          row.push(v === undefined ? null : v);
-        }
-        expectedGrid.push(row);
-      }
-
-      const hasAnyValue = expectedGrid.some(row => row.some(v => v !== null && v !== undefined && v !== ''));
-      if (!hasAnyValue) {
-        msg.textContent = "That range is empty — type the correct formula at the start cell first.";
+      if (qbHighlightedAnswerCells.length === 0) {
+        msg.textContent = 'Highlight the answer cell(s) in the sheet, then click "Use Highlighted Cells as Answer" above.';
         msg.style.color = '#B3261E';
         return;
       }
 
-      payload.target_row = startRow;
-      payload.target_col = startCol;
+      payload.target_row = qbHighlightedAnswerCells[0].r;
+      payload.target_col = qbHighlightedAnswerCells[0].c;
       payload.expected_value = null;
       payload.expected_type = null;
-      payload.expected_grid = expectedGrid;
+      payload.expected_grid = null;
+      payload.expected_cells = qbHighlightedAnswerCells.map(c => ({ r: c.r, c: c.c, value: String(c.value) }));
+    }
+
+    if (qbInputCell) {
+      payload.input_row = qbInputCell.r;
+      payload.input_col = qbInputCell.c;
     }
 
     const { data: existing } = await supabaseClient
