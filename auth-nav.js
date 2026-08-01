@@ -88,7 +88,7 @@ async function renderNavAuth() {
   });
 }
 
-// ---------- Change Password modal (current + new + confirm) ----------
+// ---------- Change Password modal (sends a secure reset link) ----------
 function buildPasswordModal() {
   if (document.getElementById('pwModalOverlay')) return;
 
@@ -99,19 +99,10 @@ function buildPasswordModal() {
     <div class="fb-box" style="max-width:380px;">
       <button class="fb-close" id="pwCloseBtn" aria-label="Close">&times;</button>
       <h3>Change Password</h3>
-      <p class="fb-hint">Enter your current password, then your new one twice.</p>
+      <p class="fb-hint">For your security, we don't change your password here directly — we'll email you a secure link to set a new one.</p>
 
-      <label>Current password</label>
-      <input type="password" id="pwCurrent" placeholder="Current password">
-
-      <label>New password</label>
-      <input type="password" id="pwNew" placeholder="At least 6 characters">
-
-      <label>Confirm new password</label>
-      <input type="password" id="pwConfirm" placeholder="Re-type new password">
-
-      <button class="btn btn-primary" id="pwSubmitBtn" style="width:100%; margin-top:14px;">Update Password</button>
-      <div id="pwMessage" style="margin-top:10px; font-size:13px; font-family:'IBM Plex Mono',monospace;"></div>
+      <button class="btn btn-primary" id="pwSendBtn" style="width:100%; margin-top:6px;">Send Reset Link</button>
+      <div id="pwMessage" style="margin-top:12px; font-size:13px; font-family:'IBM Plex Mono',monospace;"></div>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -121,56 +112,27 @@ function buildPasswordModal() {
   });
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
 
-  document.getElementById('pwSubmitBtn').addEventListener('click', async () => {
+  document.getElementById('pwSendBtn').addEventListener('click', async () => {
     const email = overlay.dataset.email;
-    const current = document.getElementById('pwCurrent').value;
-    const next = document.getElementById('pwNew').value;
-    const confirm = document.getElementById('pwConfirm').value;
+    const btn = document.getElementById('pwSendBtn');
     const msg = document.getElementById('pwMessage');
     msg.className = '';
     msg.textContent = '';
 
-    if (!current || !next || !confirm) {
-      msg.textContent = 'Please fill in all three fields.';
-      msg.style.color = '#B3261E';
-      return;
-    }
-    if (next.length < 6) {
-      msg.textContent = 'New password must be at least 6 characters.';
-      msg.style.color = '#B3261E';
-      return;
-    }
-    if (next !== confirm) {
-      msg.textContent = 'New password and confirmation don\u2019t match.';
-      msg.style.color = '#B3261E';
-      return;
-    }
-
-    // Verify the current password is correct by re-authenticating with it
-    const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: current
+    btn.disabled = true;
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/update-password.html'
     });
+    btn.disabled = false;
 
-    if (verifyError) {
-      msg.textContent = 'Current password is incorrect.';
+    if (error) {
+      msg.textContent = error.message;
       msg.style.color = '#B3261E';
       return;
     }
 
-    const { error: updateError } = await supabaseClient.auth.updateUser({ password: next });
-
-    if (updateError) {
-      msg.textContent = updateError.message;
-      msg.style.color = '#B3261E';
-      return;
-    }
-
-    msg.textContent = 'Password updated!';
+    msg.textContent = `A password reset link has been sent to your email address (${email}). Please change your password from that link.`;
     msg.style.color = 'var(--excel-green-deep)';
-    document.getElementById('pwCurrent').value = '';
-    document.getElementById('pwNew').value = '';
-    document.getElementById('pwConfirm').value = '';
   });
 }
 
