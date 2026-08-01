@@ -459,7 +459,9 @@ criteria: The condition to match"></textarea>
         const email = btn.dataset.email;
         const statusEl = document.querySelector(`[data-reset-status="${btn.dataset.resetPw}"]`);
         btn.disabled = true;
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/update-password.html'
+        });
         btn.disabled = false;
         if (statusEl) {
           statusEl.textContent = error ? `Failed: ${error.message}` : 'Reset link sent ✓';
