@@ -312,6 +312,9 @@ criteria: The condition to match"></textarea>
                   <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="manual" style="width:auto;"> I'll set it myself</label>
                 </div>
 
+                <button type="button" class="admin-mini-btn" id="qbAutoDetectRangeBtn" style="width:100%; margin-bottom:12px; background:var(--excel-green); color:#fff;">🔍 Auto-Detect Range Start</button>
+                <div id="qbAutoDetectRangeMessage" style="font-size:12px; margin-bottom:10px;"></div>
+
                 <label>Start — Row</label>
                 <input type="number" id="qbRangeStartRow" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:8px;" min="1">
                 <label>Start — Column letter</label>
@@ -1057,14 +1060,10 @@ criteria: The condition to match"></textarea>
   // Compares the live Answer Sheet against the Question Sheet data captured
   // in Phase 1, and finds the cell(s) that differ — that's the formula's
   // result, so the admin doesn't have to manually find and type row/column.
-  document.getElementById('qbAutoDetectBtn').addEventListener('click', () => {
-    const msg = document.getElementById('qbAutoDetectMessage');
-    if (!qbQuestionGrid) {
-      msg.textContent = 'Could not read the question data — try rebuilding this question.';
-      msg.style.color = '#B3261E';
-      return;
-    }
-
+  // Compares the live Answer Sheet against the Question Sheet data captured
+  // in Phase 1, and returns every cell that differs — that's new formula
+  // output the admin typed in, wherever it landed.
+  function findChangedCells() {
     const answerGrid = extractGrid(40, 20);
     const maxRows = Math.max(qbQuestionGrid.length, answerGrid.length);
     const diffs = [];
@@ -1082,6 +1081,18 @@ criteria: The condition to match"></textarea>
         }
       }
     }
+    return diffs;
+  }
+
+  document.getElementById('qbAutoDetectBtn').addEventListener('click', () => {
+    const msg = document.getElementById('qbAutoDetectMessage');
+    if (!qbQuestionGrid) {
+      msg.textContent = 'Could not read the question data — try rebuilding this question.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const diffs = findChangedCells();
 
     if (diffs.length === 0) {
       msg.textContent = 'No new value found yet — type your formula into the Answer Sheet first, then click Auto-Detect again.';
@@ -1107,6 +1118,33 @@ criteria: The condition to match"></textarea>
     if (isPureNumber) inferredType = 'number';
     else if (hasLetters && hasDigits) inferredType = 'alphanumeric';
     document.getElementById('qbExpectedType').value = inferredType;
+  });
+
+  document.getElementById('qbAutoDetectRangeBtn').addEventListener('click', () => {
+    const msg = document.getElementById('qbAutoDetectRangeMessage');
+    if (!qbQuestionGrid) {
+      msg.textContent = 'Could not read the question data — try rebuilding this question.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const diffs = findChangedCells();
+    if (diffs.length === 0) {
+      msg.textContent = 'No new values found yet — type your formula into the Answer Sheet first, then click Auto-Detect again.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    // The range's start is the top-left-most changed cell.
+    let start = diffs[0];
+    diffs.forEach(d => {
+      if (d.r < start.r || (d.r === start.r && d.c < start.c)) start = d;
+    });
+
+    document.getElementById('qbRangeStartRow').value = start.r + 1;
+    document.getElementById('qbRangeStartCol').value = colIndexToLetter(start.c);
+    msg.textContent = `Found it — starts at ${colIndexToLetter(start.c)}${start.r + 1}. Automatic mode will pick up the rest of the range from there.`;
+    msg.style.color = 'var(--excel-green-deep)';
   });
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
