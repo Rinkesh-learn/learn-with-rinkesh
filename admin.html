@@ -301,6 +301,7 @@ criteria: The condition to match"></textarea>
                 <select id="qbExpectedType" style="width:100%; padding:8px;">
                   <option value="number">Number</option>
                   <option value="text">Text</option>
+                  <option value="alphanumeric">Alphanumeric (letters + numbers)</option>
                 </select>
               </div>
 
@@ -1098,7 +1099,14 @@ criteria: The condition to match"></textarea>
     const found = diffs[0];
     document.getElementById('qbAnswerRow').value = found.r + 1;
     document.getElementById('qbAnswerCol').value = colIndexToLetter(found.c);
-    document.getElementById('qbExpectedType').value = (typeof found.value === 'number' || !isNaN(parseFloat(found.value)) && isFinite(found.value)) ? 'number' : 'text';
+    const detectedVal = String(found.value);
+    const isPureNumber = typeof found.value === 'number' || (!isNaN(parseFloat(detectedVal)) && isFinite(detectedVal));
+    const hasLetters = /[a-zA-Z]/.test(detectedVal);
+    const hasDigits = /[0-9]/.test(detectedVal);
+    let inferredType = 'text';
+    if (isPureNumber) inferredType = 'number';
+    else if (hasLetters && hasDigits) inferredType = 'alphanumeric';
+    document.getElementById('qbExpectedType').value = inferredType;
   });
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
