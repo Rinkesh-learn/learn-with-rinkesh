@@ -41,6 +41,17 @@
   .admin-sidebar a.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--amber); }
   .admin-sidebar a.disabled { opacity: 0.4; cursor: default; }
   .admin-sidebar a.disabled:hover { background: none; color: rgba(255,255,255,0.75); }
+  .admin-sidebar-sub { display: none; flex-direction: column; }
+  .admin-sidebar-sub.open { display: flex; }
+  .admin-sidebar-sub a {
+    padding: 8px 20px 8px 42px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    border-left: 3px solid transparent;
+  }
+  .admin-sidebar-sub a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .admin-sidebar-sub a.active { background: rgba(255,255,255,0.15); color: #fff; border-left-color: var(--amber); }
 
   .admin-main { flex: 1; min-width: 0; padding: 30px 36px; }
   .admin-main h1 { font-size: 24px; margin: 0 0 6px; }
@@ -149,7 +160,8 @@
     <a data-view="dashboard" class="active">📊 Dashboard</a>
     <a data-view="users">👥 Users</a>
     <a data-view="formulas">🧮 Formulas</a>
-    <a data-view="pages">📝 Pages</a>
+    <a data-view="pages" id="pagesNavToggle">📝 Pages</a>
+    <div id="pagesSubNav" class="admin-sidebar-sub"></div>
     <a class="disabled">📘 Articles (soon)</a>
     <a class="disabled">💬 Chat Moderation (soon)</a>
     <a class="disabled">📁 Case Studies (soon)</a>
@@ -333,8 +345,7 @@ criteria: The condition to match"></textarea>
       <h1>Pages</h1>
       <p class="sub">Edit the actual text on each page. Blank fields keep the site's current default text.</p>
       <div class="admin-panel">
-        <label>Pick a page</label>
-        <div id="pcPageButtons" style="display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 20px;"></div>
+        <h3 id="pcActivePageLabel" style="margin-top:0;">About</h3>
         <div id="pcBlocksList"></div>
         <button class="btn btn-primary" id="pcSaveAllBtn" style="margin-top:10px;">Save Changes</button>
         <div id="pcMessage" style="margin-top:10px; font-size:13px;"></div>
@@ -382,6 +393,11 @@ criteria: The condition to match"></textarea>
       document.querySelectorAll('.admin-main > div[id^="view-"]').forEach(v => v.style.display = 'none');
       document.getElementById('view-' + link.dataset.view).style.display = 'block';
     });
+  });
+
+  document.getElementById('pagesNavToggle').addEventListener('click', () => {
+    document.getElementById('pagesSubNav').classList.toggle('open');
+    if (!pcActivePage) selectPage('about');
   });
 
   // ---------- Dashboard stats ----------
@@ -1064,20 +1080,29 @@ criteria: The condition to match"></textarea>
   let pcActivePage = null;
 
   function populatePageSelect() {
-    const wrap = document.getElementById('pcPageButtons');
-    wrap.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<button type="button" class="admin-mini-btn" data-page-btn="${p}">${PAGE_BLOCKS[p].label}</button>`).join('');
-    wrap.querySelectorAll('[data-page-btn]').forEach(btn => {
-      btn.addEventListener('click', () => selectPage(btn.dataset.pageBtn));
+    const wrap = document.getElementById('pagesSubNav');
+    wrap.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<a data-page-link="${p}">${PAGE_BLOCKS[p].label}</a>`).join('');
+    wrap.querySelectorAll('[data-page-link]').forEach(link => {
+      link.addEventListener('click', () => selectPage(link.dataset.pageLink));
     });
   }
 
-  function selectPage(page) {
+  function selectPage(page, switchView = true) {
     pcActivePage = page;
-    document.querySelectorAll('#pcPageButtons [data-page-btn]').forEach(btn => {
-      const isActive = btn.dataset.pageBtn === page;
-      btn.style.background = isActive ? 'var(--excel-green)' : '';
-      btn.style.color = isActive ? '#fff' : '';
+    document.getElementById('pcActivePageLabel').textContent = PAGE_BLOCKS[page].label;
+    document.querySelectorAll('#pagesSubNav [data-page-link]').forEach(link => {
+      link.classList.toggle('active', link.dataset.pageLink === page);
     });
+
+    if (switchView) {
+      // Open the sub-nav and switch the main panel to the Pages view
+      document.getElementById('pagesSubNav').classList.add('open');
+      document.querySelectorAll('.admin-sidebar > a[data-view]').forEach(a => a.classList.remove('active'));
+      document.getElementById('pagesNavToggle').classList.add('active');
+      document.querySelectorAll('.admin-main > div[id^="view-"]').forEach(v => v.style.display = 'none');
+      document.getElementById('view-pages').style.display = 'block';
+    }
+
     loadPageBlocks(page);
   }
 
@@ -1140,7 +1165,7 @@ criteria: The condition to match"></textarea>
     loadUsers();
     loadFormulasAdmin();
     populatePageSelect();
-    selectPage('about');
+    selectPage('about', false);
   })();
 </script>
 
