@@ -529,9 +529,9 @@
       return;
     }
 
-    msgEl.textContent = "Thanks — we'll take a look.";
+    msgEl.textContent = "Thank you for your report. Our team will review it, and if we find it to be true, we'll take appropriate action.";
     msgEl.style.color = 'var(--excel-green-deep)';
-    setTimeout(() => { reportPanel.classList.remove('open'); }, 1200);
+    setTimeout(() => { reportPanel.classList.remove('open'); }, 2600);
   });
 
   async function loadMessages() {

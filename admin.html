@@ -152,7 +152,7 @@
     <a data-view="formulas">🧮 Formulas</a>
     <div id="pagesFlatNav"></div>
     <a data-view="articles">📘 Articles</a>
-    <a data-view="chat_moderation">💬 Chat Moderation</a>
+    <a data-view="chat_moderation">💬 Community Chat Moderation</a>
     <a data-view="case_studies">📁 Case Studies</a>
     <a data-view="bookings">📅 1-on-1 Bookings</a>
   </div>
@@ -407,14 +407,14 @@ criteria: The condition to match"></textarea>
     </div>
 
     <div id="view-chat_moderation" style="display:none;">
-      <h1>Chat Moderation</h1>
+      <h1>Community Chat Moderation</h1>
       <p class="sub">Review reported messages and control how long chat history is kept.</p>
 
       <div class="admin-panel">
         <h3 style="margin-top:0;">Reported messages</h3>
         <table class="admin-table">
-          <thead><tr><th>Message</th><th>Reported User</th><th>Reason</th><th>Details</th><th>Reported</th><th></th></tr></thead>
-          <tbody id="chatReportsTableBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+          <thead><tr><th>Message</th><th>Display Name</th><th>Email</th><th>Reason</th><th>Details</th><th>Reported</th><th></th></tr></thead>
+          <tbody id="chatReportsTableBody"><tr><td colspan="7">Loading...</td></tr></tbody>
         </table>
       </div>
 
@@ -2037,16 +2037,19 @@ criteria: The condition to match"></textarea>
       .order('created_at', { ascending: false });
 
     if (error) {
-      body.innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="7">Couldn't load: ${error.message}</td></tr>`;
       return;
     }
     if (!data || data.length === 0) {
-      body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
       return;
     }
 
     // Look up the reported users' names/emails in one batch instead of
     // guessing at Supabase's auto-generated FK relationship name.
+    // Shown here regardless of whatever display name/hidden-name setting
+    // they used in the message itself (e.g. "Anonymous") — admin always
+    // sees who someone actually is.
     const userIds = [...new Set(data.map(r => r.reported_user_id).filter(Boolean))];
     let userMap = {};
     if (userIds.length > 0) {
@@ -2059,7 +2062,8 @@ criteria: The condition to match"></textarea>
       return `
       <tr>
         <td>${r.chat_messages ? `<strong>${r.chat_messages.display_name}:</strong> ${r.chat_messages.message || '(image)'}` : '(message already deleted)'}</td>
-        <td>${reportedUser ? (reportedUser.name || reportedUser.email) : '—'}</td>
+        <td>${reportedUser ? (reportedUser.name || '—') : '—'}</td>
+        <td>${reportedUser ? (reportedUser.email || '—') : '—'}</td>
         <td>${REPORT_REASON_LABELS[r.reason] || r.reason || '—'}</td>
         <td style="max-width:180px; white-space:normal;">${r.details || '—'}</td>
         <td>${new Date(r.created_at).toLocaleDateString()}</td>
