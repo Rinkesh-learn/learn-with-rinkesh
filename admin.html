@@ -176,18 +176,12 @@
           <table class="admin-table" id="usersTable">
             <thead>
               <tr>
-                <th>Name</th><th>Username</th><th>Email</th><th>Age</th><th>Profession</th><th>Goal</th><th>Joined</th><th>Status</th><th></th>
+                <th>Name</th><th>Username</th><th>Email</th><th>Age</th><th>Profession</th><th>Goal</th><th>Joined</th><th>Status</th><th>Password</th><th></th>
               </tr>
             </thead>
             <tbody id="usersTableBody"></tbody>
           </table>
         </div>
-      </div>
-
-      <div class="admin-panel" style="margin-top:20px;">
-        <h3 style="margin-top:0;">Account &amp; Auth Pages</h3>
-        <p class="sub" style="margin-top:-6px;">Edit the text on the pages that make up the account/login flow.</p>
-        <div id="accountPagesNav" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
       </div>
     </div>
 
@@ -391,7 +385,7 @@ criteria: The condition to match"></textarea>
   document.querySelectorAll('.admin-sidebar a[data-view]').forEach(link => {
     link.addEventListener('click', () => {
       document.querySelectorAll('.admin-sidebar a[data-view]').forEach(a => a.classList.remove('active'));
-      document.querySelectorAll('#pagesFlatNav [data-page-link], #accountPagesNav [data-page-link]').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('#pagesFlatNav [data-page-link]').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
       document.querySelectorAll('.admin-main > div[id^="view-"]').forEach(v => v.style.display = 'none');
       document.getElementById('view-' + link.dataset.view).style.display = 'block';
@@ -422,7 +416,7 @@ criteria: The condition to match"></textarea>
   function renderUsersTable(users) {
     const body = document.getElementById('usersTableBody');
     if (users.length === 0) {
-      body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-soft); padding:24px;">No users found.</td></tr>';
+      body.innerHTML = '<tr><td colspan="10" style="text-align:center; color:var(--ink-soft); padding:24px;">No users found.</td></tr>';
       return;
     }
     body.innerHTML = users.map(u => `
@@ -439,6 +433,9 @@ criteria: The condition to match"></textarea>
           ${u.chat_banned ? '<span class="admin-badge banned">Chat Banned</span>' : '<span class="admin-badge ok">OK</span>'}
         </td>
         <td>
+          ${u.email ? `<button class="admin-mini-btn" data-reset-pw="${u.id}" data-email="${u.email}">🔑 Send Reset Link</button><div data-reset-status="${u.id}" style="font-size:11px; color:var(--ink-soft); margin-top:4px;"></div>` : '—'}
+        </td>
+        <td>
           ${!u.is_admin ? `<button class="admin-mini-btn danger" data-toggle-ban="${u.id}" data-current="${u.chat_banned}">${u.chat_banned ? 'Unban' : 'Ban from Chat'}</button>` : ''}
         </td>
       </tr>
@@ -452,6 +449,24 @@ criteria: The condition to match"></textarea>
         loadUsers();
       });
     });
+
+    // Passwords are one-way hashed and can never be shown or set directly from
+    // the browser (that would require the secret service_role key, which must
+    // never live in client-side code). This sends the user a secure Supabase
+    // link to set their own new password — the standard safe way to do this.
+    body.querySelectorAll('[data-reset-pw]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const email = btn.dataset.email;
+        const statusEl = document.querySelector(`[data-reset-status="${btn.dataset.resetPw}"]`);
+        btn.disabled = true;
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        btn.disabled = false;
+        if (statusEl) {
+          statusEl.textContent = error ? `Failed: ${error.message}` : 'Reset link sent ✓';
+          statusEl.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
+        }
+      });
+    });
   }
 
   async function loadUsers() {
@@ -461,7 +476,7 @@ criteria: The condition to match"></textarea>
       .order('joined_at', { ascending: false });
 
     if (error) {
-      document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="9">Couldn't load users: ${error.message}</td></tr>`;
+      document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="10">Couldn't load users: ${error.message}</td></tr>`;
       return;
     }
 
@@ -1104,7 +1119,7 @@ criteria: The condition to match"></textarea>
     shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', icon: '⌨️', group: 'site', blocks: [] },
     charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', icon: '📈', group: 'site', blocks: [] },
     account: { label: 'Account', file: 'account.html', icon: '👤', group: 'account', blocks: [] },
-    purchases: { label: 'Purchases', file: 'purchases.html', icon: '🛒', group: 'account', blocks: [] },
+    purchases: { label: 'Purchases', file: 'purchases.html', icon: '🛒', group: 'site', blocks: [] },
     login: { label: 'Login', file: 'login.html', icon: '🔑', group: 'account', blocks: [] },
     signup: { label: 'Sign Up', file: 'signup.html', icon: '✍️', group: 'account', blocks: [] },
     forgot_password: { label: 'Forgot Password', file: 'forgot-password.html', icon: '🔓', group: 'account', blocks: [] },
@@ -1120,18 +1135,12 @@ criteria: The condition to match"></textarea>
     wrap.querySelectorAll('[data-page-link]').forEach(link => {
       link.addEventListener('click', () => selectPage(link.dataset.pageLink));
     });
-
-    const accWrap = document.getElementById('accountPagesNav');
-    accWrap.innerHTML = Object.keys(PAGE_BLOCKS).filter(p => PAGE_BLOCKS[p].group === 'account').map(p => `<button type="button" class="admin-mini-btn" data-page-link="${p}">${PAGE_BLOCKS[p].icon} ${PAGE_BLOCKS[p].label}</button>`).join('');
-    accWrap.querySelectorAll('[data-page-link]').forEach(link => {
-      link.addEventListener('click', () => selectPage(link.dataset.pageLink));
-    });
   }
 
   function selectPage(page, switchView = true) {
     pcActivePage = page;
     document.getElementById('pcActivePageLabel').textContent = PAGE_BLOCKS[page].label;
-    document.querySelectorAll('#pagesFlatNav [data-page-link], #accountPagesNav [data-page-link]').forEach(link => {
+    document.querySelectorAll('#pagesFlatNav [data-page-link]').forEach(link => {
       link.classList.toggle('active', link.dataset.pageLink === page);
     });
 
