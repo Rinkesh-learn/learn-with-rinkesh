@@ -199,7 +199,10 @@
         <div class="admin-panel">
           <div class="admin-panel-header">
             <input type="text" id="formulaSearchAdmin" placeholder="🔍 Search formulas...">
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:13px; margin:0;">
+                <input type="checkbox" id="popularOnlyFilter" style="width:auto;"> Popular only
+              </label>
               <button class="admin-mini-btn" id="importFormulasBtn">🔄 One-time Import from Site Data</button>
               <button class="btn btn-primary" id="addFormulaBtn" style="padding:8px 16px; font-size:12px;">+ Add Formula</button>
             </div>
@@ -207,7 +210,7 @@
           <div id="importStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
           <div style="overflow-x:auto;">
             <table class="admin-table">
-              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Questions</th><th>Practiced</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Questions</th><th>Practiced</th><th>Popular</th><th>Status</th><th></th></tr></thead>
               <tbody id="formulasTableBody"></tbody>
             </table>
           </div>
@@ -732,7 +735,7 @@ criteria: The condition to match"></textarea>
   function renderFormulasAdminTable(list) {
     const body = document.getElementById('formulasTableBody');
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
       return;
     }
     body.innerHTML = list.map(f => `
@@ -742,6 +745,7 @@ criteria: The condition to match"></textarea>
         <td>${f.video_url ? '🎥' : '—'}</td>
         <td>${questionCounts[f.id] || 0}</td>
         <td>${practiceCounts[f.id] || 0}</td>
+        <td><button class="admin-mini-btn" data-toggle-popular="${f.id}" data-current="${f.popular}" style="${f.popular ? 'background:#F6C846; border-color:#F6C846;' : ''}">${f.popular ? '⭐ Popular' : '☆ Mark Popular'}</button></td>
         <td>${f.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
         <td style="white-space:nowrap;">
           <button class="admin-mini-btn" data-edit-formula="${f.id}">Edit</button>
@@ -761,6 +765,13 @@ criteria: The condition to match"></textarea>
         loadFormulasAdmin();
       });
     });
+    body.querySelectorAll('[data-toggle-popular]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('formulas').update({ popular: !current }).eq('id', btn.dataset.togglePopular);
+        loadFormulasAdmin();
+      });
+    });
     body.querySelectorAll('[data-delete-formula]').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (!confirm('Delete this formula and all its questions? This cannot be undone.')) return;
@@ -770,13 +781,21 @@ criteria: The condition to match"></textarea>
     });
   }
 
-  document.getElementById('formulaSearchAdmin').addEventListener('input', (e) => {
-    const term = e.target.value.trim().toLowerCase();
-    const filtered = !term ? allFormulasAdmin : allFormulasAdmin.filter(f =>
-      f.name.toLowerCase().includes(term) || f.category.toLowerCase().includes(term)
-    );
+  function applyFormulaFilters() {
+    const term = document.getElementById('formulaSearchAdmin').value.trim().toLowerCase();
+    const popularOnly = document.getElementById('popularOnlyFilter').checked;
+    let filtered = allFormulasAdmin;
+    if (term) {
+      filtered = filtered.filter(f => f.name.toLowerCase().includes(term) || f.category.toLowerCase().includes(term));
+    }
+    if (popularOnly) {
+      filtered = filtered.filter(f => f.popular);
+    }
     renderFormulasAdminTable(filtered);
-  });
+  }
+
+  document.getElementById('formulaSearchAdmin').addEventListener('input', applyFormulaFilters);
+  document.getElementById('popularOnlyFilter').addEventListener('change', applyFormulaFilters);
 
   function openFormulaEditor(id) {
     document.getElementById('formulaEditorPanel').style.display = 'block';
