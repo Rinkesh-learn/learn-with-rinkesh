@@ -261,34 +261,77 @@ criteria: The condition to match"></textarea>
             <label>Task instructions (what the user is asked to do)</label>
             <textarea id="qbTask" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;" placeholder="Find total sales where Region is North."></textarea>
 
-            <p class="sub" style="margin-bottom:8px;">Type your sample data directly into the sheet below — exactly like building the exercise in Excel.</p>
-            <div id="qbSheetContainer" style="width:100%; height:420px; border:1px solid var(--grid-line); position:relative; margin-bottom:14px;"></div>
-
-            <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px;">
-              <div>
-                <label>Answer cell — Row (as shown in sheet, e.g. 2)</label>
-                <input type="number" id="qbAnswerRow" style="width:120px; padding:8px;" min="1">
-              </div>
-              <div>
-                <label>Answer cell — Column letter (e.g. D)</label>
-                <input type="text" id="qbAnswerCol" style="width:120px; padding:8px; text-transform:uppercase;" maxlength="2">
-              </div>
-              <div>
-                <label>Expected answer</label>
-                <input type="text" id="qbExpectedValue" style="width:160px; padding:8px;">
-              </div>
-              <div>
-                <label>Answer type</label>
-                <select id="qbExpectedType" style="padding:8px;">
-                  <option value="number">Number</option>
-                  <option value="text">Text</option>
-                </select>
-              </div>
+            <!-- ===== Phase 1: Question Sheet ===== -->
+            <div id="qbPhase1">
+              <p class="sub" style="margin-bottom:8px;">Step 1 — type your sample data directly into the sheet below, exactly like building the exercise in Excel.</p>
+              <div id="qbSheetContainer" style="width:100%; height:420px; border:1px solid var(--grid-line); position:relative; margin-bottom:14px;"></div>
+              <button class="btn btn-primary" id="qbNextToAnswerBtn">Next: Build the Answer &rarr;</button>
+              <button class="admin-mini-btn" id="qbCancelBtn">Cancel</button>
             </div>
 
-            <button class="btn btn-primary" id="qbSaveQuestionBtn">Save Question</button>
-            <button class="admin-mini-btn" id="qbCancelBtn">Cancel</button>
-            <div id="qbMessage" style="margin-top:10px; font-size:13px;"></div>
+            <!-- ===== Phase 2: Answer Sheet ===== -->
+            <div id="qbPhase2" style="display:none;">
+              <p class="sub" style="margin-bottom:8px;">Step 2 — same data. Type the <strong>real, correct formula</strong> here. This becomes the answer key.</p>
+              <div id="qbAnswerSheetContainer" style="width:100%; height:420px; border:1px solid var(--grid-line); position:relative; margin-bottom:14px;"></div>
+
+              <label>What kind of answer does this formula give?</label>
+              <div style="display:flex; gap:16px; margin-bottom:14px;">
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbAnswerMode" value="single" checked style="width:auto;"> Single cell (most formulas)</label>
+                <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbAnswerMode" value="range" style="width:auto;"> A list of cells (UNIQUE, SORT, FILTER, etc.)</label>
+              </div>
+
+              <div id="qbSingleModeFields" style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:12px;">
+                <div>
+                  <label>Answer cell — Row (as shown in sheet, e.g. 2)</label>
+                  <input type="number" id="qbAnswerRow" style="width:120px; padding:8px;" min="1">
+                </div>
+                <div>
+                  <label>Answer cell — Column letter (e.g. D)</label>
+                  <input type="text" id="qbAnswerCol" style="width:120px; padding:8px; text-transform:uppercase;" maxlength="2">
+                </div>
+                <div>
+                  <label>Answer type</label>
+                  <select id="qbExpectedType" style="padding:8px;">
+                    <option value="number">Number</option>
+                    <option value="text">Text</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="qbRangeModeFields" style="display:none; margin-bottom:12px;">
+                <label>How should the range be determined?</label>
+                <div style="display:flex; gap:16px; margin-bottom:10px;">
+                  <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="auto" checked style="width:auto;"> Automatic (find where the results end)</label>
+                  <label style="display:flex; align-items:center; gap:6px; font-weight:400;"><input type="radio" name="qbRangeDetect" value="manual" style="width:auto;"> I'll set the exact range myself</label>
+                </div>
+
+                <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                  <div>
+                    <label>Start — Row</label>
+                    <input type="number" id="qbRangeStartRow" style="width:100px; padding:8px;" min="1">
+                  </div>
+                  <div>
+                    <label>Start — Column letter</label>
+                    <input type="text" id="qbRangeStartCol" style="width:100px; padding:8px; text-transform:uppercase;" maxlength="2">
+                  </div>
+                  <div id="qbRangeEndFields" style="display:none; gap:14px; flex-wrap:wrap;">
+                    <div>
+                      <label>End — Row</label>
+                      <input type="number" id="qbRangeEndRow" style="width:100px; padding:8px;" min="1">
+                    </div>
+                    <div>
+                      <label>End — Column letter</label>
+                      <input type="text" id="qbRangeEndCol" style="width:100px; padding:8px; text-transform:uppercase;" maxlength="2">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="qbSaveQuestionBtn">Save Question</button>
+              <button class="admin-mini-btn" id="qbBackBtn">&larr; Back</button>
+              <button class="admin-mini-btn" id="qbCancelBtn2">Cancel</button>
+              <div id="qbMessage" style="margin-top:10px; font-size:13px;"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -669,7 +712,9 @@ criteria: The condition to match"></textarea>
       <tr>
         <td>${i + 1}</td>
         <td>${q.task.length > 60 ? q.task.slice(0, 60) + '...' : q.task}</td>
-        <td>${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}</td>
+        <td>${q.answer_mode === 'range'
+          ? `${colIndexToLetter(q.target_col)}${q.target_row + 1}... (${q.expected_grid ? q.expected_grid.flat().filter(v => v !== null && v !== '').length : '?'} values)`
+          : `${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}`}</td>
         <td>${q.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
         <td>
           <button class="admin-mini-btn" data-toggle-q="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
@@ -695,14 +740,54 @@ criteria: The condition to match"></textarea>
   }
 
   let qbSheetReady = false;
+  let qbAnswerSheetReady = false;
+  let qbQuestionGrid = null; // captured after Phase 1
+
+  function extractGrid(maxRows, maxCols) {
+    try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
+    const grid = [];
+    let lastRowWithData = -1;
+    for (let r = 0; r < maxRows; r++) {
+      const row = [];
+      for (let c = 0; c < maxCols; c++) {
+        let v = null;
+        try {
+          v = luckysheet.getCellValue(r, c);
+          if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+        } catch (e) {}
+        row.push(v === undefined ? null : v);
+        if (v !== null && v !== undefined && v !== '') lastRowWithData = r;
+      }
+      grid.push(row);
+    }
+    return grid.slice(0, lastRowWithData + 1);
+  }
+
+  function gridToCelldata(grid) {
+    const cells = [];
+    grid.forEach((row, r) => {
+      row.forEach((val, c) => {
+        if (val !== null && val !== undefined && val !== '') {
+          cells.push({ r, c, v: { v: val } });
+        }
+      });
+    });
+    return cells;
+  }
 
   document.getElementById('qbNewQuestionBtn').addEventListener('click', () => {
     document.getElementById('qbBuilder').style.display = 'block';
+    document.getElementById('qbPhase1').style.display = 'block';
+    document.getElementById('qbPhase2').style.display = 'none';
     document.getElementById('qbTask').value = '';
     document.getElementById('qbAnswerRow').value = '';
     document.getElementById('qbAnswerCol').value = '';
-    document.getElementById('qbExpectedValue').value = '';
+    document.getElementById('qbRangeStartRow').value = '';
+    document.getElementById('qbRangeStartCol').value = '';
+    document.getElementById('qbRangeEndRow').value = '';
+    document.getElementById('qbRangeEndCol').value = '';
     document.getElementById('qbMessage').textContent = '';
+    qbQuestionGrid = null;
 
     if (qbSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
@@ -711,75 +796,199 @@ criteria: The condition to match"></textarea>
       container: 'qbSheetContainer',
       lang: 'en',
       showinfobar: false,
-      data: [{ name: 'Sheet1', celldata: [], row: 40, column: 20, status: 1 }]
+      data: [{ name: 'Question', celldata: [], row: 40, column: 20, status: 1 }]
     });
     qbSheetReady = true;
     document.getElementById('qbBuilder').scrollIntoView({ behavior: 'smooth' });
   });
 
+  // Phase 1 → Phase 2: capture the question data, then open a matching Answer Sheet
+  document.getElementById('qbNextToAnswerBtn').addEventListener('click', () => {
+    const grid = extractGrid(40, 20);
+    if (grid.length === 0) {
+      alert('Type some sample data into the sheet first.');
+      return;
+    }
+    qbQuestionGrid = grid;
+
+    document.getElementById('qbPhase1').style.display = 'none';
+    document.getElementById('qbPhase2').style.display = 'block';
+
+    if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
+      try { luckysheet.destroy(); } catch (e) {}
+    }
+    luckysheet.create({
+      container: 'qbAnswerSheetContainer',
+      lang: 'en',
+      showinfobar: false,
+      data: [{ name: 'Answer', celldata: gridToCelldata(qbQuestionGrid), row: 40, column: 20, status: 1 }]
+    });
+    qbAnswerSheetReady = true;
+  });
+
+  function backToPhase1() {
+    document.getElementById('qbPhase2').style.display = 'none';
+    document.getElementById('qbPhase1').style.display = 'block';
+  }
+  document.getElementById('qbBackBtn').addEventListener('click', backToPhase1);
   document.getElementById('qbCancelBtn').addEventListener('click', () => {
     document.getElementById('qbBuilder').style.display = 'none';
+  });
+  document.getElementById('qbCancelBtn2').addEventListener('click', () => {
+    document.getElementById('qbBuilder').style.display = 'none';
+  });
+
+  // Answer mode toggle (single cell vs range)
+  document.querySelectorAll('input[name="qbAnswerMode"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isRange = document.querySelector('input[name="qbAnswerMode"]:checked').value === 'range';
+      document.getElementById('qbSingleModeFields').style.display = isRange ? 'none' : 'flex';
+      document.getElementById('qbRangeModeFields').style.display = isRange ? 'block' : 'none';
+    });
+  });
+
+  // Range detect toggle (auto vs manual)
+  document.querySelectorAll('input[name="qbRangeDetect"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      const isManual = document.querySelector('input[name="qbRangeDetect"]:checked').value === 'manual';
+      document.getElementById('qbRangeEndFields').style.display = isManual ? 'flex' : 'none';
+    });
   });
 
   document.getElementById('qbSaveQuestionBtn').addEventListener('click', async () => {
     const msg = document.getElementById('qbMessage');
     const formulaId = document.getElementById('qbFormulaSelect').value;
     const task = document.getElementById('qbTask').value.trim();
-    const rowInput = parseInt(document.getElementById('qbAnswerRow').value, 10);
-    const colLetters = document.getElementById('qbAnswerCol').value.trim();
-    const expectedValue = document.getElementById('qbExpectedValue').value.trim();
-    const expectedType = document.getElementById('qbExpectedType').value;
+    const answerMode = document.querySelector('input[name="qbAnswerMode"]:checked').value;
 
-    if (!task || !rowInput || !colLetters || !expectedValue) {
-      msg.textContent = 'Fill in the task, answer cell, and expected answer.';
+    if (!task) {
+      msg.textContent = 'Fill in the task instructions.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+    if (!qbQuestionGrid) {
+      msg.textContent = 'Something went wrong — go back and re-enter the question data.';
       msg.style.color = '#B3261E';
       return;
     }
 
-    const targetRow = rowInput - 1;
-    const targetCol = colLetterToIndex(colLetters);
-
-    // Extract everything typed into the sheet as a simple grid
     try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
-    const maxRows = 30, maxCols = 15;
-    const grid = [];
-    let lastRowWithData = -1;
-    for (let r = 0; r < maxRows; r++) {
-      const row = [];
-      let rowHasData = false;
-      for (let c = 0; c < maxCols; c++) {
-        let v = null;
-        try {
-          v = luckysheet.getCellValue(r, c);
-          if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
-        } catch (e) {}
-        row.push(v === undefined ? null : v);
-        if (v !== null && v !== undefined && v !== '') { rowHasData = true; lastRowWithData = r; }
-      }
-      grid.push(row);
-    }
-    const trimmedGrid = grid.slice(0, lastRowWithData + 1);
+    let payload = { formula_id: formulaId, task, grid: qbQuestionGrid, answer_mode: answerMode };
 
-    if (trimmedGrid.length === 0) {
-      msg.textContent = 'The sheet is empty — type some sample data first.';
-      msg.style.color = '#B3261E';
-      return;
+    if (answerMode === 'single') {
+      const rowInput = parseInt(document.getElementById('qbAnswerRow').value, 10);
+      const colLetters = document.getElementById('qbAnswerCol').value.trim();
+      const expectedType = document.getElementById('qbExpectedType').value;
+
+      if (!rowInput || !colLetters) {
+        msg.textContent = 'Fill in the answer cell row and column.';
+        msg.style.color = '#B3261E';
+        return;
+      }
+      const targetRow = rowInput - 1;
+      const targetCol = colLetterToIndex(colLetters);
+      let value = null;
+      try {
+        value = luckysheet.getCellValue(targetRow, targetCol);
+        if (value && typeof value === 'object') value = (value.v !== undefined ? value.v : value.m);
+      } catch (e) {}
+
+      if (value === null || value === undefined || value === '') {
+        msg.textContent = 'That answer cell is empty — type the correct formula there first.';
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      payload.target_row = targetRow;
+      payload.target_col = targetCol;
+      payload.expected_value = String(value);
+      payload.expected_type = expectedType;
+      payload.expected_grid = null;
+    } else {
+      const startRowInput = parseInt(document.getElementById('qbRangeStartRow').value, 10);
+      const startColLetters = document.getElementById('qbRangeStartCol').value.trim();
+      const detectMode = document.querySelector('input[name="qbRangeDetect"]:checked').value;
+
+      if (!startRowInput || !startColLetters) {
+        msg.textContent = 'Fill in the starting row and column of the answer range.';
+        msg.style.color = '#B3261E';
+        return;
+      }
+      const startRow = startRowInput - 1;
+      const startCol = colLetterToIndex(startColLetters);
+
+      let endRow, endCol;
+      if (detectMode === 'manual') {
+        const endRowInput = parseInt(document.getElementById('qbRangeEndRow').value, 10);
+        const endColLetters = document.getElementById('qbRangeEndCol').value.trim();
+        if (!endRowInput || !endColLetters) {
+          msg.textContent = 'Fill in the ending row and column, or switch to Automatic.';
+          msg.style.color = '#B3261E';
+          return;
+        }
+        endRow = endRowInput - 1;
+        endCol = colLetterToIndex(endColLetters);
+      } else {
+        // Automatic: scan down and right from the start cell until values stop
+        endRow = startRow;
+        endCol = startCol;
+        for (let r = startRow; r < startRow + 200; r++) {
+          let v = null;
+          try {
+            v = luckysheet.getCellValue(r, startCol);
+            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+          } catch (e) {}
+          if (v === null || v === undefined || v === '') break;
+          endRow = r;
+        }
+        for (let c = startCol; c < startCol + 100; c++) {
+          let v = null;
+          try {
+            v = luckysheet.getCellValue(startRow, c);
+            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+          } catch (e) {}
+          if (v === null || v === undefined || v === '') break;
+          endCol = c;
+        }
+      }
+
+      const expectedGrid = [];
+      for (let r = startRow; r <= endRow; r++) {
+        const row = [];
+        for (let c = startCol; c <= endCol; c++) {
+          let v = null;
+          try {
+            v = luckysheet.getCellValue(r, c);
+            if (v && typeof v === 'object') v = (v.v !== undefined ? v.v : v.m);
+          } catch (e) {}
+          row.push(v === undefined ? null : v);
+        }
+        expectedGrid.push(row);
+      }
+
+      const hasAnyValue = expectedGrid.some(row => row.some(v => v !== null && v !== undefined && v !== ''));
+      if (!hasAnyValue) {
+        msg.textContent = "That range is empty — type the correct formula at the start cell first.";
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      payload.target_row = startRow;
+      payload.target_col = startCol;
+      payload.expected_value = null;
+      payload.expected_type = null;
+      payload.expected_grid = expectedGrid;
     }
 
     const { data: existing } = await supabaseClient
       .from('formula_questions')
       .select('id')
       .eq('formula_id', formulaId);
-    const orderIndex = existing ? existing.length : 0;
+    payload.order_index = existing ? existing.length : 0;
+    payload.enabled = true;
 
-    const { error } = await supabaseClient.from('formula_questions').insert({
-      formula_id: formulaId,
-      task, grid: trimmedGrid,
-      target_row: targetRow, target_col: targetCol,
-      expected_value: expectedValue, expected_type: expectedType,
-      order_index: orderIndex, enabled: true
-    });
+    const { error } = await supabaseClient.from('formula_questions').insert(payload);
 
     if (error) {
       msg.textContent = error.message;
