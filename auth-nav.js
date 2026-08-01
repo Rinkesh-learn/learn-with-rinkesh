@@ -24,7 +24,7 @@ async function renderNavAuth() {
     .maybeSingle();
 
   const onSetupPage = window.location.pathname.includes('profile-setup.html');
-  if (profile && !profile.profile_completed && !onSetupPage) {
+  if ((!profile || !profile.profile_completed) && !onSetupPage) {
     window.location.href = 'profile-setup.html';
     return;
   }
