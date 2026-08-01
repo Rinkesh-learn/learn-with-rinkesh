@@ -17,7 +17,13 @@
   const OPEN_STATE_KEY = 'lwr_chat_open_state';
   const THEME_KEY = 'lwr_chat_theme';
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '😢', '😮', '🙏'];
-  const COMPOSE_EMOJIS = ['😀','😂','😍','😎','🤔','😢','😮','🙏','👍','👎','🔥','🎉','❤️','💡','✅','❌','😅','🙌','👏','🤝'];
+  const COMPOSE_EMOJIS = [
+    '😀','😂','🤣','😍','😘','😎','🤔','🙂','😅','😇',
+    '😢','😭','😮','😱','🥳','😴','🙄','😳','🤯','🥰',
+    '🙏','👍','👎','👏','🙌','🤝','💪','🤞','✌️','👋',
+    '🔥','🎉','❤️','💛','💙','💚','💜','🖤','💡','⭐',
+    '✅','❌','⚠️','❓','❗','💯','🎯','🏆','🚀','☕'
+  ];
 
   // ---------- Shared disclaimer content ----------
   const DISCLAIMER_HTML = `
@@ -93,7 +99,13 @@
       <button class="btn btn-primary" id="chatSaveSettingsBtn" style="width:100%; margin-top:8px;">Save</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-emoji-panel" id="chatEmojiPanel"></div>
+    <div class="chat-emoji-panel" id="chatEmojiPanel">
+      <div class="chat-emoji-header">
+        <span>Pick an emoji</span>
+        <button type="button" id="chatEmojiCloseBtn" class="chat-emoji-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="chat-emoji-grid" id="chatEmojiGrid"></div>
+    </div>
     <div class="chat-input-row">
       <label class="chat-attach-btn" title="Attach an image">
         📎<input type="file" id="chatImageInput" accept="image/*" style="display:none;">
@@ -309,8 +321,9 @@
 
   // ---------- Emoji picker (composing) ----------
   const emojiPanel = document.getElementById('chatEmojiPanel');
-  emojiPanel.innerHTML = COMPOSE_EMOJIS.map(e => `<span class="chat-emoji-option">${e}</span>`).join('');
-  emojiPanel.querySelectorAll('.chat-emoji-option').forEach(el => {
+  const emojiGrid = document.getElementById('chatEmojiGrid');
+  emojiGrid.innerHTML = COMPOSE_EMOJIS.map(e => `<span class="chat-emoji-option">${e}</span>`).join('');
+  emojiGrid.querySelectorAll('.chat-emoji-option').forEach(el => {
     el.addEventListener('click', () => {
       const input = document.getElementById('chatTextInput');
       input.value += el.textContent;
@@ -319,6 +332,9 @@
   });
   document.getElementById('chatEmojiBtn').addEventListener('click', () => {
     emojiPanel.classList.toggle('open');
+  });
+  document.getElementById('chatEmojiCloseBtn').addEventListener('click', () => {
+    emojiPanel.classList.remove('open');
   });
 
   // ---------- Messages ----------
