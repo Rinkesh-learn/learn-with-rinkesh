@@ -741,7 +741,7 @@ criteria: The condition to match"></textarea>
         <td><strong>${f.name}</strong></td>
         <td>${f.category}</td>
         <td>${f.video_url ? '🎥' : '—'}</td>
-        <td>${questionCounts[f.id] || 0}</td>
+        <td>${questionCounts[f.id] ? `<button class="admin-mini-btn" data-view-questions="${f.id}">${questionCounts[f.id]} — View</button>` : '0'}</td>
         <td>${practiceCounts[f.id] || 0}</td>
         <td><button class="admin-mini-btn" data-toggle-popular="${f.id}" data-current="${f.popular}" style="${f.popular ? 'background:#F6C846; border-color:#F6C846;' : ''}">${f.popular ? '⭐ Popular' : '☆ Mark Popular'}</button></td>
         <td>${f.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
@@ -753,6 +753,17 @@ criteria: The condition to match"></textarea>
       </tr>
     `).join('');
 
+    body.querySelectorAll('[data-view-questions]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('subTabQuestionsBtn').click();
+        document.getElementById('qbFormulaSelect').value = btn.dataset.viewQuestions;
+        loadQuestionsForFormula(btn.dataset.viewQuestions);
+        const wrap = document.getElementById('qbQuestionsListWrap');
+        const toggleBtn = document.getElementById('qbToggleExistingBtn');
+        wrap.style.display = 'block';
+        toggleBtn.innerHTML = '📋 Existing Questions &nbsp;▴';
+      });
+    });
     body.querySelectorAll('[data-edit-formula]').forEach(btn => {
       btn.addEventListener('click', () => openFormulaEditor(btn.dataset.editFormula));
     });
@@ -980,12 +991,19 @@ criteria: The condition to match"></textarea>
           : `${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}`}</td>
         <td>${q.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
         <td>
+          <button class="admin-mini-btn" data-edit-q="${q.id}">Edit</button>
           <button class="admin-mini-btn" data-toggle-q="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
           <button class="admin-mini-btn danger" data-delete-q="${q.id}">Delete</button>
         </td>
       </tr>
     `).join('');
 
+    body.querySelectorAll('[data-edit-q]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = data.find(x => x.id == btn.dataset.editQ);
+        if (q) openQuestionEditor(q);
+      });
+    });
     body.querySelectorAll('[data-toggle-q]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const current = btn.dataset.current === 'true';
@@ -1006,6 +1024,7 @@ criteria: The condition to match"></textarea>
   let qbAnswerSheetReady = false;
   let qbQuestionGrid = null; // captured after Phase 1
   let qbInputCell = null; // {r, c} — optionally marked in Phase 1
+  let qbEditingQuestionId = null; // null = building new, set = editing an existing question
 
   function extractGrid(maxRows, maxCols) {
     try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
@@ -1197,6 +1216,7 @@ criteria: The condition to match"></textarea>
     qbQuestionGrid = null;
     qbInputCell = null;
     qbHighlightedAnswerCells = [];
+    qbEditingQuestionId = null;
 
     if (qbSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
@@ -1209,6 +1229,85 @@ criteria: The condition to match"></textarea>
     });
     qbSheetReady = true;
   });
+
+  // Loads an existing saved question back into the builder (jumping
+  // straight to Phase 2, since all the data — question grid AND the
+  // answer — is already known) so it can be modified and re-saved.
+  function openQuestionEditor(q) {
+    document.getElementById('subTabQuestionsBtn').click();
+    document.getElementById('qbFormulaSelect').value = q.formula_id;
+
+    qbEditingQuestionId = q.id;
+    qbQuestionGrid = q.grid || [];
+    qbInputCell = (q.input_row !== null && q.input_row !== undefined) ? { r: q.input_row, c: q.input_col } : null;
+    qbHighlightedAnswerCells = [];
+
+    document.getElementById('qbSheetPlaceholder').style.display = 'none';
+    document.getElementById('qbSheetContainer').style.display = 'none';
+    document.getElementById('qbAnswerSheetContainer').style.display = 'block';
+    document.getElementById('qbPhase1Controls').style.display = 'none';
+    document.getElementById('qbPhase2Controls').style.display = 'block';
+
+    document.getElementById('qbTask').value = q.task || '';
+    const inputDisplay = document.getElementById('qbInputCellDisplay');
+    inputDisplay.textContent = qbInputCell ? `Marked: ${colIndexToLetter(qbInputCell.c)}${qbInputCell.r + 1}` : 'No input cell marked yet.';
+    inputDisplay.style.color = qbInputCell ? 'var(--excel-green-deep)' : 'var(--ink-soft)';
+    document.getElementById('qbMessage').textContent = '';
+    document.getElementById('qbAutoDetectMessage').textContent = '';
+
+    const mode = q.answer_mode || 'single';
+    document.querySelector(`input[name="qbAnswerMode"][value="${mode}"]`).checked = true;
+    document.getElementById('qbSingleModeFields').style.display = mode === 'range' ? 'none' : 'block';
+    document.getElementById('qbRangeModeFields').style.display = mode === 'range' ? 'block' : 'none';
+
+    // Build the Answer Sheet's starting data: the original question grid,
+    // with the saved answer value(s) overlaid on top at their real cells.
+    const cellMap = {};
+    gridToCelldata(qbQuestionGrid).forEach(cell => { cellMap[`${cell.r},${cell.c}`] = cell; });
+
+    if (mode === 'single') {
+      document.getElementById('qbAnswerRow').value = q.target_row + 1;
+      document.getElementById('qbAnswerCol').value = colIndexToLetter(q.target_col);
+      document.getElementById('qbExpectedType').value = q.expected_type || 'number';
+      cellMap[`${q.target_row},${q.target_col}`] = { r: q.target_row, c: q.target_col, v: { v: q.expected_value } };
+    } else {
+      let cells = [];
+      if (q.expected_cells && q.expected_cells.length) {
+        cells = q.expected_cells.map(c => ({ r: c.r, c: c.c, value: c.value }));
+      } else if (q.expected_grid) {
+        // Older questions saved before highlight-based marking existed —
+        // convert the rectangle into an equivalent cell list so editing works.
+        q.expected_grid.forEach((row, ri) => {
+          row.forEach((val, ci) => {
+            if (val !== null && val !== undefined && val !== '') {
+              cells.push({ r: q.target_row + ri, c: q.target_col + ci, value: val });
+            }
+          });
+        });
+      }
+      qbHighlightedAnswerCells = cells;
+      cells.forEach(c => { cellMap[`${c.r},${c.c}`] = { r: c.r, c: c.c, v: { v: c.value } }; });
+
+      const preview = document.getElementById('qbHighlightRangePreview');
+      const rangeMsg = document.getElementById('qbHighlightRangeMessage');
+      preview.innerHTML = cells.map(c => `${colIndexToLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>');
+      rangeMsg.textContent = `Loaded ${cells.length} saved answer cell${cells.length === 1 ? '' : 's'} — highlight different cells and click the button again to change them.`;
+      rangeMsg.style.color = 'var(--excel-green-deep)';
+    }
+
+    if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
+      try { luckysheet.destroy(); } catch (e) {}
+    }
+    luckysheet.create({
+      container: 'qbAnswerSheetContainer',
+      lang: 'en',
+      showinfobar: false,
+      data: [{ name: 'Answer', celldata: Object.values(cellMap), row: 40, column: 20, status: 1 }]
+    });
+    qbAnswerSheetReady = true;
+
+    document.getElementById('qbPhase2Controls').scrollIntoView({ behavior: 'smooth' });
+  }
 
   document.getElementById('qbMarkInputBtn').addEventListener('click', () => {
     const display = document.getElementById('qbInputCellDisplay');
@@ -1277,6 +1376,7 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbSheetContainer').style.display = 'none';
     document.getElementById('qbAnswerSheetContainer').style.display = 'none';
     document.getElementById('qbSheetPlaceholder').style.display = 'block';
+    qbEditingQuestionId = null;
   }
   document.getElementById('qbCancelBtn').addEventListener('click', qbCancelBuilder);
   document.getElementById('qbCancelBtn2').addEventListener('click', qbCancelBuilder);
@@ -1361,14 +1461,18 @@ criteria: The condition to match"></textarea>
       payload.input_col = qbInputCell.c;
     }
 
-    const { data: existing } = await supabaseClient
-      .from('formula_questions')
-      .select('id')
-      .eq('formula_id', formulaId);
-    payload.order_index = existing ? existing.length : 0;
-    payload.enabled = true;
+    if (!qbEditingQuestionId) {
+      const { data: existing } = await supabaseClient
+        .from('formula_questions')
+        .select('id')
+        .eq('formula_id', formulaId);
+      payload.order_index = existing ? existing.length : 0;
+      payload.enabled = true;
+    }
 
-    const { error } = await supabaseClient.from('formula_questions').insert(payload);
+    const { error } = qbEditingQuestionId
+      ? await supabaseClient.from('formula_questions').update(payload).eq('id', qbEditingQuestionId)
+      : await supabaseClient.from('formula_questions').insert(payload);
 
     if (error) {
       msg.textContent = error.message;
@@ -1376,7 +1480,7 @@ criteria: The condition to match"></textarea>
       return;
     }
 
-    msg.textContent = 'Question saved!';
+    msg.textContent = qbEditingQuestionId ? 'Question updated!' : 'Question saved!';
     msg.style.color = 'var(--excel-green-deep)';
     setTimeout(() => {
       qbCancelBuilder();
