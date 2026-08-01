@@ -115,6 +115,7 @@
   }
   .admin-mini-btn.danger { color: #B3261E; border-color: #f0c0bb; }
   .admin-mini-btn.danger:hover { background: #FBE6E2; }
+  .admin-mini-btn.active { background: var(--excel-green); color: #fff; border-color: var(--excel-green); }
 
   .admin-locked {
     max-width: 400px;
@@ -181,6 +182,12 @@
             <tbody id="usersTableBody"></tbody>
           </table>
         </div>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Account &amp; Auth Pages</h3>
+        <p class="sub" style="margin-top:-6px;">Edit the text on the pages that make up the account/login flow.</p>
+        <div id="accountPagesNav" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
       </div>
     </div>
 
@@ -377,7 +384,7 @@ criteria: The condition to match"></textarea>
   document.querySelectorAll('.admin-sidebar a[data-view]').forEach(link => {
     link.addEventListener('click', () => {
       document.querySelectorAll('.admin-sidebar a[data-view]').forEach(a => a.classList.remove('active'));
-      document.querySelectorAll('#pagesFlatNav [data-page-link]').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('#pagesFlatNav [data-page-link], #accountPagesNav [data-page-link]').forEach(a => a.classList.remove('active'));
       link.classList.add('active');
       document.querySelectorAll('.admin-main > div[id^="view-"]').forEach(v => v.style.display = 'none');
       document.getElementById('view-' + link.dataset.view).style.display = 'block';
@@ -1027,46 +1034,56 @@ criteria: The condition to match"></textarea>
 
   // ---------- Pages (page content editing) ----------
   // Registry of every real page on the site, with its actual page name
-  // (not an auto-capitalized code key) and its editable blocks. To wire
-  // up a page's content for editing: give the text an
-  // id="pc-<page>-<name>" in its HTML, add a matching entry to that
-  // page's blocks array here, and it shows up automatically — no other
-  // code changes needed. Pages with an empty blocks array already show
-  // up in the dropdown (so the full site is visible here) but display
-  // a "not wired up yet" message until their blocks are added.
+  // (not an auto-capitalized code key), an icon, a group ('site' shows
+  // in the main sidebar list, 'account' shows grouped under the Users
+  // tab since those pages are all part of the account/login flow), and
+  // its editable blocks. To wire up a page's content for editing: give
+  // the text an id="pc-<page>-<name>" in its HTML, add a matching entry
+  // to that page's blocks array here, and it shows up automatically —
+  // no other code changes needed. Pages with an empty blocks array
+  // already show up in their list (so the full site is visible here)
+  // but display a "not wired up yet" message until their blocks are added.
   const PAGE_BLOCKS = {
-    home: { label: 'Home', file: 'index.html', blocks: [] },
+    home: { label: 'Home', file: 'index.html', icon: '🏠', group: 'site', blocks: [] },
     about: {
       label: 'About',
       file: 'about.html',
+      icon: 'ℹ️',
+      group: 'site',
       blocks: [
         { id: 'pc-about-hero-title', label: 'Hero title' },
         { id: 'pc-about-why-text', label: '"Why this exists" paragraph' },
         { id: 'pc-about-bio-text', label: 'Developer bio paragraph' }
       ]
     },
-    formulas_list: { label: 'Formulas List', file: 'formula-example.html', blocks: [] },
-    practice: { label: 'Practice', file: 'practice.html', blocks: [] },
-    excel_basics: { label: 'Excel Basics', file: 'excel-basics.html', blocks: [] },
-    excel_guide: { label: 'Excel Guide', file: 'excel-guide.html', blocks: [] },
-    interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', blocks: [] },
-    shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', blocks: [] },
-    charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', blocks: [] },
-    account: { label: 'Account', file: 'account.html', blocks: [] },
-    purchases: { label: 'Purchases', file: 'purchases.html', blocks: [] },
-    login: { label: 'Login', file: 'login.html', blocks: [] },
-    signup: { label: 'Sign Up', file: 'signup.html', blocks: [] },
-    forgot_password: { label: 'Forgot Password', file: 'forgot-password.html', blocks: [] },
-    update_password: { label: 'Set New Password', file: 'update-password.html', blocks: [] },
-    profile_setup: { label: 'Complete Profile', file: 'profile-setup.html', blocks: [] }
+    formulas_list: { label: 'Formulas List', file: 'formula-example.html', icon: '📋', group: 'site', blocks: [] },
+    practice: { label: 'Practice', file: 'practice.html', icon: '📝', group: 'site', blocks: [] },
+    excel_basics: { label: 'Excel Basics', file: 'excel-basics.html', icon: '📗', group: 'site', blocks: [] },
+    excel_guide: { label: 'Excel Guide', file: 'excel-guide.html', icon: '📘', group: 'site', blocks: [] },
+    interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', icon: '🎯', group: 'site', blocks: [] },
+    shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', icon: '⌨️', group: 'site', blocks: [] },
+    charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', icon: '📈', group: 'site', blocks: [] },
+    account: { label: 'Account', file: 'account.html', icon: '👤', group: 'account', blocks: [] },
+    purchases: { label: 'Purchases', file: 'purchases.html', icon: '🛒', group: 'account', blocks: [] },
+    login: { label: 'Login', file: 'login.html', icon: '🔑', group: 'account', blocks: [] },
+    signup: { label: 'Sign Up', file: 'signup.html', icon: '✍️', group: 'account', blocks: [] },
+    forgot_password: { label: 'Forgot Password', file: 'forgot-password.html', icon: '🔓', group: 'account', blocks: [] },
+    update_password: { label: 'Set New Password', file: 'update-password.html', icon: '🔐', group: 'account', blocks: [] },
+    profile_setup: { label: 'Complete Profile', file: 'profile-setup.html', icon: '🪪', group: 'account', blocks: [] }
   };
 
   let pcActivePage = null;
 
   function populatePageSelect() {
     const wrap = document.getElementById('pagesFlatNav');
-    wrap.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<a data-page-link="${p}">📄 ${PAGE_BLOCKS[p].label}</a>`).join('');
+    wrap.innerHTML = Object.keys(PAGE_BLOCKS).filter(p => PAGE_BLOCKS[p].group === 'site').map(p => `<a data-page-link="${p}">${PAGE_BLOCKS[p].icon} ${PAGE_BLOCKS[p].label}</a>`).join('');
     wrap.querySelectorAll('[data-page-link]').forEach(link => {
+      link.addEventListener('click', () => selectPage(link.dataset.pageLink));
+    });
+
+    const accWrap = document.getElementById('accountPagesNav');
+    accWrap.innerHTML = Object.keys(PAGE_BLOCKS).filter(p => PAGE_BLOCKS[p].group === 'account').map(p => `<button type="button" class="admin-mini-btn" data-page-link="${p}">${PAGE_BLOCKS[p].icon} ${PAGE_BLOCKS[p].label}</button>`).join('');
+    accWrap.querySelectorAll('[data-page-link]').forEach(link => {
       link.addEventListener('click', () => selectPage(link.dataset.pageLink));
     });
   }
@@ -1074,7 +1091,7 @@ criteria: The condition to match"></textarea>
   function selectPage(page, switchView = true) {
     pcActivePage = page;
     document.getElementById('pcActivePageLabel').textContent = PAGE_BLOCKS[page].label;
-    document.querySelectorAll('#pagesFlatNav [data-page-link]').forEach(link => {
+    document.querySelectorAll('#pagesFlatNav [data-page-link], #accountPagesNav [data-page-link]').forEach(link => {
       link.classList.toggle('active', link.dataset.pageLink === page);
     });
 
