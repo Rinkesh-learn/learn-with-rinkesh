@@ -444,7 +444,7 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 });
 
 // ---------- Result modal (icon buttons with hover tooltips) ----------
-function showResultModal({ correct, html, answerHtml }) {
+function showResultModal({ correct, html, question }) {
   const overlay = document.getElementById('resultOverlay');
   const box = document.getElementById('resultBox');
 
@@ -458,10 +458,7 @@ function showResultModal({ correct, html, answerHtml }) {
   box.innerHTML = `
     <div class="result-icon">${icon}</div>
     <div class="result-message">${html}</div>
-    ${!correct && answerHtml ? `
-      <button class="admin-mini-btn" id="resultSeeAnswerBtn" style="margin:6px 0;">👁 See Answer</button>
-      <div id="resultAnswerReveal" style="display:none; font-size:13px; background:#F5F0DC; border-radius:8px; padding:10px; margin-bottom:6px;">${answerHtml}</div>
-    ` : ''}
+    ${!correct && question ? `<button class="admin-mini-btn" id="resultSeeAnswerBtn" style="margin:6px 0;">👁 See Answer</button>` : ''}
     <div class="icon-btn-row">
       <button class="icon-btn" id="resultAgainBtn" title="Practice Again">🔁</button>
       ${hasNextQuestion ? `<button class="icon-btn primary" id="resultNextQBtn" title="Next Question">➡️</button>` : ''}
@@ -470,10 +467,10 @@ function showResultModal({ correct, html, answerHtml }) {
     </div>
   `;
 
-  if (!correct && answerHtml) {
+  if (!correct && question) {
     document.getElementById('resultSeeAnswerBtn').addEventListener('click', () => {
-      document.getElementById('resultAnswerReveal').style.display = 'block';
-      document.getElementById('resultSeeAnswerBtn').style.display = 'none';
+      overlay.classList.remove('open');
+      revealAnswerSheet(question);
     });
   }
 
@@ -528,6 +525,33 @@ function buildCelldata(question) {
     });
   });
   return cells;
+}
+
+// Loads the correct, filled-in answer straight into the sheet (green
+// background on the answer cell(s)) instead of showing text — nothing
+// else about the layout changes, the task/title above stay exactly
+// as they were.
+function revealAnswerSheet(question) {
+  const answerMap = {};
+  if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
+    question.expectedCells.forEach(c => { answerMap[`${c.r},${c.c}`] = c.value; });
+  } else {
+    answerMap[`${question.targetRow},${question.targetCol}`] = question.expectedValue;
+  }
+
+  const cells = [];
+  question.grid.forEach((row, r) => {
+    row.forEach((val, c) => {
+      const key = `${r},${c}`;
+      if (answerMap[key] !== undefined) {
+        cells.push({ r, c, v: { v: answerMap[key], bg: '#D9EFDD', bl: 1 } });
+      } else if (val !== null && val !== '') {
+        cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
+      }
+    });
+  });
+
+  createSheet((currentFormula ? currentFormula.name : 'Answer') + ' — Answer', cells);
 }
 
 function createSheet(name, celldata) {
@@ -601,10 +625,6 @@ function unwrapValue(raw) {
 function checkAnswer(question) {
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
-  const answerHtml = (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length)
-    ? question.expectedCells.map(c => `${colLetter(c.c)}${c.r + 1}: <strong>${c.value}</strong>`).join('<br>')
-    : `Expected answer: <strong>${question.expectedValue}</strong>`;
-
   if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
     let anyEmpty = false, anyUnconfirmed = false, anyError = false, allMatch = true;
 
@@ -627,15 +647,15 @@ function checkAnswer(question) {
     });
 
     if (anyEmpty) {
-      showResultModal({ correct: false, html: 'Fill in all the highlighted cells first, then click outside before checking.', answerHtml });
+      showResultModal({ correct: false, html: "You haven't tried the formula yet. Still want to check the answer?", question });
       return;
     }
     if (anyUnconfirmed) {
-      showResultModal({ correct: false, html: 'Click outside the cells (or press Enter) to confirm your formulas, then check again.', answerHtml });
+      showResultModal({ correct: false, html: 'Click outside the cells (or press Enter) to confirm your formulas, then check again.', question });
       return;
     }
     if (anyError) {
-      showResultModal({ correct: false, html: "One or more cells show an error — check your formula's cell references and arguments.", answerHtml });
+      showResultModal({ correct: false, html: "One or more cells show an error — check your formula's cell references and arguments.", question });
       return;
     }
 
@@ -644,11 +664,7 @@ function checkAnswer(question) {
       const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
       showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Every cell matches!` });
     } else {
-      showResultModal({
-        correct: false,
-        html: "Not quite — one or more of the highlighted cells doesn't match yet. Try again!",
-        answerHtml
-      });
+      showResultModal({ correct: false, html: 'Your answer is wrong. Try again!', question });
     }
     return;
   }
@@ -658,22 +674,22 @@ function checkAnswer(question) {
     value = luckysheet.getCellValue(question.targetRow, question.targetCol);
     value = unwrapValue(value);
   } catch (e) {
-    showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again.", answerHtml });
+    showResultModal({ correct: false, html: "Couldn't read that cell — click outside the cell once, then press Check My Answer again.", question });
     return;
   }
 
   if (value === null || value === undefined || value === '') {
-    showResultModal({ correct: false, html: 'Write a formula in the highlighted cell first, then click outside it before checking.', answerHtml });
+    showResultModal({ correct: false, html: "You haven't tried the formula yet. Still want to check the answer?", question });
     return;
   }
 
   if (typeof value === 'string' && value.trim().startsWith('=')) {
-    showResultModal({ correct: false, html: "Click outside the cell (or press Enter) to confirm your formula, then check again.", answerHtml });
+    showResultModal({ correct: false, html: "Click outside the cell (or press Enter) to confirm your formula, then check again.", question });
     return;
   }
 
   if (typeof value === 'string' && value.startsWith('#')) {
-    showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>`, answerHtml });
+    showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>`, question });
     return;
   }
 
@@ -689,11 +705,7 @@ function checkAnswer(question) {
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
-    showResultModal({
-      correct: false,
-      html: `Result: <strong>${value}</strong> — not quite. Try again!`,
-      answerHtml
-    });
+    showResultModal({ correct: false, html: 'Your answer is wrong. Try again!', question });
   }
 }
 
