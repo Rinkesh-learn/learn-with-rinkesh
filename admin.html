@@ -153,8 +153,8 @@
     <div id="pagesFlatNav"></div>
     <a data-view="articles">📘 Articles</a>
     <a data-view="chat_moderation">💬 Chat Moderation</a>
-    <a class="disabled">📁 Case Studies (soon)</a>
-    <a class="disabled">📅 1-on-1 Bookings (soon)</a>
+    <a data-view="case_studies">📁 Case Studies</a>
+    <a data-view="bookings">📅 1-on-1 Bookings</a>
   </div>
 
   <div class="admin-main">
@@ -430,6 +430,91 @@ criteria: The condition to match"></textarea>
         <br>
         <button class="btn btn-primary" id="chatRetentionSaveBtn" style="padding:8px 16px; font-size:12px;">Save Retention Setting</button>
         <div id="chatRetentionMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-case_studies" style="display:none;">
+      <h1>Case Studies</h1>
+      <p class="sub">Manage downloadable case study assignments.</p>
+
+      <div class="admin-panel">
+        <div class="admin-panel-header">
+          <span></span>
+          <button class="btn btn-primary" id="addCaseStudyBtn" style="padding:8px 16px; font-size:12px;">+ Add Assignment</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table">
+            <thead><tr><th>Title</th><th>Price</th><th>File</th><th>Downloads</th><th>Status</th><th></th></tr></thead>
+            <tbody id="caseStudiesTableBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="caseStudyEditorPanel" class="admin-panel" style="display:none; margin-top:16px;">
+        <h3 id="csEditorTitle" style="margin-top:0;">Add Assignment</h3>
+        <input type="hidden" id="csId">
+
+        <label>Title</label>
+        <input type="text" id="csTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+
+        <label>Description</label>
+        <textarea id="csDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
+
+        <label>Price (USD — 0 for free)</label>
+        <input type="number" id="csPrice" value="0" min="0" step="0.01" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
+
+        <label>Assignment file</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <span id="csCurrentFileName" style="font-size:13px; color:var(--ink-soft);">No file uploaded yet</span>
+        </div>
+        <input type="file" id="csFileUpload" style="margin-bottom:10px;">
+        <div id="csUploadStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
+
+        <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="csEnabled" style="width:auto;" checked> Enabled (visible on the live site)</label>
+
+        <div style="margin-top:14px; display:flex; gap:8px;">
+          <button class="btn btn-primary" id="csSaveBtn">Save Assignment</button>
+          <button class="admin-mini-btn" id="csCancelBtn">Cancel</button>
+        </div>
+        <div id="csMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-bookings" style="display:none;">
+      <h1>1-on-1 Bookings</h1>
+      <p class="sub">Mark when you're available. There's no public booking page yet — that's a separate build — so this just sets up your calendar and where bookings will show once it exists.</p>
+
+      <div class="admin-panel">
+        <h3 style="margin-top:0;">Add availability</h3>
+        <label>Date</label>
+        <input type="date" id="availDate" style="width:100%; max-width:220px; padding:8px; margin-bottom:10px;">
+        <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:10px;">
+          <div>
+            <label>Start time</label>
+            <input type="time" id="availStart" style="padding:8px;">
+          </div>
+          <div>
+            <label>End time</label>
+            <input type="time" id="availEnd" style="padding:8px;">
+          </div>
+          <button class="btn btn-primary" id="addAvailBtn" style="padding:8px 16px; font-size:12px;">+ Add Slot</button>
+        </div>
+        <div id="availMessage" style="font-size:13px; margin-bottom:14px;"></div>
+
+        <h3>Upcoming availability</h3>
+        <table class="admin-table">
+          <thead><tr><th>Date</th><th>Start</th><th>End</th><th></th></tr></thead>
+          <tbody id="availTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Bookings</h3>
+        <p class="sub" style="margin-top:-6px;">Read-only — will populate once the public booking page is built and users can actually book a slot.</p>
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Slot</th><th>Status</th></tr></thead>
+          <tbody id="bookingsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1773,6 +1858,236 @@ criteria: The condition to match"></textarea>
     msg.style.color = 'var(--excel-green-deep)';
   });
 
+  // ---------- Case Studies ----------
+  let allCaseStudiesAdmin = [];
+
+  async function loadCaseStudiesAdmin() {
+    const { data, error } = await supabaseClient.from('case_studies').select('*').order('order_index');
+    if (error) {
+      document.getElementById('caseStudiesTableBody').innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    allCaseStudiesAdmin = data || [];
+    renderCaseStudiesAdminTable();
+  }
+
+  function renderCaseStudiesAdminTable() {
+    const body = document.getElementById('caseStudiesTableBody');
+    if (allCaseStudiesAdmin.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No assignments yet — click "+ Add Assignment" to create one.</td></tr>';
+      return;
+    }
+    body.innerHTML = allCaseStudiesAdmin.map(c => `
+      <tr>
+        <td><strong>${c.title}</strong></td>
+        <td>${c.price > 0 ? '$' + Number(c.price).toFixed(2) : 'Free'}</td>
+        <td>${c.file_name ? '📎 ' + c.file_name : '—'}</td>
+        <td>${c.downloads || 0}</td>
+        <td>${c.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="admin-mini-btn" data-edit-cs="${c.id}">Edit</button>
+          <button class="admin-mini-btn" data-toggle-cs="${c.id}" data-current="${c.enabled}">${c.enabled ? 'Disable' : 'Enable'}</button>
+          <button class="admin-mini-btn danger" data-delete-cs="${c.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-edit-cs]').forEach(btn => {
+      btn.addEventListener('click', () => openCaseStudyEditor(btn.dataset.editCs));
+    });
+    body.querySelectorAll('[data-toggle-cs]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('case_studies').update({ enabled: !current }).eq('id', btn.dataset.toggleCs);
+        loadCaseStudiesAdmin();
+      });
+    });
+    body.querySelectorAll('[data-delete-cs]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this assignment? This cannot be undone.')) return;
+        await supabaseClient.from('case_studies').delete().eq('id', btn.dataset.deleteCs);
+        loadCaseStudiesAdmin();
+      });
+    });
+  }
+
+  let csUploadedFileUrl = null;
+  let csUploadedFileName = null;
+
+  function openCaseStudyEditor(id) {
+    const c = id ? allCaseStudiesAdmin.find(x => x.id == id) : null;
+    document.getElementById('csEditorTitle').textContent = c ? 'Edit Assignment' : 'Add Assignment';
+    document.getElementById('csId').value = c ? c.id : '';
+    document.getElementById('csTitle').value = c ? c.title : '';
+    document.getElementById('csDescription').value = c ? c.description : '';
+    document.getElementById('csPrice').value = c ? c.price : 0;
+    document.getElementById('csEnabled').checked = c ? c.enabled : true;
+    document.getElementById('csCurrentFileName').textContent = c && c.file_name ? c.file_name : 'No file uploaded yet';
+    document.getElementById('csFileUpload').value = '';
+    document.getElementById('csUploadStatus').textContent = '';
+    document.getElementById('csMessage').textContent = '';
+    csUploadedFileUrl = c ? c.file_url : null;
+    csUploadedFileName = c ? c.file_name : null;
+    document.getElementById('caseStudyEditorPanel').style.display = 'block';
+    document.getElementById('caseStudyEditorPanel').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('addCaseStudyBtn').addEventListener('click', () => openCaseStudyEditor(null));
+  document.getElementById('csCancelBtn').addEventListener('click', () => {
+    document.getElementById('caseStudyEditorPanel').style.display = 'none';
+  });
+
+  document.getElementById('csFileUpload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('csUploadStatus');
+    status.textContent = 'Uploading...';
+
+    const path = `${Date.now()}_${file.name}`;
+    const { error } = await supabaseClient.storage.from('case-study-files').upload(path, file, { upsert: true });
+    if (error) {
+      status.textContent = 'Upload failed: ' + error.message;
+      return;
+    }
+    const { data: urlData } = supabaseClient.storage.from('case-study-files').getPublicUrl(path);
+    csUploadedFileUrl = urlData.publicUrl;
+    csUploadedFileName = file.name;
+    document.getElementById('csCurrentFileName').textContent = file.name;
+    status.textContent = 'Uploaded — click Save Assignment to publish.';
+  });
+
+  document.getElementById('csSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('csMessage');
+    const id = document.getElementById('csId').value;
+    const title = document.getElementById('csTitle').value.trim();
+    const description = document.getElementById('csDescription').value.trim();
+
+    if (!title || !description) {
+      msg.textContent = 'Title and description are both required.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const row = {
+      title,
+      description,
+      price: parseFloat(document.getElementById('csPrice').value) || 0,
+      file_url: csUploadedFileUrl,
+      file_name: csUploadedFileName,
+      enabled: document.getElementById('csEnabled').checked
+    };
+
+    let error;
+    if (id) {
+      ({ error } = await supabaseClient.from('case_studies').update(row).eq('id', id));
+    } else {
+      const { count } = await supabaseClient.from('case_studies').select('*', { count: 'exact', head: true });
+      row.order_index = count || 0;
+      ({ error } = await supabaseClient.from('case_studies').insert(row));
+    }
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    msg.textContent = 'Saved!';
+    msg.style.color = 'var(--excel-green-deep)';
+    loadCaseStudiesAdmin();
+    setTimeout(() => { document.getElementById('caseStudyEditorPanel').style.display = 'none'; }, 600);
+  });
+
+  // ---------- 1-on-1 Bookings ----------
+  async function loadAvailability() {
+    const body = document.getElementById('availTableBody');
+    const { data, error } = await supabaseClient
+      .from('availability_slots')
+      .select('*')
+      .gte('slot_date', new Date().toISOString().slice(0, 10))
+      .order('slot_date')
+      .order('start_time');
+
+    if (error) {
+      body.innerHTML = `<tr><td colspan="4">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--ink-soft); padding:16px;">No upcoming availability added yet.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = data.map(s => `
+      <tr>
+        <td>${new Date(s.slot_date + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+        <td>${s.start_time.slice(0, 5)}</td>
+        <td>${s.end_time.slice(0, 5)}</td>
+        <td><button class="admin-mini-btn danger" data-delete-avail="${s.id}">Remove</button></td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-delete-avail]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('availability_slots').delete().eq('id', btn.dataset.deleteAvail);
+        loadAvailability();
+      });
+    });
+  }
+
+  document.getElementById('addAvailBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('availMessage');
+    const slot_date = document.getElementById('availDate').value;
+    const start_time = document.getElementById('availStart').value;
+    const end_time = document.getElementById('availEnd').value;
+
+    if (!slot_date || !start_time || !end_time) {
+      msg.textContent = 'Pick a date, start time, and end time.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+    if (end_time <= start_time) {
+      msg.textContent = 'End time must be after start time.';
+      msg.style.color = '#B3261E';
+      return;
+    }
+
+    const { error } = await supabaseClient.from('availability_slots').insert({ slot_date, start_time, end_time });
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+    msg.textContent = 'Slot added!';
+    msg.style.color = 'var(--excel-green-deep)';
+    loadAvailability();
+  });
+
+  async function loadBookings() {
+    const body = document.getElementById('bookingsTableBody');
+    const { data, error } = await supabaseClient
+      .from('bookings')
+      .select('*, availability_slots(slot_date, start_time)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      body.innerHTML = `<tr><td colspan="4">Couldn't load: ${error.message}</td></tr>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--ink-soft); padding:16px;">No bookings yet.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = data.map(b => `
+      <tr>
+        <td>${b.name || '—'}</td>
+        <td>${b.email || '—'}</td>
+        <td>${b.availability_slots ? `${b.availability_slots.slot_date} ${b.availability_slots.start_time.slice(0, 5)}` : '—'}</td>
+        <td>${b.status}</td>
+      </tr>
+    `).join('');
+  }
+
   // ---------- Init ----------
   (async function init() {
     const ok = await checkAdminAccess();
@@ -1783,6 +2098,9 @@ criteria: The condition to match"></textarea>
     loadArticlesAdmin();
     loadChatReports();
     loadChatSettings();
+    loadCaseStudiesAdmin();
+    loadAvailability();
+    loadBookings();
     populatePageSelect();
     selectPage('about', false);
   })();
