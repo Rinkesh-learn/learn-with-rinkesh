@@ -413,8 +413,8 @@ criteria: The condition to match"></textarea>
       <div class="admin-panel">
         <h3 style="margin-top:0;">Reported messages</h3>
         <table class="admin-table">
-          <thead><tr><th>Message</th><th>Display Name</th><th>Email</th><th>Reason</th><th>Details</th><th>Reported</th><th></th></tr></thead>
-          <tbody id="chatReportsTableBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+          <thead><tr><th>Message</th><th>Display Name</th><th>Email</th><th>Reason</th><th>Details</th><th>Times Reported</th><th>Reported</th><th></th></tr></thead>
+          <tbody id="chatReportsTableBody"><tr><td colspan="8">Loading...</td></tr></tbody>
         </table>
       </div>
 
@@ -2032,16 +2032,16 @@ criteria: The condition to match"></textarea>
     const body = document.getElementById('chatReportsTableBody');
     const { data, error } = await supabaseClient
       .from('chat_reports')
-      .select('id, reason, details, created_at, status, message_id, reported_user_id, chat_messages(message, display_name)')
+      .select('id, reason, details, created_at, status, message_id, reported_user_id, chat_messages(message, display_name, image_url)')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
     if (error) {
-      body.innerHTML = `<tr><td colspan="7">Couldn't load: ${error.message}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="8">Couldn't load: ${error.message}</td></tr>`;
       return;
     }
     if (!data || data.length === 0) {
-      body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
       return;
     }
 
@@ -2052,20 +2052,37 @@ criteria: The condition to match"></textarea>
     // sees who someone actually is.
     const userIds = [...new Set(data.map(r => r.reported_user_id).filter(Boolean))];
     let userMap = {};
+    let reportCounts = {};
     if (userIds.length > 0) {
       const { data: users } = await supabaseClient.from('profiles').select('id, name, email').in('id', userIds);
       (users || []).forEach(u => { userMap[u.id] = u; });
+
+      // Total times each of these users has EVER been reported (any
+      // status — pending, reviewed, dismissed — this is a track record,
+      // not just the current pending queue).
+      const { data: allReportsForUsers } = await supabaseClient
+        .from('chat_reports')
+        .select('reported_user_id')
+        .in('reported_user_id', userIds);
+      (allReportsForUsers || []).forEach(r => {
+        reportCounts[r.reported_user_id] = (reportCounts[r.reported_user_id] || 0) + 1;
+      });
     }
 
     body.innerHTML = data.map(r => {
       const reportedUser = userMap[r.reported_user_id];
+      const imageUrl = r.chat_messages && r.chat_messages.image_url;
+      const messageCell = r.chat_messages
+        ? `<strong>${r.chat_messages.display_name}:</strong> ${r.chat_messages.message || ''}${imageUrl ? `<br><a href="${imageUrl}" target="_blank" rel="noopener"><img src="${imageUrl}" alt="Reported image" style="max-width:70px; max-height:70px; border-radius:4px; margin-top:4px; display:block;"></a>` : ''}`
+        : '(message already deleted)';
       return `
       <tr>
-        <td>${r.chat_messages ? `<strong>${r.chat_messages.display_name}:</strong> ${r.chat_messages.message || '(image)'}` : '(message already deleted)'}</td>
+        <td>${messageCell}</td>
         <td>${reportedUser ? (reportedUser.name || '—') : '—'}</td>
         <td>${reportedUser ? (reportedUser.email || '—') : '—'}</td>
         <td>${REPORT_REASON_LABELS[r.reason] || r.reason || '—'}</td>
         <td style="max-width:180px; white-space:normal;">${r.details || '—'}</td>
+        <td style="text-align:center;">${reportCounts[r.reported_user_id] || 1}</td>
         <td>${new Date(r.created_at).toLocaleDateString()}</td>
         <td style="white-space:nowrap;">
           <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
