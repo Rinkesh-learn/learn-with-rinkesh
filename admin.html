@@ -1110,14 +1110,17 @@ criteria: The condition to match"></textarea>
       blocks: [
         { id: 'pc-about-hero-title', label: 'Hero title' },
         { id: 'pc-about-why-text', label: '"Why this exists" paragraph' },
-        { id: 'pc-about-bio-text', label: 'Developer bio paragraph' }
+        { id: 'pc-about-bio-text', label: 'Developer bio paragraph' },
+        { id: 'pc-about-photo', label: 'Developer photo', type: 'image', fallback: 'rinkesh-photo.jpg' },
+        { id: 'pc-about-youtube-link', label: 'YouTube link', type: 'text' },
+        { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text' }
       ]
     },
     formulas_list: { label: 'Formulas List', file: 'formula-example.html', icon: '📋', group: 'site', blocks: [] },
     practice: { label: 'Practice', file: 'practice.html', icon: '📝', group: 'site', blocks: [] },
     excel_basics: { label: 'Excel Basics', file: 'excel-basics.html', icon: '📗', group: 'site', blocks: [] },
     excel_guide: { label: 'Excel Guide', file: 'excel-guide.html', icon: '📘', group: 'site', blocks: [] },
-    interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', icon: '🎯', group: 'site', blocks: [] },
+    interview_prep: { label: 'Interview Prep', file: 'interview-prep.html', icon: '🎯', group: 'site', custom: 'interview_practical', blocks: [] },
     shortcuts: { label: 'Shortcuts', file: 'shortcuts.html', icon: '⌨️', group: 'site', blocks: [] },
     charts_pivots: { label: 'Charts & Pivots', file: 'charts-pivots.html', icon: '📈', group: 'site', blocks: [] },
     account: { label: 'Account', file: 'account.html', icon: '👤', group: 'account', blocks: [] },
@@ -1158,6 +1161,17 @@ criteria: The condition to match"></textarea>
 
   async function loadPageBlocks(page) {
     const wrap = document.getElementById('pcBlocksList');
+    const saveBtn = document.getElementById('pcSaveAllBtn');
+    const msgEl = document.getElementById('pcMessage');
+
+    if (PAGE_BLOCKS[page].custom === 'interview_practical') {
+      saveBtn.style.display = 'none';
+      msgEl.textContent = '';
+      renderInterviewPracticalManager(wrap);
+      return;
+    }
+    saveBtn.style.display = '';
+
     const blocks = PAGE_BLOCKS[page].blocks;
 
     if (blocks.length === 0) {
@@ -1171,23 +1185,205 @@ criteria: The condition to match"></textarea>
     const existing = {};
     (data || []).forEach(row => { existing[row.id] = row.content; });
 
-    wrap.innerHTML = blocks.map(block => `
-      <label>${block.label}</label>
-      <textarea data-block-id="${block.id}" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site text">${existing[block.id] || ''}</textarea>
-    `).join('');
+    wrap.innerHTML = blocks.map(block => {
+      const current = existing[block.id] || '';
+      if (block.type === 'image') {
+        return `
+          <label>${block.label}</label>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <img data-image-preview="${block.id}" src="${current || block.fallback || ''}" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:1px solid var(--grid-line); background:#f0f0f0;">
+            <div style="flex:1;">
+              <input type="text" data-block-id="${block.id}" value="${current}" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:6px;" placeholder="Image URL — or upload a file below">
+              <input type="file" accept="image/*" data-image-upload="${block.id}" style="font-size:12px;">
+              <div data-upload-status="${block.id}" style="font-size:11px; color:var(--ink-soft); margin-top:2px;"></div>
+            </div>
+          </div>
+        `;
+      }
+      if (block.type === 'text') {
+        return `
+          <label>${block.label}</label>
+          <input type="text" data-block-id="${block.id}" value="${current}" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site value">
+        `;
+      }
+      return `
+        <label>${block.label}</label>
+        <textarea data-block-id="${block.id}" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;" placeholder="Leave blank to keep the current site text">${current}</textarea>
+      `;
+    }).join('');
+
+    // Wire up any image-upload widgets on this page
+    wrap.querySelectorAll('[data-image-upload]').forEach(fileInput => {
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const blockId = fileInput.dataset.imageUpload;
+        const status = wrap.querySelector(`[data-upload-status="${blockId}"]`);
+        const urlField = wrap.querySelector(`input[data-block-id="${blockId}"]`);
+        const preview = wrap.querySelector(`[data-image-preview="${blockId}"]`);
+        status.textContent = 'Uploading...';
+
+        const fileName = `${blockId}_${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabaseClient.storage.from('avatars').upload(fileName, file, { upsert: true });
+        if (uploadError) {
+          status.textContent = 'Upload failed: ' + uploadError.message;
+          return;
+        }
+        const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+        urlField.value = urlData.publicUrl;
+        preview.src = urlData.publicUrl;
+        status.textContent = 'Uploaded — click Save Changes to publish.';
+      });
+    });
+  }
+
+  // ---------- Interview Prep: Practical Questions manager ----------
+  // Lets Rinkesh pick a formula, pick one of its already-built Question
+  // Builder questions, and write his own interview-style title/description
+  // around it. Saves to the interview_practical table.
+  async function renderInterviewPracticalManager(wrap) {
+    if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
+
+    wrap.innerHTML = `
+      <p class="sub" style="margin-top:0;">Pick a formula, then pick one of its already-built Question Builder questions — the card is built automatically from that.</p>
+
+      <label>Formula</label>
+      <select id="ipFormulaSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
+
+      <label>Question (from that formula's Question Builder questions)</label>
+      <select id="ipQuestionSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
+
+      <label>Icon (a single emoji)</label>
+      <input type="text" id="ipIcon" value="📊" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+
+      <button class="btn btn-primary" id="ipAddBtn" style="padding:8px 16px; font-size:12px;">+ Add Practical Question</button>
+      <div id="ipAddMessage" style="margin-top:10px; font-size:13px;"></div>
+
+      <h3 style="margin-top:28px;">Existing practical questions</h3>
+      <table class="admin-table" id="ipExistingTable">
+        <thead><tr><th>#</th><th>Title</th><th>Formula</th><th>Status</th><th></th></tr></thead>
+        <tbody id="ipExistingBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+      </table>
+    `;
+
+    const formulaSelect = document.getElementById('ipFormulaSelect');
+    formulaSelect.innerHTML = allFormulasAdmin.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+    async function loadQuestionOptions(formulaId) {
+      const qSelect = document.getElementById('ipQuestionSelect');
+      qSelect.innerHTML = '<option>Loading...</option>';
+      const { data } = await supabaseClient.from('formula_questions').select('id, task').eq('formula_id', formulaId).order('order_index');
+      if (!data || data.length === 0) {
+        qSelect.innerHTML = '<option value="">No questions built for this formula yet — build one in Question Builder first</option>';
+        return;
+      }
+      qSelect.innerHTML = data.map(q => `<option value="${q.id}">${q.task.length > 70 ? q.task.slice(0, 70) + '...' : q.task}</option>`).join('');
+    }
+
+    if (allFormulasAdmin.length > 0) loadQuestionOptions(formulaSelect.value);
+    formulaSelect.addEventListener('change', (e) => loadQuestionOptions(e.target.value));
+
+    async function loadExistingList() {
+      const body = document.getElementById('ipExistingBody');
+      const { data, error } = await supabaseClient.from('interview_practical').select('*, formulas(name)').order('order_index');
+
+      if (error) {
+        body.innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:16px;">No practical questions added yet.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = data.map((item, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${item.icon || ''} ${item.title}</td>
+          <td>${item.formulas ? item.formulas.name : '—'}</td>
+          <td>${item.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+          <td>
+            <button class="admin-mini-btn" data-toggle-ip="${item.id}" data-current="${item.enabled}">${item.enabled ? 'Disable' : 'Enable'}</button>
+            <button class="admin-mini-btn danger" data-delete-ip="${item.id}">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      body.querySelectorAll('[data-toggle-ip]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const current = btn.dataset.current === 'true';
+          await supabaseClient.from('interview_practical').update({ enabled: !current }).eq('id', btn.dataset.toggleIp);
+          loadExistingList();
+        });
+      });
+      body.querySelectorAll('[data-delete-ip]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this practical question?')) return;
+          await supabaseClient.from('interview_practical').delete().eq('id', btn.dataset.deleteIp);
+          loadExistingList();
+        });
+      });
+    }
+    loadExistingList();
+
+    document.getElementById('ipAddBtn').addEventListener('click', async () => {
+      const msg = document.getElementById('ipAddMessage');
+      const formulaId = formulaSelect.value;
+      const questionId = document.getElementById('ipQuestionSelect').value;
+      const icon = document.getElementById('ipIcon').value.trim() || '📊';
+
+      if (!questionId) {
+        msg.textContent = 'Pick a question — build one in Question Builder first if this formula has none.';
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      // Title and description come straight from what's already built —
+      // the question's task text is the title, the formula's own
+      // description is the framing text underneath.
+      const { data: qData, error: qError } = await supabaseClient.from('formula_questions').select('task').eq('id', questionId).maybeSingle();
+      if (qError || !qData) {
+        msg.textContent = qError ? qError.message : "Couldn't find that question.";
+        msg.style.color = '#B3261E';
+        return;
+      }
+      const formula = allFormulasAdmin.find(f => f.id === formulaId);
+      const title = qData.task;
+      const description = (formula && formula.description) || '';
+
+      const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
+
+      const { error } = await supabaseClient.from('interview_practical').insert({
+        icon, title, description,
+        formula_id: formulaId,
+        formula_question_id: questionId,
+        order_index: count || 0,
+        enabled: true
+      });
+
+      if (error) {
+        msg.textContent = error.message;
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      msg.textContent = 'Added!';
+      msg.style.color = 'var(--excel-green-deep)';
+      loadExistingList();
+    });
   }
 
   document.getElementById('pcSaveAllBtn').addEventListener('click', async () => {
     const msg = document.getElementById('pcMessage');
     const page = pcActivePage;
-    const textareas = document.querySelectorAll('#pcBlocksList textarea[data-block-id]');
+    const fields = document.querySelectorAll('#pcBlocksList [data-block-id]');
 
     const rows = [];
-    textareas.forEach(ta => {
-      const content = ta.value.trim();
+    fields.forEach(field => {
+      const content = field.value.trim();
       if (content) {
-        const blockDef = PAGE_BLOCKS[page].blocks.find(b => b.id === ta.dataset.blockId);
-        rows.push({ id: ta.dataset.blockId, page, label: blockDef.label, content });
+        const blockDef = PAGE_BLOCKS[page].blocks.find(b => b.id === field.dataset.blockId);
+        rows.push({ id: field.dataset.blockId, page, label: blockDef.label, content });
       }
     });
 
