@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Control — Learn With Rinkesh</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { background: #F4F3EE; }
+
+  .admin-shell {
+    display: flex;
+    min-height: calc(100vh - 60px);
+  }
+
+  .admin-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--excel-green-deep);
+    padding: 20px 0;
+  }
+  .admin-sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    color: rgba(255,255,255,0.75);
+    text-decoration: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+  }
+  .admin-sidebar a:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .admin-sidebar a.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: var(--amber); }
+  .admin-sidebar a.disabled { opacity: 0.4; cursor: default; }
+  .admin-sidebar a.disabled:hover { background: none; color: rgba(255,255,255,0.75); }
+
+  .admin-main { flex: 1; min-width: 0; padding: 30px 36px; }
+  .admin-main h1 { font-size: 24px; margin: 0 0 6px; }
+  .admin-main .sub { color: var(--ink-soft); font-size: 14px; margin: 0 0 24px; }
+
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .admin-stat-card {
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-top: 4px solid var(--excel-green);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .admin-stat-card .num { font-size: 28px; font-weight: 700; color: var(--excel-green-deep); font-family: 'IBM Plex Mono', monospace; }
+  .admin-stat-card .label { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .admin-panel {
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .admin-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .admin-panel-header input[type="text"] {
+    padding: 8px 14px;
+    border: 1px solid var(--grid-line);
+    border-radius: 18px;
+    font-size: 13px;
+    min-width: 220px;
+  }
+
+  table.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.admin-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #F0F5F1;
+    color: var(--excel-green-deep);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--grid-line);
+  }
+  table.admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--grid-line); vertical-align: middle; }
+  table.admin-table tr:hover { background: #F9F8F3; }
+
+  .admin-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .admin-badge.admin { background: #FDF1DC; color: #8a6414; }
+  .admin-badge.banned { background: #FBE6E2; color: #a13a2a; }
+  .admin-badge.ok { background: #E8F4EC; color: var(--excel-green-deep); }
+
+  .admin-mini-btn {
+    padding: 5px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--grid-line);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .admin-mini-btn.danger { color: #B3261E; border-color: #f0c0bb; }
+  .admin-mini-btn.danger:hover { background: #FBE6E2; }
+
+  .admin-locked {
+    max-width: 400px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 0 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh — Master Control
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Back to Site</a>
+    </nav>
+  </div>
+</div>
+
+<div id="lockedView" class="admin-locked" style="display:none;">
+  <div style="font-size:40px; margin-bottom:10px;">🔒</div>
+  <h2>Master Control is private</h2>
+  <p style="color:var(--ink-soft); font-size:14px;">This page is restricted to the site owner.</p>
+</div>
+
+<div id="adminShell" class="admin-shell" style="display:none;">
+  <div class="admin-sidebar">
+    <a data-view="dashboard" class="active">📊 Dashboard</a>
+    <a data-view="users">👥 Users</a>
+    <a class="disabled">🧮 Formulas (soon)</a>
+    <a class="disabled">📘 Articles (soon)</a>
+    <a class="disabled">💬 Chat Moderation (soon)</a>
+    <a class="disabled">📁 Case Studies (soon)</a>
+    <a class="disabled">📅 1-on-1 Bookings (soon)</a>
+  </div>
+
+  <div class="admin-main">
+    <div id="view-dashboard">
+      <h1>Dashboard</h1>
+      <p class="sub">A snapshot of the whole site.</p>
+      <div class="admin-stats-grid" id="statsGrid"></div>
+    </div>
+
+    <div id="view-users" style="display:none;">
+      <h1>Users</h1>
+      <p class="sub">Everyone registered on the site.</p>
+      <div class="admin-panel">
+        <div class="admin-panel-header">
+          <input type="text" id="userSearch" placeholder="🔍 Search by name, email, or username...">
+          <button class="btn btn-primary" id="exportUsersBtn" style="padding:8px 16px; font-size:12px;">⬇ Export as CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="admin-table" id="usersTable">
+            <thead>
+              <tr>
+                <th>Name</th><th>Username</th><th>Email</th><th>Age</th><th>Profession</th><th>Goal</th><th>Joined</th><th>Status</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  let allUsers = [];
+
+  async function checkAdminAccess() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+      return false;
+    }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (!profile || !profile.is_admin) {
+      document.getElementById('lockedView').style.display = 'block';
+      return false;
+    }
+
+    document.getElementById('adminShell').style.display = 'flex';
+    return true;
+  }
+
+  // ---------- Sidebar navigation ----------
+  document.querySelectorAll('.admin-sidebar a[data-view]').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.admin-sidebar a[data-view]').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+      document.querySelectorAll('.admin-main > div[id^="view-"]').forEach(v => v.style.display = 'none');
+      document.getElementById('view-' + link.dataset.view).style.display = 'block';
+    });
+  });
+
+  // ---------- Dashboard stats ----------
+  async function loadDashboard() {
+    const grid = document.getElementById('statsGrid');
+    grid.innerHTML = '<div class="admin-stat-card"><div class="num">...</div><div class="label">Loading</div></div>';
+
+    const [{ count: userCount }, { count: feedbackCount }, { count: chatCount }, { count: bannedCount }] = await Promise.all([
+      supabaseClient.from('profiles').select('*', { count: 'exact', head: true }),
+      supabaseClient.from('feedback').select('*', { count: 'exact', head: true }),
+      supabaseClient.from('chat_messages').select('*', { count: 'exact', head: true }),
+      supabaseClient.from('profiles').select('*', { count: 'exact', head: true }).eq('chat_banned', true)
+    ]);
+
+    grid.innerHTML = `
+      <div class="admin-stat-card"><div class="num">${userCount ?? '—'}</div><div class="label">Registered Users</div></div>
+      <div class="admin-stat-card"><div class="num">${feedbackCount ?? '—'}</div><div class="label">Feedback Submissions</div></div>
+      <div class="admin-stat-card"><div class="num">${chatCount ?? '—'}</div><div class="label">Chat Messages</div></div>
+      <div class="admin-stat-card"><div class="num">${bannedCount ?? '—'}</div><div class="label">Banned Chat Users</div></div>
+    `;
+  }
+
+  // ---------- Users table ----------
+  function renderUsersTable(users) {
+    const body = document.getElementById('usersTableBody');
+    if (users.length === 0) {
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-soft); padding:24px;">No users found.</td></tr>';
+      return;
+    }
+    body.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.name || '—'}</td>
+        <td>${u.username || '—'}</td>
+        <td>${u.email || '—'}</td>
+        <td>${u.age || '—'}</td>
+        <td>${u.profession || '—'}</td>
+        <td>${u.goal || '—'}</td>
+        <td>${u.joined_at ? new Date(u.joined_at).toLocaleDateString() : '—'}</td>
+        <td>
+          ${u.is_admin ? '<span class="admin-badge admin">Admin</span>' : ''}
+          ${u.chat_banned ? '<span class="admin-badge banned">Chat Banned</span>' : '<span class="admin-badge ok">OK</span>'}
+        </td>
+        <td>
+          ${!u.is_admin ? `<button class="admin-mini-btn danger" data-toggle-ban="${u.id}" data-current="${u.chat_banned}">${u.chat_banned ? 'Unban' : 'Ban from Chat'}</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-toggle-ban]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.toggleBan;
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('profiles').update({ chat_banned: !current }).eq('id', id);
+        loadUsers();
+      });
+    });
+  }
+
+  async function loadUsers() {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .order('joined_at', { ascending: false });
+
+    if (error) {
+      document.getElementById('usersTableBody').innerHTML = `<tr><td colspan="9">Couldn't load users: ${error.message}</td></tr>`;
+      return;
+    }
+
+    allUsers = data || [];
+    renderUsersTable(allUsers);
+  }
+
+  document.getElementById('userSearch').addEventListener('input', (e) => {
+    const term = e.target.value.trim().toLowerCase();
+    const filtered = !term ? allUsers : allUsers.filter(u =>
+      (u.name || '').toLowerCase().includes(term) ||
+      (u.email || '').toLowerCase().includes(term) ||
+      (u.username || '').toLowerCase().includes(term)
+    );
+    renderUsersTable(filtered);
+  });
+
+  document.getElementById('exportUsersBtn').addEventListener('click', () => {
+    const headers = ['Name', 'Username', 'Email', 'Age', 'Profession', 'Goal', 'Joined'];
+    const rows = allUsers.map(u => [
+      u.name || '', u.username || '', u.email || '', u.age || '', u.profession || '', u.goal || '',
+      u.joined_at ? new Date(u.joined_at).toLocaleDateString() : ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'learn-with-rinkesh-users.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ---------- Init ----------
+  (async function init() {
+    const ok = await checkAdminAccess();
+    if (!ok) return;
+    loadDashboard();
+    loadUsers();
+  })();
+</script>
+
+</body>
+</html>
