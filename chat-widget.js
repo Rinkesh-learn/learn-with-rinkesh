@@ -17,6 +17,21 @@
   const OPEN_STATE_KEY = 'lwr_chat_open_state';
   const THEME_KEY = 'lwr_chat_theme';
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '😢', '😮', '🙏'];
+
+  // Basic client-side offensive-language check before sending — not
+  // foolproof (no filter ever is), but catches the common, obvious
+  // cases and reminds people to be respectful before they post.
+  const OFFENSIVE_WORDS = [
+    'fuck','fucking','fucker','shit','bullshit','bitch','asshole','ass',
+    'bastard','dick','pussy','cunt','cock','whore','slut','nigger','nigga',
+    'faggot','retard','retarded','moron','idiot','stupid','dumbass',
+    'motherfucker','damn','crap','piss','screwyou','loser'
+  ];
+  function containsOffensiveLanguage(text) {
+    const lower = text.toLowerCase();
+    return OFFENSIVE_WORDS.some(w => new RegExp(`\\b${w}\\b`, 'i').test(lower));
+  }
+
   const COMPOSE_EMOJIS = [
     // Smileys
     '😀','😁','😂','🤣','😊','😇','🙂','😉','😍','🥰',
@@ -120,9 +135,29 @@
       <button class="btn btn-primary" id="chatSaveSettingsBtn" style="width:100%; margin-top:8px;">Save</button>
     </div>
     <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-report-panel" id="chatReportPanel">
+      <div class="chat-report-header">
+        <strong>Report this message</strong>
+        <button type="button" id="chatReportCloseBtn" class="chat-emoji-close" aria-label="Close">&times;</button>
+      </div>
+      <p class="chat-report-target" id="chatReportTarget"></p>
+      <label>Reason</label>
+      <select id="chatReportReason">
+        <option value="offensive">Offensive or vulgar language</option>
+        <option value="harassment">Harassment or bullying</option>
+        <option value="spam">Spam</option>
+        <option value="hate">Hate speech</option>
+        <option value="other">Other</option>
+      </select>
+      <label>Details (optional)</label>
+      <textarea id="chatReportDetails" rows="3" placeholder="Add any details that would help..."></textarea>
+      <button class="btn btn-primary" id="chatReportSubmitBtn" style="width:100%; margin-top:8px;">Submit Report</button>
+      <div id="chatReportMessage" style="font-size:12px; margin-top:6px;"></div>
+    </div>
     <div class="chat-emoji-panel" id="chatEmojiPanel">
       <div class="chat-emoji-grid" id="chatEmojiGrid"></div>
     </div>
+    <div id="chatComposeWarning" class="chat-compose-warning" style="display:none;"></div>
     <div class="chat-input-row">
       <label class="chat-attach-btn" title="Attach an image">
         📎<input type="file" id="chatImageInput" accept="image/*" style="display:none;">
@@ -151,7 +186,7 @@
 
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned')
+      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned, chat_banned_until')
       .eq('id', session.user.id)
       .maybeSingle();
 
@@ -159,11 +194,14 @@
       ? 'Anonymous'
       : (profile && (profile.chat_display_name || profile.name)) || session.user.email.split('@')[0];
 
+    const isBanned = !!(profile && profile.chat_banned) &&
+      (!profile.chat_banned_until || new Date(profile.chat_banned_until) > new Date());
+
     currentUser = {
       id: session.user.id,
       displayName: name,
       disclaimerSeen: !!(profile && profile.chat_disclaimer_seen),
-      banned: !!(profile && profile.chat_banned),
+      banned: isBanned,
       rawName: profile ? profile.chat_display_name : '',
       hideNameSetting: !!(profile && profile.chat_hide_name)
     };
@@ -404,26 +442,102 @@
     }
   }
 
+  function formatDateDivider(dateObj) {
+    const now = new Date();
+    const msgDay = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((today - msgDay) / 86400000);
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    return dateObj.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  let lastRenderedDateKey = null;
+
   function renderMessage(msg) {
     const container = document.getElementById('chatMessages');
+    const msgDate = new Date(msg.created_at);
+    const dateKey = msgDate.toDateString();
+    if (dateKey !== lastRenderedDateKey) {
+      lastRenderedDateKey = dateKey;
+      const divider = document.createElement('div');
+      divider.className = 'chat-date-divider';
+      divider.innerHTML = `<span>${formatDateDivider(msgDate)}</span>`;
+      container.appendChild(divider);
+    }
+
     const div = document.createElement('div');
     div.className = 'chat-msg';
     div.dataset.messageId = msg.id;
-    const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     div.innerHTML = `
-      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span></div>
+      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span> <button type="button" class="chat-report-icon" title="Report this message">🚩</button></div>
       ${msg.message ? `<div class="chat-msg-text">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
       ${renderReactionBar(msg.id)}
     `;
     container.appendChild(div);
     attachReactionHandlers(div, msg.id);
+    attachReportHandler(div, msg);
     container.scrollTop = container.scrollHeight;
   }
+
+  // ---------- Reporting a message/user ----------
+  const reportPanel = document.getElementById('chatReportPanel');
+  let reportTarget = null; // { messageId, userId, displayName }
+
+  function attachReportHandler(div, msg) {
+    const btn = div.querySelector('.chat-report-icon');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      if (!currentUser) {
+        loginPromptOverlay.classList.add('open');
+        return;
+      }
+      reportTarget = { messageId: msg.id, userId: msg.user_id, displayName: msg.display_name };
+      document.getElementById('chatReportTarget').textContent = `Reporting ${msg.display_name}'s message`;
+      document.getElementById('chatReportReason').value = 'offensive';
+      document.getElementById('chatReportDetails').value = '';
+      document.getElementById('chatReportMessage').textContent = '';
+      reportPanel.classList.add('open');
+      document.getElementById('chatEmojiPanel').classList.remove('open');
+      document.getElementById('chatEmojiBtn').textContent = '😊';
+    });
+  }
+
+  document.getElementById('chatReportCloseBtn').addEventListener('click', () => {
+    reportPanel.classList.remove('open');
+  });
+
+  document.getElementById('chatReportSubmitBtn').addEventListener('click', async () => {
+    if (!currentUser || !reportTarget) return;
+    const msgEl = document.getElementById('chatReportMessage');
+    const reason = document.getElementById('chatReportReason').value;
+    const details = document.getElementById('chatReportDetails').value.trim();
+
+    const { error } = await supabaseClient.from('chat_reports').insert({
+      message_id: reportTarget.messageId,
+      reported_by: currentUser.id,
+      reported_user_id: reportTarget.userId,
+      reason,
+      details: details || null
+    });
+
+    if (error) {
+      msgEl.textContent = 'Could not submit the report — try again.';
+      msgEl.style.color = '#B3261E';
+      return;
+    }
+
+    msgEl.textContent = "Thanks — we'll take a look.";
+    msgEl.style.color = 'var(--excel-green-deep)';
+    setTimeout(() => { reportPanel.classList.remove('open'); }, 1200);
+  });
 
   async function loadMessages() {
     const container = document.getElementById('chatMessages');
     container.innerHTML = '<div class="chat-loading">Loading chat...</div>';
+    lastRenderedDateKey = null;
     try {
       const { data, error } = await supabaseClient
         .from('chat_messages')
@@ -507,6 +621,14 @@
     const text = textInput.value.trim();
     if (!text && !pendingImageFile) return;
 
+    const warningEl = document.getElementById('chatComposeWarning');
+    if (text && containsOffensiveLanguage(text)) {
+      warningEl.textContent = "This message looks offensive — please be respectful in the community chat.";
+      warningEl.style.display = 'block';
+      return;
+    }
+    warningEl.style.display = 'none';
+
     let imageUrl = null;
     if (pendingImageFile) {
       try {
@@ -563,5 +685,8 @@
   document.getElementById('chatSendBtn').addEventListener('click', sendMessage);
   document.getElementById('chatTextInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') sendMessage();
+  });
+  document.getElementById('chatTextInput').addEventListener('input', () => {
+    document.getElementById('chatComposeWarning').style.display = 'none';
   });
 })();

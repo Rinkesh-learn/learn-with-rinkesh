@@ -413,8 +413,8 @@ criteria: The condition to match"></textarea>
       <div class="admin-panel">
         <h3 style="margin-top:0;">Reported messages</h3>
         <table class="admin-table">
-          <thead><tr><th>Message</th><th>Reported by</th><th>Reason</th><th>Reported</th><th></th></tr></thead>
-          <tbody id="chatReportsTableBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+          <thead><tr><th>Message</th><th>Reported User</th><th>Reason</th><th>Details</th><th>Reported</th><th></th></tr></thead>
+          <tbody id="chatReportsTableBody"><tr><td colspan="6">Loading...</td></tr></tbody>
         </table>
       </div>
 
@@ -616,7 +616,9 @@ criteria: The condition to match"></textarea>
       btn.addEventListener('click', async () => {
         const id = btn.dataset.toggleBan;
         const current = btn.dataset.current === 'true';
-        await supabaseClient.from('profiles').update({ chat_banned: !current }).eq('id', id);
+        const update = { chat_banned: !current };
+        if (current) update.chat_banned_until = null; // unbanning — clear any temp-ban expiry
+        await supabaseClient.from('profiles').update(update).eq('id', id);
         loadUsers();
       });
     });
@@ -2018,35 +2020,72 @@ criteria: The condition to match"></textarea>
   });
 
   // ---------- Chat Moderation ----------
+  const REPORT_REASON_LABELS = {
+    offensive: 'Offensive / vulgar language',
+    harassment: 'Harassment or bullying',
+    spam: 'Spam',
+    hate: 'Hate speech',
+    other: 'Other'
+  };
+
   async function loadChatReports() {
     const body = document.getElementById('chatReportsTableBody');
     const { data, error } = await supabaseClient
       .from('chat_reports')
-      .select('id, reason, created_at, status, message_id, chat_messages(message, display_name)')
+      .select('id, reason, details, created_at, status, message_id, reported_user_id, chat_messages(message, display_name)')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
     if (error) {
-      body.innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`;
       return;
     }
     if (!data || data.length === 0) {
-      body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No pending reports.</td></tr>';
       return;
     }
 
-    body.innerHTML = data.map(r => `
+    // Look up the reported users' names/emails in one batch instead of
+    // guessing at Supabase's auto-generated FK relationship name.
+    const userIds = [...new Set(data.map(r => r.reported_user_id).filter(Boolean))];
+    let userMap = {};
+    if (userIds.length > 0) {
+      const { data: users } = await supabaseClient.from('profiles').select('id, name, email').in('id', userIds);
+      (users || []).forEach(u => { userMap[u.id] = u; });
+    }
+
+    body.innerHTML = data.map(r => {
+      const reportedUser = userMap[r.reported_user_id];
+      return `
       <tr>
         <td>${r.chat_messages ? `<strong>${r.chat_messages.display_name}:</strong> ${r.chat_messages.message || '(image)'}` : '(message already deleted)'}</td>
-        <td>—</td>
-        <td>${r.reason || '—'}</td>
+        <td>${reportedUser ? (reportedUser.name || reportedUser.email) : '—'}</td>
+        <td>${REPORT_REASON_LABELS[r.reason] || r.reason || '—'}</td>
+        <td style="max-width:180px; white-space:normal;">${r.details || '—'}</td>
         <td>${new Date(r.created_at).toLocaleDateString()}</td>
         <td style="white-space:nowrap;">
-          <button class="admin-mini-btn" data-dismiss-report="${r.id}">Dismiss</button>
-          <button class="admin-mini-btn danger" data-delete-report="${r.id}" data-message-id="${r.message_id}">Delete Message</button>
+          <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+            <div>
+              <button class="admin-mini-btn" data-dismiss-report="${r.id}">Dismiss</button>
+              <button class="admin-mini-btn danger" data-delete-report="${r.id}" data-message-id="${r.message_id}">Delete Message</button>
+            </div>
+            ${r.reported_user_id ? `
+              <div style="display:flex; gap:4px;">
+                <select data-ban-duration="${r.reported_user_id}" style="font-size:11px; padding:3px;">
+                  <option value="7">1 week</option>
+                  <option value="15">15 days</option>
+                  <option value="30">1 month</option>
+                  <option value="90">3 months</option>
+                  <option value="permanent">Permanent</option>
+                </select>
+                <button class="admin-mini-btn danger" data-ban-user="${r.reported_user_id}" data-report-id="${r.id}">Ban User</button>
+              </div>
+            ` : ''}
+          </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
 
     body.querySelectorAll('[data-dismiss-report]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -2061,6 +2100,27 @@ criteria: The condition to match"></textarea>
           await supabaseClient.from('chat_messages').delete().eq('id', btn.dataset.messageId);
         }
         await supabaseClient.from('chat_reports').update({ status: 'reviewed' }).eq('id', btn.dataset.deleteReport);
+        loadChatReports();
+      });
+    });
+    body.querySelectorAll('[data-ban-user]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.banUser;
+        const select = body.querySelector(`[data-ban-duration="${userId}"]`);
+        const duration = select.value;
+        const label = select.options[select.selectedIndex].textContent;
+
+        if (!confirm(`Ban this user from chat for ${label}?`)) return;
+
+        let bannedUntil = null;
+        if (duration !== 'permanent') {
+          const d = new Date();
+          d.setDate(d.getDate() + parseInt(duration, 10));
+          bannedUntil = d.toISOString();
+        }
+
+        await supabaseClient.from('profiles').update({ chat_banned: true, chat_banned_until: bannedUntil }).eq('id', userId);
+        await supabaseClient.from('chat_reports').update({ status: 'reviewed' }).eq('id', btn.dataset.reportId);
         loadChatReports();
       });
     });
