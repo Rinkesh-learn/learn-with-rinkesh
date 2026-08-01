@@ -18,11 +18,28 @@
   const THEME_KEY = 'lwr_chat_theme';
   const REACTION_EMOJIS = ['👍', '❤️', '😂', '😢', '😮', '🙏'];
   const COMPOSE_EMOJIS = [
-    '😀','😂','🤣','😍','😘','😎','🤔','🙂','😅','😇',
-    '😢','😭','😮','😱','🥳','😴','🙄','😳','🤯','🥰',
-    '🙏','👍','👎','👏','🙌','🤝','💪','🤞','✌️','👋',
-    '🔥','🎉','❤️','💛','💙','💚','💜','🖤','💡','⭐',
-    '✅','❌','⚠️','❓','❗','💯','🎯','🏆','🚀','☕'
+    // Smileys
+    '😀','😁','😂','🤣','😊','😇','🙂','😉','😍','🥰',
+    '😘','😗','😋','😛','😜','🤪','😝','🤑','🤗','🤭',
+    '🤔','🤐','😐','😑','😶','😏','😒','🙄','😬','🤥',
+    '😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🥵',
+    '🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕',
+    '😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨',
+    '😰','😥','😢','😭','😱','😖','😣','😞','😓','😩',
+    '😫','🥱','😤','😡','😠','🤬','😈','👿','💀','👻',
+    // Gestures & people
+    '👋','🤚','🖐️','✋','🖖','👌','🤏','✌️','🤞','🤟',
+    '🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊',
+    '👊','🤛','🤜','👏','🙌','👐','🤲','🙏','✍️','💪',
+    // Hearts & symbols
+    '❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔',
+    '❣️','💕','💞','💓','💗','💖','💘','💝','💯','💢',
+    '💥','💫','💦','💨','🕳️','💣','💬','👁️‍🗨️','🗨️','🗯️',
+    // Fun & misc
+    '🔥','⭐','🌟','✨','🎉','🎊','🎈','🎁','🏆','🥇',
+    '⚡','☀️','🌈','☁️','❄️','🍀','🌸','🌺','🌻','🍎',
+    '☕','🍕','🍔','🍟','🍩','🍰','🎂','🍫','🍿','🥤',
+    '✅','❌','⚠️','❓','❗','🔔','🔒','🔓','📌','📍'
   ];
 
   // ---------- Shared disclaimer content ----------
@@ -75,8 +92,12 @@
   chatWindow.className = 'chat-window';
   chatWindow.innerHTML = `
     <div class="chat-header" id="chatHeader">
-      <span>💬 Community Chat</span>
-      <div>
+      <div class="chat-header-title">
+        <span class="chat-header-icon">💬</span>
+        <span>Community Chat</span>
+        <span class="chat-live-dot" title="Live"></span>
+      </div>
+      <div class="chat-header-actions">
         <button id="chatGuidelinesBtn" title="Community guidelines">&excl;</button>
         <button id="chatSettingsBtn" title="Chat settings">⚙️</button>
         <button id="chatMaximizeBtn" title="Maximize">⛶</button>
@@ -100,10 +121,6 @@
     </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-emoji-panel" id="chatEmojiPanel">
-      <div class="chat-emoji-header">
-        <span>Pick an emoji</span>
-        <button type="button" id="chatEmojiCloseBtn" class="chat-emoji-close" aria-label="Close">&times;</button>
-      </div>
       <div class="chat-emoji-grid" id="chatEmojiGrid"></div>
     </div>
     <div class="chat-input-row">
@@ -331,10 +348,8 @@
     });
   });
   document.getElementById('chatEmojiBtn').addEventListener('click', () => {
-    emojiPanel.classList.toggle('open');
-  });
-  document.getElementById('chatEmojiCloseBtn').addEventListener('click', () => {
-    emojiPanel.classList.remove('open');
+    const isOpen = emojiPanel.classList.toggle('open');
+    document.getElementById('chatEmojiBtn').textContent = isOpen ? '✕' : '😊';
   });
 
   // ---------- Messages ----------
@@ -542,6 +557,7 @@
     document.getElementById('chatImageInput').value = '';
     document.getElementById('chatImagePreviewRow').style.display = 'none';
     emojiPanel.classList.remove('open');
+    document.getElementById('chatEmojiBtn').textContent = '😊';
   }
 
   document.getElementById('chatSendBtn').addEventListener('click', sendMessage);
