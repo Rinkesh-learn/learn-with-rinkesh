@@ -334,7 +334,7 @@ criteria: The condition to match"></textarea>
       <p class="sub">Edit the actual text on each page. Blank fields keep the site's current default text.</p>
       <div class="admin-panel">
         <label>Pick a page</label>
-        <select id="pcPageSelect" style="width:100%; max-width:280px; padding:8px; margin-bottom:20px;"></select>
+        <div id="pcPageButtons" style="display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 20px;"></div>
         <div id="pcBlocksList"></div>
         <button class="btn btn-primary" id="pcSaveAllBtn" style="margin-top:10px;">Save Changes</button>
         <div id="pcMessage" style="margin-top:10px; font-size:13px;"></div>
@@ -1061,9 +1061,24 @@ criteria: The condition to match"></textarea>
     profile_setup: { label: 'Complete Profile', file: 'profile-setup.html', blocks: [] }
   };
 
+  let pcActivePage = null;
+
   function populatePageSelect() {
-    const select = document.getElementById('pcPageSelect');
-    select.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<option value="${p}">${PAGE_BLOCKS[p].label}</option>`).join('');
+    const wrap = document.getElementById('pcPageButtons');
+    wrap.innerHTML = Object.keys(PAGE_BLOCKS).map(p => `<button type="button" class="admin-mini-btn" data-page-btn="${p}">${PAGE_BLOCKS[p].label}</button>`).join('');
+    wrap.querySelectorAll('[data-page-btn]').forEach(btn => {
+      btn.addEventListener('click', () => selectPage(btn.dataset.pageBtn));
+    });
+  }
+
+  function selectPage(page) {
+    pcActivePage = page;
+    document.querySelectorAll('#pcPageButtons [data-page-btn]').forEach(btn => {
+      const isActive = btn.dataset.pageBtn === page;
+      btn.style.background = isActive ? 'var(--excel-green)' : '';
+      btn.style.color = isActive ? '#fff' : '';
+    });
+    loadPageBlocks(page);
   }
 
   async function loadPageBlocks(page) {
@@ -1087,13 +1102,9 @@ criteria: The condition to match"></textarea>
     `).join('');
   }
 
-  document.getElementById('pcPageSelect').addEventListener('change', (e) => {
-    loadPageBlocks(e.target.value);
-  });
-
   document.getElementById('pcSaveAllBtn').addEventListener('click', async () => {
     const msg = document.getElementById('pcMessage');
-    const page = document.getElementById('pcPageSelect').value;
+    const page = pcActivePage;
     const textareas = document.querySelectorAll('#pcBlocksList textarea[data-block-id]');
 
     const rows = [];
@@ -1129,7 +1140,7 @@ criteria: The condition to match"></textarea>
     loadUsers();
     loadFormulasAdmin();
     populatePageSelect();
-    loadPageBlocks('about');
+    selectPage('about');
   })();
 </script>
 
