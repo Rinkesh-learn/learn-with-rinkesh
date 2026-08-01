@@ -1254,6 +1254,20 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbPhase1Controls').style.display = 'block';
     document.getElementById('qbAnswerSheetContainer').style.display = 'none';
     document.getElementById('qbSheetContainer').style.display = 'block';
+
+    // Luckysheet only ever has one live instance — creating the Answer
+    // Sheet earlier tore down the Question Sheet's rendering. Re-create it
+    // here from the data captured after Phase 1, so it's not just blank.
+    if (window.luckysheet && window.luckysheet.destroy) {
+      try { luckysheet.destroy(); } catch (e) {}
+    }
+    luckysheet.create({
+      container: 'qbSheetContainer',
+      lang: 'en',
+      showinfobar: false,
+      data: [{ name: 'Question', celldata: gridToCelldata(qbQuestionGrid || []), row: 40, column: 20, status: 1 }]
+    });
+    qbSheetReady = true;
   }
   document.getElementById('qbBackBtn').addEventListener('click', backToPhase1);
 
