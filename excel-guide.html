@@ -203,17 +203,27 @@
   .ribbon-tab.active { background: var(--excel-green); color: #fff; font-weight: 700; }
 
   /* ---- Presentation trigger card + popup ---- */
+  .hub-hero { padding-top: 10px !important; }
+  .hub-hero-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+  }
+  .hub-hero-text h1 { margin: 0 0 4px; }
+  .hub-hero-text p { margin: 0; }
+  .hub-search-wrap { margin: 0 auto; }
+
   .hub-present-card {
     display: flex;
     align-items: center;
-    gap: 14px;
-    width: 360px;
-    max-width: 100%;
-    margin: 0 auto 22px;
-    padding: 16px 20px;
+    gap: 12px;
+    width: 280px;
+    flex-shrink: 0;
+    padding: 12px 16px;
     background: linear-gradient(135deg, #EAF4EC, #FFFFFF);
     border: 1px solid var(--grid-line);
-    border-radius: 18px;
+    border-radius: 16px;
     box-shadow: 0 8px 22px rgba(28,35,33,0.10);
     cursor: pointer;
     font-family: inherit;
@@ -230,7 +240,7 @@
     50% { transform: translateY(-6px); }
   }
   .hub-present-icon {
-    font-size: 30px;
+    font-size: 26px;
     flex-shrink: 0;
     line-height: 1;
   }
@@ -241,17 +251,22 @@
     flex: 1;
   }
   .hub-present-body strong {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--ink);
   }
   .hub-present-body span {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--ink-soft);
   }
   .hub-present-arrow {
     font-size: 13px;
     color: var(--excel-green);
     flex-shrink: 0;
+  }
+
+  @media (max-width: 720px) {
+    .hub-hero-top { flex-direction: column; align-items: stretch; }
+    .hub-present-card { width: 100%; box-sizing: border-box; }
   }
 
   .presentation-overlay {
@@ -326,17 +341,20 @@
 </div>
 
 <div class="hub-hero">
-  <button class="hub-present-card" id="togglePresentationBtn" type="button">
-    <span class="hub-present-icon">📊</span>
-    <span class="hub-present-body">
-      <strong>Excel Basics, Visually</strong>
-      <span>A quick slide walkthrough before you dive in</span>
-    </span>
-    <span class="hub-present-arrow">▶</span>
-  </button>
-
-  <h1 id="pc-excel_guide-hero-title">Learn Excel — the knowledge hub</h1>
-  <p id="pc-excel_guide-hero-subtitle">Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
+  <div class="hub-hero-top">
+    <button class="hub-present-card" id="togglePresentationBtn" type="button">
+      <span class="hub-present-icon">📊</span>
+      <span class="hub-present-body">
+        <strong>Excel Basics, Visually</strong>
+        <span>A quick slide walkthrough before you dive in</span>
+      </span>
+      <span class="hub-present-arrow">▶</span>
+    </button>
+    <div class="hub-hero-text">
+      <h1 id="pc-excel_guide-hero-title">Learn Excel — the knowledge hub</h1>
+      <p id="pc-excel_guide-hero-subtitle">Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
+    </div>
+  </div>
   <div class="hub-search-wrap">
     <span class="hub-search-icon">🔍</span>
     <input type="text" id="hubSearch" placeholder="Search articles or keywords...">
@@ -371,6 +389,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="excel-articles-data.js"></script>
 <script>
   document.getElementById('togglePresentationBtn').addEventListener('click', () => {
     document.getElementById('presentationOverlay').classList.add('open');
@@ -390,13 +409,13 @@
 
   // Articles now come from Master Control's Articles manager (Supabase),
   // not a hardcoded file — this loads them once on page load.
-  let ARTICLES = [];
+  let LIVE_ARTICLES = [];
   let currentArticleId = null;
 
   function renderHubSidebar(term) {
     term = (term || '').trim().toLowerCase();
     const sidebar = document.getElementById('hubSidebar');
-    const filtered = ARTICLES.filter(a =>
+    const filtered = LIVE_ARTICLES.filter(a =>
       !term || a.title.toLowerCase().includes(term) || a.shortDesc.toLowerCase().includes(term) || (a.keywords || '').toLowerCase().includes(term)
     );
 
@@ -430,11 +449,11 @@
 
   function renderHubArticle() {
     const main = document.getElementById('hubMain');
-    if (ARTICLES.length === 0) {
+    if (LIVE_ARTICLES.length === 0) {
       main.innerHTML = '<p style="color:var(--ink-soft);">Articles coming soon.</p>';
       return;
     }
-    const article = ARTICLES.find(a => a.id === currentArticleId) || ARTICLES[0];
+    const article = LIVE_ARTICLES.find(a => a.id === currentArticleId) || LIVE_ARTICLES[0];
     main.innerHTML = `
       <h1 class="hub-article-title">${article.title}</h1>
       <p class="hub-article-keywords">${article.keywords || ''}</p>
@@ -449,25 +468,33 @@
   });
 
   (async function loadArticles() {
-    const { data } = await supabaseClient
-      .from('articles')
-      .select('*')
-      .eq('enabled', true)
-      .order('order_index');
+    let fromDb = [];
+    try {
+      const { data } = await supabaseClient
+        .from('articles')
+        .select('*')
+        .eq('enabled', true)
+        .order('order_index');
 
-    ARTICLES = (data || []).map(a => ({
-      id: a.slug,
-      title: a.title,
-      shortDesc: a.short_desc,
-      keywords: a.keywords,
-      icon: a.icon || '📄',
-      videoUrl: a.video_url,
-      visual1: a.visual1,
-      visual2: a.visual2,
-      content: a.content
-    }));
+      fromDb = (data || []).map(a => ({
+        id: a.slug,
+        title: a.title,
+        shortDesc: a.short_desc,
+        keywords: a.keywords,
+        icon: a.icon || '📄',
+        videoUrl: a.video_url,
+        visual1: a.visual1,
+        visual2: a.visual2,
+        content: a.content
+      }));
+    } catch (e) { /* fall through to the built-in articles below */ }
 
-    if (ARTICLES.length > 0) currentArticleId = ARTICLES[0].id;
+    // Falls back to the original built-in articles (from
+    // excel-articles-data.js) if Master Control's articles table is
+    // empty or not set up yet — so this page never just goes blank.
+    LIVE_ARTICLES = fromDb.length > 0 ? fromDb : (typeof ARTICLES !== 'undefined' ? ARTICLES : []);
+
+    if (LIVE_ARTICLES.length > 0) currentArticleId = LIVE_ARTICLES[0].id;
     renderHubSidebar('');
     renderHubArticle();
   })();
