@@ -498,9 +498,16 @@ function colLetter(i) { return String.fromCharCode(65 + i); }
 
 function buildCelldata(question) {
   const cells = [];
+  const targetCells = new Set();
+  if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
+    question.expectedCells.forEach(c => targetCells.add(`${c.r},${c.c}`));
+  } else {
+    targetCells.add(`${question.targetRow},${question.targetCol}`);
+  }
+
   question.grid.forEach((row, r) => {
     row.forEach((val, c) => {
-      const isTarget = r === question.targetRow && c === question.targetCol;
+      const isTarget = targetCells.has(`${r},${c}`);
       if (isTarget) {
         cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
       } else if (val !== null && val !== '') {
@@ -555,10 +562,13 @@ function startPractice(formula, qIndex) {
   renderList();
 
   const question = formula.questions[qIndex];
-  const targetLabel = colLetter(question.targetCol) + (question.targetRow + 1);
+  const isRangeQ = question.answerMode === 'range' && question.expectedCells && question.expectedCells.length;
+  const targetLabel = isRangeQ
+    ? `the ${question.expectedCells.length} highlighted cells`
+    : colLetter(question.targetCol) + (question.targetRow + 1);
 
   document.getElementById('activeTitle').textContent = formula.name;
-  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong> Write your formula in the yellow cell (${targetLabel}).`;
+  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong> Write your formula in ${isRangeQ ? targetLabel : 'the yellow cell (' + targetLabel + ')'}.`;
   document.getElementById('checkBtn').style.display = 'inline-block';
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
@@ -576,6 +586,50 @@ function unwrapValue(raw) {
 
 function checkAnswer(question) {
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
+
+  if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
+    let anyEmpty = false, anyUnconfirmed = false, anyError = false, allMatch = true;
+
+    question.expectedCells.forEach(cell => {
+      let value;
+      try {
+        value = luckysheet.getCellValue(cell.r, cell.c);
+        value = unwrapValue(value);
+      } catch (e) { value = null; }
+
+      if (value === null || value === undefined || value === '') { anyEmpty = true; return; }
+      if (typeof value === 'string' && value.trim().startsWith('=')) { anyUnconfirmed = true; return; }
+      if (typeof value === 'string' && value.startsWith('#')) { anyError = true; return; }
+
+      const expNum = Number(cell.value);
+      const isMatch = (cell.value !== '' && !isNaN(expNum))
+        ? Number(value) === expNum
+        : String(value).trim().toLowerCase() === String(cell.value).trim().toLowerCase();
+      if (!isMatch) allMatch = false;
+    });
+
+    if (anyEmpty) {
+      showResultModal({ correct: false, html: 'Fill in all the highlighted cells first, then click outside before checking.' });
+      return;
+    }
+    if (anyUnconfirmed) {
+      showResultModal({ correct: false, html: 'Click outside the cells (or press Enter) to confirm your formulas, then check again.' });
+      return;
+    }
+    if (anyError) {
+      showResultModal({ correct: false, html: "One or more cells show an error — check your formula's cell references and arguments." });
+      return;
+    }
+
+    if (allMatch) {
+      if (currentFormula) { practicedFormulas.add(currentFormula.id); renderList(); }
+      const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
+      showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Every cell matches!` });
+    } else {
+      showResultModal({ correct: false, html: "Not quite — one or more of the highlighted cells doesn't match yet. Try again!" });
+    }
+    return;
+  }
 
   let value;
   try {
@@ -602,7 +656,7 @@ function checkAnswer(question) {
   }
 
   const isCorrect = question.expectedType === 'number'
-    ? Number(value) === question.expectedValue
+    ? Number(value) === Number(question.expectedValue)
     : String(value).trim().toLowerCase() === String(question.expectedValue).trim().toLowerCase();
 
   if (isCorrect) {
@@ -624,18 +678,41 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 
 renderList();
 
+// Pull in questions built in Master Control's Question Builder and merge
+// them into each formula's question list (in addition to any built-in
+// ones already here), converting each row into the same shape used above.
+async function loadAdminQuestions() {
+  try {
+    const { data } = await supabaseClient.from('formula_questions').select('*').eq('enabled', true);
+    (data || []).forEach(q => {
+      const f = FORMULAS.find(x => x.id === q.formula_id);
+      if (!f) return;
+      if (!f.questions) f.questions = [];
+      f.questions.push({
+        task: q.task,
+        targetRow: q.target_row,
+        targetCol: q.target_col,
+        expectedValue: q.expected_value,
+        expectedType: q.expected_type || 'text',
+        grid: q.grid,
+        answerMode: q.answer_mode || 'single',
+        expectedCells: q.expected_cells || null
+      });
+    });
+  } catch (e) { /* keep working with the built-in questions only */ }
+}
+
 // Pull in which formulas Rinkesh has marked "Popular" from Master Control.
 // Falls back to the built-in list above if this fails for any reason.
-(async function loadPopularFromAdmin() {
+async function loadPopularFromAdmin() {
   try {
     const { data } = await supabaseClient.from('formulas').select('id').eq('popular', true);
     if (data && data.length > 0) {
       POPULAR_FORMULA_IDS.clear();
       data.forEach(row => POPULAR_FORMULA_IDS.add(row.id));
-      renderList();
     }
   } catch (e) { /* keep the built-in popular list on any failure */ }
-})();
+}
 
 // Hide the current page's own link in the quicklinks strip
 (function() {
@@ -648,7 +725,14 @@ renderList();
 })();
 
 window.addEventListener('load', () => {
-  setTimeout(() => {
+  setTimeout(async () => {
+    // Load admin data BEFORE deciding what to show — otherwise a formula
+    // opened straight from a link (e.g. Interview Prep) could render as
+    // "no practice questions yet" for a split second before catching up,
+    // or worse, permanently if the auto-open logic ran first.
+    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin()]);
+    renderList();
+
     const params = new URLSearchParams(window.location.search);
     const requested = params.get('formula');
     const match = requested ? FORMULAS.find(f => f.id === requested) : null;
