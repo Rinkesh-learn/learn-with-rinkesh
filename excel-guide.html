@@ -173,16 +173,8 @@
     margin-right: auto;
   }
 
-  .guide-topbtn {
-    position: fixed;
-    top: 76px;
-    right: 24px;
-    z-index: 50;
-  }
-
   @media (max-width: 720px) {
     .guide-card { padding: 28px; min-height: auto; }
-    .guide-topbtn { position: static; margin: 0 auto 16px; display: block; text-align: center; }
   }
 
   /* mini grid illustration */
@@ -209,6 +201,102 @@
     color: var(--ink-soft);
   }
   .ribbon-tab.active { background: var(--excel-green); color: #fff; font-weight: 700; }
+
+  /* ---- Presentation trigger card + popup ---- */
+  .hub-present-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 360px;
+    max-width: 100%;
+    margin: 0 auto 22px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #EAF4EC, #FFFFFF);
+    border: 1px solid var(--grid-line);
+    border-radius: 18px;
+    box-shadow: 0 8px 22px rgba(28,35,33,0.10);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    animation: presentFloat 3.5s ease-in-out infinite;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hub-present-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 14px 30px rgba(28,35,33,0.16);
+  }
+  @keyframes presentFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .hub-present-icon {
+    font-size: 30px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .hub-present-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .hub-present-body strong {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .hub-present-body span {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .hub-present-arrow {
+    font-size: 13px;
+    color: var(--excel-green);
+    flex-shrink: 0;
+  }
+
+  .presentation-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,35,33,0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 16px;
+  }
+  .presentation-overlay.open { display: flex; }
+  .presentation-box {
+    background: #fff;
+    border-radius: var(--radius);
+    max-width: 760px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+    animation: presentPop 0.3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes presentPop {
+    from { opacity: 0; transform: scale(0.92) translateY(14px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .presentation-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #F0F5F1;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .presentation-close-btn:hover { background: #E3ECE5; }
+
+  .presentation-box .guide-shell { margin: 0; padding: 0; }
+  .presentation-box .guide-card { min-height: 320px; box-shadow: none; }
 </style>
 </head>
 <body>
@@ -238,6 +326,15 @@
 </div>
 
 <div class="hub-hero">
+  <button class="hub-present-card" id="togglePresentationBtn" type="button">
+    <span class="hub-present-icon">📊</span>
+    <span class="hub-present-body">
+      <strong>Excel Basics, Visually</strong>
+      <span>A quick slide walkthrough before you dive in</span>
+    </span>
+    <span class="hub-present-arrow">▶</span>
+  </button>
+
   <h1 id="pc-excel_guide-hero-title">Learn Excel — the knowledge hub</h1>
   <p id="pc-excel_guide-hero-subtitle">Macros, filters, formatting, data types, errors, and everything else beyond formulas — real guides on how to practice Excel online and actually get good at it, not just read about it.</p>
   <div class="hub-search-wrap">
@@ -246,22 +343,21 @@
   </div>
 </div>
 
-<div class="hub-presentation-toggle">
-  <button class="hub-presentation-btn" id="togglePresentationBtn">▶ Open the Excel Basics Presentation</button>
-</div>
+<div class="presentation-overlay" id="presentationOverlay">
+  <div class="presentation-box">
+    <button class="presentation-close-btn" id="presentationCloseBtn" aria-label="Close">&times;</button>
+    <a href="practice.html" class="btn btn-primary" style="display:inline-block; margin-bottom:16px;">Start Practicing &rarr;</a>
 
-<div id="presentationWrap">
-  <a href="practice.html" class="btn btn-primary guide-topbtn">Start Practicing &rarr;</a>
-
-  <div class="guide-shell">
-    <div class="guide-progress" id="guideProgress"></div>
-    <div class="guide-card" id="guideCard"></div>
-    <div class="guide-nav-row">
-      <button class="btn btn-ghost" id="prevBtn">&larr; Back</button>
-      <span id="slideCounter" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);"></span>
-      <button class="btn btn-primary" id="nextBtn">Next &rarr;</button>
+    <div class="guide-shell">
+      <div class="guide-progress" id="guideProgress"></div>
+      <div class="guide-card" id="guideCard"></div>
+      <div class="guide-nav-row">
+        <button class="btn btn-ghost" id="prevBtn">&larr; Back</button>
+        <span id="slideCounter" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft);"></span>
+        <button class="btn btn-primary" id="nextBtn">Next &rarr;</button>
+      </div>
     </div>
-</div>
+  </div>
 </div>
 
 <div class="hub-layout">
@@ -273,23 +369,35 @@
   Learn With Rinkesh — built one cell at a time.
 </footer>
 
-<script src="excel-articles-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   document.getElementById('togglePresentationBtn').addEventListener('click', () => {
-    const wrap = document.getElementById('presentationWrap');
-    const btn = document.getElementById('togglePresentationBtn');
-    wrap.classList.toggle('open');
-    btn.textContent = wrap.classList.contains('open') ? '▲ Hide the Presentation' : '▶ Open the Excel Basics Presentation';
-    if (wrap.classList.contains('open')) render();
+    document.getElementById('presentationOverlay').classList.add('open');
+    render();
   });
 
-  let currentArticleId = ARTICLES[0].id;
+  function closePresentation() {
+    document.getElementById('presentationOverlay').classList.remove('open');
+  }
+  document.getElementById('presentationCloseBtn').addEventListener('click', closePresentation);
+  document.getElementById('presentationOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'presentationOverlay') closePresentation();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closePresentation();
+  });
+
+  // Articles now come from Master Control's Articles manager (Supabase),
+  // not a hardcoded file — this loads them once on page load.
+  let ARTICLES = [];
+  let currentArticleId = null;
 
   function renderHubSidebar(term) {
     term = (term || '').trim().toLowerCase();
     const sidebar = document.getElementById('hubSidebar');
     const filtered = ARTICLES.filter(a =>
-      !term || a.title.toLowerCase().includes(term) || a.shortDesc.toLowerCase().includes(term) || a.keywords.toLowerCase().includes(term)
+      !term || a.title.toLowerCase().includes(term) || a.shortDesc.toLowerCase().includes(term) || (a.keywords || '').toLowerCase().includes(term)
     );
 
     if (filtered.length === 0) {
@@ -321,14 +429,18 @@
   }
 
   function renderHubArticle() {
-    const article = ARTICLES.find(a => a.id === currentArticleId) || ARTICLES[0];
     const main = document.getElementById('hubMain');
+    if (ARTICLES.length === 0) {
+      main.innerHTML = '<p style="color:var(--ink-soft);">Articles coming soon.</p>';
+      return;
+    }
+    const article = ARTICLES.find(a => a.id === currentArticleId) || ARTICLES[0];
     main.innerHTML = `
       <h1 class="hub-article-title">${article.title}</h1>
-      <p class="hub-article-keywords">${article.keywords}</p>
-      <div class="hub-visual-block">${article.visual1}</div>
+      <p class="hub-article-keywords">${article.keywords || ''}</p>
+      ${article.visual1 ? `<div class="hub-visual-block">${article.visual1}</div>` : ''}
       <div class="hub-article-body">${article.content}</div>
-      <div class="hub-visual-block">${article.visual2}</div>
+      ${article.visual2 ? `<div class="hub-visual-block">${article.visual2}</div>` : ''}
     `;
   }
 
@@ -336,8 +448,29 @@
     renderHubSidebar(e.target.value);
   });
 
-  renderHubSidebar('');
-  renderHubArticle();
+  (async function loadArticles() {
+    const { data } = await supabaseClient
+      .from('articles')
+      .select('*')
+      .eq('enabled', true)
+      .order('order_index');
+
+    ARTICLES = (data || []).map(a => ({
+      id: a.slug,
+      title: a.title,
+      shortDesc: a.short_desc,
+      keywords: a.keywords,
+      icon: a.icon || '📄',
+      videoUrl: a.video_url,
+      visual1: a.visual1,
+      visual2: a.visual2,
+      content: a.content
+    }));
+
+    if (ARTICLES.length > 0) currentArticleId = ARTICLES[0].id;
+    renderHubSidebar('');
+    renderHubArticle();
+  })();
 </script>
 
 <script>
@@ -804,8 +937,6 @@ document.addEventListener('keydown', (e) => {
 render();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
 <script>
   (async function loadPageContent() {
     try {
