@@ -68,7 +68,7 @@
   chatWindow.id = 'chatWindow';
   chatWindow.className = 'chat-window';
   chatWindow.innerHTML = `
-    <div class="chat-header">
+    <div class="chat-header" id="chatHeader">
       <span>💬 Community Chat</span>
       <div>
         <button id="chatGuidelinesBtn" title="Community guidelines">&excl;</button>
@@ -211,6 +211,53 @@
       chatWindow.style.height = '';
     }
   });
+
+  // ---------- Drag to reposition ----------
+  // Switches the window from right/bottom anchoring to left/top anchoring
+  // the first time it's dragged, so it can be freely moved and isn't
+  // stuck pinned to one corner while resizing from the opposite corner.
+  (function enableDrag() {
+    const header = document.getElementById('chatHeader');
+    let dragging = false;
+    let startX, startY, startLeft, startTop;
+
+    header.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button')) return; // don't drag when clicking header buttons
+      dragging = true;
+      const rect = chatWindow.getBoundingClientRect();
+      // Switch to left/top anchoring so dragging has something to move
+      chatWindow.style.left = rect.left + 'px';
+      chatWindow.style.top = rect.top + 'px';
+      chatWindow.style.right = 'auto';
+      chatWindow.style.bottom = 'auto';
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = rect.left;
+      startTop = rect.top;
+      header.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      let newLeft = startLeft + dx;
+      let newTop = startTop + dy;
+      // Keep it on-screen
+      newLeft = Math.max(0, Math.min(window.innerWidth - 80, newLeft));
+      newTop = Math.max(0, Math.min(window.innerHeight - 40, newTop));
+      chatWindow.style.left = newLeft + 'px';
+      chatWindow.style.top = newTop + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (dragging) {
+        dragging = false;
+        header.style.cursor = 'grab';
+      }
+    });
+  })();
 
   // Stay open across page navigation until explicitly minimized.
   // Small delay so Supabase's auth session has time to fully restore

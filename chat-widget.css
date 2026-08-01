@@ -63,13 +63,18 @@
   right: 24px;
   width: 340px;
   height: 480px;
+  min-width: 300px;
+  min-height: 320px;
+  max-width: 96vw;
+  max-height: 92vh;
   background: #fff;
   border-radius: var(--radius);
   border: 1px solid var(--grid-line);
   box-shadow: 0 16px 40px rgba(0,0,0,0.2);
   z-index: 1000000;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
+  resize: both;
 }
 .chat-window.open { display: flex; animation: fbPop 0.3s cubic-bezier(.34,1.56,.64,1); }
 
@@ -102,6 +107,8 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 13px;
   font-weight: 700;
+  cursor: grab;
+  user-select: none;
 }
 .chat-header button {
   background: rgba(255,255,255,0.2);
