@@ -28,18 +28,18 @@
 
 <div class="ab-hero">
   <img src="rinkesh-photo.jpg" alt="Rinkesh Shah" class="ab-avatar-img">
-  <h1>Meet Rinkesh Shah.</h1>
+  <h1 id="pc-about-hero-title">Meet Rinkesh Shah.</h1>
   <p class="ab-tagline">Learn With Rinkesh teaches Excel the way it's actually used at work — real formulas, real corporate scenarios, real practice. Not another course that stops at theory.</p>
 </div>
 
 <div class="ab-section" id="abWhy">
   <h2>Why this exists</h2>
-  <p>Most Excel content either stays too basic to matter at work, or jumps into advanced tricks nobody explains properly. This platform was built to close that gap — real formulas, real corporate scenarios, and an actual spreadsheet to practice in, not a multiple-choice quiz. The goal is simple: get comfortable enough to open a blank sheet at work and actually build something.</p>
+  <p id="pc-about-why-text">Most Excel content either stays too basic to matter at work, or jumps into advanced tricks nobody explains properly. This platform was built to close that gap — real formulas, real corporate scenarios, and an actual spreadsheet to practice in, not a multiple-choice quiz. The goal is simple: get comfortable enough to open a blank sheet at work and actually build something.</p>
 </div>
 
 <div class="ab-section" id="abMe">
   <h2>About the Developer</h2>
-  <p>Behind Learn With Rinkesh is Rinkesh Shah, a Business Analyst with 5+ years of experience in the data industry across US Logistics, Healthcare Revenue Cycle Management (RCM), and Legal &amp; Business Process Automation. With expertise in Microsoft Excel, Power BI, SQL, Excel Reporting, Dashboard Development, Report Automation, Data Analysis, MIS Reporting, MS Power Apps, and MS Power Automate, Rinkesh has worked on streamlining business processes, building interactive reports and dashboards, automating workflows, and delivering data-driven solutions that improve efficiency and support better business decisions.</p>
+  <p id="pc-about-bio-text">Behind Learn With Rinkesh is Rinkesh Shah, a Business Analyst with 5+ years of experience in the data industry across US Logistics, Healthcare Revenue Cycle Management (RCM), and Legal &amp; Business Process Automation. With expertise in Microsoft Excel, Power BI, SQL, Excel Reporting, Dashboard Development, Report Automation, Data Analysis, MIS Reporting, MS Power Apps, and MS Power Automate, Rinkesh has worked on streamlining business processes, building interactive reports and dashboards, automating workflows, and delivering data-driven solutions that improve efficiency and support better business decisions.</p>
 
   <div class="ab-timeline">
     <div class="ab-tl-step">
@@ -156,6 +156,19 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  // Pull in any edits made from Master Control's Page Editor.
+  // Falls back to the text already in the HTML if nothing's been edited yet.
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'about');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (el) el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep the default text on any failure */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
