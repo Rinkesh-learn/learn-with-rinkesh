@@ -94,6 +94,8 @@
 <script src="formulas-data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 
 <script>
 const CELEBRATIONS = [
@@ -622,6 +624,19 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 
 renderList();
 
+// Pull in which formulas Rinkesh has marked "Popular" from Master Control.
+// Falls back to the built-in list above if this fails for any reason.
+(async function loadPopularFromAdmin() {
+  try {
+    const { data } = await supabaseClient.from('formulas').select('id').eq('popular', true);
+    if (data && data.length > 0) {
+      POPULAR_FORMULA_IDS.clear();
+      data.forEach(row => POPULAR_FORMULA_IDS.add(row.id));
+      renderList();
+    }
+  } catch (e) { /* keep the built-in popular list on any failure */ }
+})();
+
 // Hide the current page's own link in the quicklinks strip
 (function() {
   const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -652,8 +667,6 @@ window.addEventListener('load', () => {
 });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
