@@ -638,6 +638,7 @@ function startFreePractice(formula) {
   document.getElementById('questionNavGroup').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet(formula.name, []);
+  document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function startPractice(formula, qIndex) {
