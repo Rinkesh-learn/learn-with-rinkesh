@@ -99,6 +99,62 @@
   table.admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--grid-line); vertical-align: middle; }
   table.admin-table tr:hover { background: #F9F8F3; }
 
+  .col-filter-btn {
+    cursor: pointer;
+    margin-left: 3px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .col-filter-btn:hover, .col-filter-btn.active { background: var(--excel-green); color: #fff; }
+  .col-filter-dropdown {
+    display: none;
+    position: absolute;
+    z-index: 500;
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(28,35,33,0.18);
+    padding: 8px;
+    min-width: 160px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-family: inherit;
+    text-transform: none;
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .col-filter-dropdown.open { display: block; }
+  .col-filter-dropdown label { display: flex; align-items: center; gap: 6px; padding: 3px 2px; font-weight: 400; cursor: pointer; }
+  .col-filter-dropdown label input { width: auto; }
+  .col-filter-dropdown .cf-actions { display: flex; gap: 6px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--grid-line); }
+  .col-filter-dropdown .cf-actions button { font-size: 10px; padding: 2px 6px; }
+
+  .formula-name-btn {
+    background: none;
+    border: none;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--excel-green-deep);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    padding: 0;
+  }
+  .formula-name-btn:hover { color: var(--excel-green); }
+  .formula-accordion-row td { background: #EAF4EC; padding: 14px 16px; border-bottom: 2px solid var(--excel-green); }
+  .formula-accordion-item {
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .formula-accordion-item .fa-task { font-size: 12px; margin-bottom: 6px; }
+  .formula-accordion-item .fa-actions button { font-size: 11px; padding: 3px 8px; margin-right: 4px; }
+
   .admin-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
   .admin-badge.admin { background: #FDF1DC; color: #8a6414; }
   .admin-badge.banned { background: #FBE6E2; color: #a13a2a; }
@@ -201,17 +257,24 @@
           <div class="admin-panel-header">
             <input type="text" id="formulaSearchAdmin" placeholder="🔍 Search formulas...">
             <div style="display:flex; gap:8px; align-items:center;">
-              <label style="display:flex; align-items:center; gap:6px; font-weight:400; font-size:13px; margin:0;">
-                <input type="checkbox" id="popularOnlyFilter" style="width:auto;"> Popular only
-              </label>
               <button class="admin-mini-btn" id="importFormulasBtn">🔄 One-time Import from Site Data</button>
               <button class="btn btn-primary" id="addFormulaBtn" style="padding:8px 16px; font-size:12px;">+ Add Formula</button>
             </div>
           </div>
           <div id="importStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
-          <div style="overflow-x:auto;">
+          <div style="overflow-x:auto; position:relative;">
             <table class="admin-table">
-              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Questions</th><th>Practiced</th><th>Popular</th><th>Difficulty</th><th>Status</th><th></th></tr></thead>
+              <thead><tr>
+                <th>Name</th>
+                <th data-filter-col="category">Category <span class="col-filter-btn" data-filter-btn="category">▾</span></th>
+                <th data-filter-col="video">Video <span class="col-filter-btn" data-filter-btn="video">▾</span></th>
+                <th data-filter-col="questions">Questions <span class="col-filter-btn" data-filter-btn="questions">▾</span></th>
+                <th data-filter-col="practiced">Practiced <span class="col-filter-btn" data-filter-btn="practiced">▾</span></th>
+                <th data-filter-col="popular">Popular <span class="col-filter-btn" data-filter-btn="popular">▾</span></th>
+                <th data-filter-col="difficulty">Difficulty <span class="col-filter-btn" data-filter-btn="difficulty">▾</span></th>
+                <th data-filter-col="status">Status <span class="col-filter-btn" data-filter-btn="status">▾</span></th>
+                <th></th>
+              </tr></thead>
               <tbody id="formulasTableBody"></tbody>
             </table>
           </div>
@@ -762,8 +825,12 @@ criteria: The condition to match"></textarea>
     (qRows || []).forEach(r => { questionCounts[r.formula_id] = (questionCounts[r.formula_id] || 0) + 1; });
     (pRows || []).forEach(r => { practiceCounts[r.formula_id] = (practiceCounts[r.formula_id] || 0) + 1; });
 
-    renderFormulasAdminTable(allFormulasAdmin);
+    applyFormulaFilters();
   }
+
+  let expandedFormulaId = null;
+  let expandedFormulaQuestions = [];
+  let currentFilteredList = [];
 
   function renderFormulasAdminTable(list) {
     const body = document.getElementById('formulasTableBody');
@@ -771,12 +838,13 @@ criteria: The condition to match"></textarea>
       body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
       return;
     }
-    body.innerHTML = list.map(f => `
+    body.innerHTML = list.map(f => {
+      const row = `
       <tr>
-        <td><strong>${f.name}</strong></td>
+        <td><button type="button" class="formula-name-btn" data-toggle-accordion="${f.id}">${f.name}</button></td>
         <td>${f.category}</td>
         <td>${f.video_url ? '🎥' : '—'}</td>
-        <td>${questionCounts[f.id] ? `<button class="admin-mini-btn" data-view-questions="${f.id}">${questionCounts[f.id]} — View</button>` : '0'}</td>
+        <td>${questionCounts[f.id] || 0}</td>
         <td>${practiceCounts[f.id] || 0}</td>
         <td><button class="admin-mini-btn" data-toggle-popular="${f.id}" data-current="${f.popular}" style="${f.popular ? 'background:#F6C846; border-color:#F6C846;' : ''}">${f.popular ? '⭐ Popular' : '☆ Mark Popular'}</button></td>
         <td>
@@ -792,23 +860,97 @@ criteria: The condition to match"></textarea>
           <button class="admin-mini-btn" data-toggle-formula="${f.id}" data-current="${f.enabled}">${f.enabled ? 'Disable' : 'Enable'}</button>
           <button class="admin-mini-btn danger" data-delete-formula="${f.id}">Delete</button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`;
+      if (f.id === expandedFormulaId) {
+        return row + `<tr class="formula-accordion-row"><td colspan="9">${renderFormulaAccordion(f)}</td></tr>`;
+      }
+      return row;
+    }).join('');
+
+    function renderFormulaAccordion(f) {
+      if (expandedFormulaQuestions === 'loading') {
+        return '<div style="padding:6px;">Loading questions...</div>';
+      }
+      const qs = expandedFormulaQuestions;
+      let html = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <strong>${f.name} — ${qs.length} question${qs.length === 1 ? '' : 's'}</strong>
+        <button class="btn btn-primary" data-build-question="${f.id}" style="padding:6px 14px; font-size:12px;">+ Build New Question</button>
+      </div>`;
+      if (qs.length === 0) {
+        html += '<p class="sub" style="margin:0;">No questions built yet for this formula.</p>';
+      } else {
+        html += qs.map((q, i) => `
+          <div class="formula-accordion-item">
+            <div class="fa-task">${i + 1}. ${q.task}</div>
+            <div class="fa-actions">
+              <button class="admin-mini-btn" data-acc-edit="${q.id}">Edit</button>
+              <button class="admin-mini-btn" data-acc-toggle="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
+              <button class="admin-mini-btn danger" data-acc-delete="${q.id}">Delete</button>
+              <button class="admin-mini-btn" data-acc-reflect="${q.id}">🎯 To Interview Prep</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      return html;
+    }
+
+    body.querySelectorAll('[data-toggle-accordion]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.toggleAccordion;
+        if (expandedFormulaId === id) {
+          expandedFormulaId = null;
+          expandedFormulaQuestions = [];
+          renderFormulasAdminTable(currentFilteredList);
+          return;
+        }
+        expandedFormulaId = id;
+        expandedFormulaQuestions = 'loading';
+        renderFormulasAdminTable(currentFilteredList);
+        const { data } = await supabaseClient.from('formula_questions').select('*').eq('formula_id', id).order('order_index');
+        expandedFormulaQuestions = data || [];
+        renderFormulasAdminTable(currentFilteredList);
+      });
+    });
+    body.querySelectorAll('[data-build-question]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('subTabQuestionsBtn').click();
+        document.getElementById('qbFormulaSelect').value = btn.dataset.buildQuestion;
+        document.getElementById('qbNewQuestionBtn').click();
+      });
+    });
+    body.querySelectorAll('[data-acc-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const q = expandedFormulaQuestions.find(x => x.id == btn.dataset.accEdit);
+        if (!q) return;
+        document.getElementById('subTabQuestionsBtn').click();
+        openQuestionEditor(q);
+      });
+    });
+    body.querySelectorAll('[data-acc-toggle]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const current = btn.dataset.current === 'true';
+        await supabaseClient.from('formula_questions').update({ enabled: !current }).eq('id', btn.dataset.accToggle);
+        loadFormulasAdmin();
+      });
+    });
+    body.querySelectorAll('[data-acc-delete]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this question?')) return;
+        await supabaseClient.from('formula_questions').delete().eq('id', btn.dataset.accDelete);
+        loadFormulasAdmin();
+      });
+    });
+    body.querySelectorAll('[data-acc-reflect]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const q = expandedFormulaQuestions.find(x => x.id == btn.dataset.accReflect);
+        if (!q) return;
+        await reflectQuestionToInterviewPrep(q, btn);
+      });
+    });
 
     body.querySelectorAll('[data-difficulty]').forEach(sel => {
       sel.addEventListener('change', async () => {
         await supabaseClient.from('formulas').update({ difficulty: sel.value }).eq('id', sel.dataset.difficulty);
-      });
-    });
-    body.querySelectorAll('[data-view-questions]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('subTabQuestionsBtn').click();
-        document.getElementById('qbFormulaSelect').value = btn.dataset.viewQuestions;
-        loadQuestionsForFormula(btn.dataset.viewQuestions);
-        const wrap = document.getElementById('qbQuestionsListWrap');
-        const toggleBtn = document.getElementById('qbToggleExistingBtn');
-        wrap.style.display = 'block';
-        toggleBtn.innerHTML = '📋 Existing Questions &nbsp;▴';
       });
     });
     body.querySelectorAll('[data-edit-formula]').forEach(btn => {
@@ -837,21 +979,140 @@ criteria: The condition to match"></textarea>
     });
   }
 
+  // Shared by both the Question Builder's own quick-add button and the
+  // Manage Formulas accordion's quick-add button.
+  async function reflectQuestionToInterviewPrep(q, btnEl) {
+    if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
+    const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
+    const defaultTitle = q.task;
+    const defaultDescription = (formula && formula.description) || '';
+
+    const title = prompt('Title for this Interview Prep card:', defaultTitle);
+    if (title === null) return;
+    const description = prompt('Description shown under the title:', defaultDescription);
+    if (description === null) return;
+    const icon = prompt('Icon (a single emoji):', '📊');
+    if (icon === null) return;
+
+    const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
+    const { error } = await supabaseClient.from('interview_practical').insert({
+      icon: icon.trim() || '📊',
+      title: title.trim() || defaultTitle,
+      description: description.trim(),
+      formula_id: q.formula_id,
+      formula_question_id: q.id,
+      order_index: count || 0,
+      enabled: true
+    });
+
+    if (btnEl) {
+      btnEl.textContent = error ? '❌ Failed' : '✅ Added';
+      setTimeout(() => { btnEl.textContent = '🎯 To Interview Prep'; }, 1500);
+    }
+  }
+
+  // ---------- Excel-style per-column filters ----------
+  const columnFilters = { category: new Set(), video: new Set(), questions: new Set(), practiced: new Set(), popular: new Set(), difficulty: new Set(), status: new Set() };
+
+  function getColumnValue(f, col) {
+    switch (col) {
+      case 'category': return f.category || '(none)';
+      case 'video': return f.video_url ? 'yes' : 'no';
+      case 'questions': return questionCounts[f.id] ? 'yes' : 'no';
+      case 'practiced': return practiceCounts[f.id] ? 'yes' : 'no';
+      case 'popular': return f.popular ? 'yes' : 'no';
+      case 'difficulty': return f.difficulty || 'intermediate';
+      case 'status': return f.enabled ? 'enabled' : 'disabled';
+      default: return '';
+    }
+  }
+
+  const COLUMN_VALUE_LABELS = {
+    video: { yes: 'Has Video', no: 'No Video' },
+    questions: { yes: 'Has Questions', no: 'No Questions' },
+    practiced: { yes: 'Practiced', no: 'Not Practiced' },
+    popular: { yes: '⭐ Popular', no: 'Not Popular' },
+    difficulty: { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' },
+    status: { enabled: 'Enabled', disabled: 'Disabled' }
+  };
+  function columnValueLabel(col, val) {
+    return (COLUMN_VALUE_LABELS[col] && COLUMN_VALUE_LABELS[col][val]) || val;
+  }
+
+  let openFilterDropdownEl = null;
+  function closeColumnFilterDropdown() {
+    if (openFilterDropdownEl) {
+      openFilterDropdownEl.remove();
+      openFilterDropdownEl = null;
+      document.querySelectorAll('.col-filter-btn').forEach(b => b.classList.remove('active'));
+    }
+  }
+
+  document.querySelectorAll('[data-filter-btn]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const col = btn.dataset.filterBtn;
+      const wasOpenForThis = btn.classList.contains('active');
+      closeColumnFilterDropdown();
+      if (wasOpenForThis) return;
+
+      const th = btn.closest('th');
+      th.style.position = 'relative';
+      const uniqueVals = [...new Set(allFormulasAdmin.map(f => getColumnValue(f, col)))].sort();
+
+      const dropdown = document.createElement('div');
+      dropdown.className = 'col-filter-dropdown open';
+      dropdown.innerHTML = `
+        <div class="cf-actions">
+          <button type="button" class="admin-mini-btn" data-cf-all>Select All</button>
+          <button type="button" class="admin-mini-btn" data-cf-clear>Clear</button>
+        </div>
+        ${uniqueVals.map(v => `<label><input type="checkbox" value="${v.replace(/"/g, '&quot;')}" ${columnFilters[col].size === 0 || columnFilters[col].has(v) ? 'checked' : ''}> ${columnValueLabel(col, v)}</label>`).join('')}
+      `;
+      th.appendChild(dropdown);
+      openFilterDropdownEl = dropdown;
+      btn.classList.add('active');
+
+      function syncFromCheckboxes() {
+        const checked = [...dropdown.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value);
+        columnFilters[col] = (checked.length === uniqueVals.length) ? new Set() : new Set(checked);
+        applyFormulaFilters();
+      }
+      dropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', syncFromCheckboxes));
+      dropdown.querySelector('[data-cf-all]').addEventListener('click', () => {
+        dropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+        columnFilters[col] = new Set();
+        applyFormulaFilters();
+      });
+      dropdown.querySelector('[data-cf-clear]').addEventListener('click', () => {
+        dropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+        columnFilters[col] = new Set(['__none_selected__']);
+        applyFormulaFilters();
+      });
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if (openFilterDropdownEl && !e.target.closest('.col-filter-dropdown') && !e.target.closest('[data-filter-btn]')) {
+      closeColumnFilterDropdown();
+    }
+  });
+
   function applyFormulaFilters() {
     const term = document.getElementById('formulaSearchAdmin').value.trim().toLowerCase();
-    const popularOnly = document.getElementById('popularOnlyFilter').checked;
     let filtered = allFormulasAdmin;
     if (term) {
       filtered = filtered.filter(f => f.name.toLowerCase().includes(term) || f.category.toLowerCase().includes(term));
     }
-    if (popularOnly) {
-      filtered = filtered.filter(f => f.popular);
-    }
+    Object.keys(columnFilters).forEach(col => {
+      if (columnFilters[col].size > 0) {
+        filtered = filtered.filter(f => columnFilters[col].has(getColumnValue(f, col)));
+      }
+    });
+    currentFilteredList = filtered;
     renderFormulasAdminTable(filtered);
   }
 
   document.getElementById('formulaSearchAdmin').addEventListener('input', applyFormulaFilters);
-  document.getElementById('popularOnlyFilter').addEventListener('change', applyFormulaFilters);
 
   function openFormulaEditor(id) {
     document.getElementById('formulaEditorPanel').style.display = 'block';
