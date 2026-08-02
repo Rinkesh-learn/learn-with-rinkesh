@@ -3,7 +3,7 @@
 // Used by formula-example.html (reference cards) and
 // practice.html (explain popup + practice questions).
 //
-// Formulas with a matching entry in QUESTION_SETS (practice.html)
+// Formulas with graded questions in Supabase (formula_questions table)
 // get full graded practice. All others still get a real
 // explanation and a free-form live sheet to try them in.
 // =========================================================

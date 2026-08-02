@@ -118,194 +118,9 @@ const CELEBRATIONS = [
 ];
 
 // ---------- Question banks: 10 per formula, easy -> advanced ----------
-const QUESTION_SETS = {
+// QUESTION_SETS removed — all questions now come exclusively from Supabase (formula_questions table), no hardcoded fallback.
 
-  vlookup: [
-    { task: "Find the Salary for Employee ID 103.", targetRow: 1, targetCol: 5, expectedValue: 62000, expectedType: 'number',
-      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",103,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""]] },
-    { task: "Find the Department for Employee ID 104.", targetRow: 1, targetCol: 5, expectedValue: "Finance", expectedType: 'string',
-      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",104,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""]] },
-    { task: "Find the Salary for Employee ID 107.", targetRow: 1, targetCol: 5, expectedValue: 39000, expectedType: 'number',
-      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",107,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""],[106,"IT",58000,"","",""],[107,"HR",39000,"","",""],[108,"Finance",67000,"","",""]] },
-    { task: "Find the Department for Employee ID 108.", targetRow: 1, targetCol: 5, expectedValue: "Finance", expectedType: 'string',
-      grid: [["Employee ID","Department","Salary","","Lookup ID","Result"],[101,"Finance",55000,"",108,null],[102,"HR",48000,"","",""],[103,"IT",62000,"","",""],[104,"Finance",51000,"","",""],[105,"Marketing",45000,"","",""],[106,"IT",58000,"","",""],[107,"HR",39000,"","",""],[108,"Finance",67000,"","",""]] },
-    { task: "Find the Bonus for Employee ID 106 (4th column).", targetRow: 1, targetCol: 6, expectedValue: 6000, expectedType: 'number',
-      grid: [["Employee ID","Department","Salary","Bonus","","Lookup ID","Result"],[101,"Finance",55000,5000,"",106,null],[102,"HR",48000,3000,"","",""],[103,"IT",62000,7000,"","",""],[104,"Finance",51000,4000,"","",""],[105,"Marketing",45000,2000,"","",""],[106,"IT",58000,6000,"","",""],[107,"HR",39000,2500,"","",""],[108,"Finance",67000,8000,"","",""]] },
-    { task: "Find Karan's Salary using their name.", targetRow: 1, targetCol: 6, expectedValue: 62000, expectedType: 'number',
-      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Karan",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""]] },
-    { task: "Find Simran's Bonus using their name.", targetRow: 1, targetCol: 6, expectedValue: 4000, expectedType: 'number',
-      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Simran",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""]] },
-    { task: "Find Vikram's Salary using their name.", targetRow: 1, targetCol: 6, expectedValue: 67000, expectedType: 'number',
-      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Vikram",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] },
-    { task: "Find Priya's Bonus using their name.", targetRow: 1, targetCol: 6, expectedValue: 2500, expectedType: 'number',
-      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Priya",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] },
-    { task: "Find Aditya's Department using their name.", targetRow: 1, targetCol: 6, expectedValue: "IT", expectedType: 'string',
-      grid: [["Employee Name","Department","Salary","Bonus","","Lookup Name","Result"],["Aman","Finance",55000,5000,"","Aditya",null],["Riya","HR",48000,3000,"","",""],["Karan","IT",62000,7000,"","",""],["Simran","Finance",51000,4000,"","",""],["Neha","Marketing",45000,2000,"","",""],["Aditya","IT",58000,6000,"","",""],["Priya","HR",39000,2500,"","",""],["Vikram","Finance",67000,8000,"","",""]] }
-  ],
-
-  sum: [
-    { task: "Find the Total sales from Jan to Apr.", targetRow: 1, targetCol: 3, expectedValue: 5600, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""]] },
-    { task: "Find the Total sales from Jan to Jun.", targetRow: 1, targetCol: 3, expectedValue: 8600, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""]] },
-    { task: "Find the Total sales from Jan to Aug.", targetRow: 1, targetCol: 3, expectedValue: 11600, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""],["Jul",1700,"",""],["Aug",1300,"",""]] },
-    { task: "Find the Total expense across all 4 quarters.", targetRow: 1, targetCol: 3, expectedValue: 5602, expectedType: 'number',
-      grid: [["Quarter","Expense","","Total"],["Q1",1200.5,"",null],["Q2",1500.75,"",""],["Q3",1100.25,"",""],["Q4",1800.5,"",""]] },
-    { task: "Find the Total profit/loss across all months (some are losses).", targetRow: 1, targetCol: 3, expectedValue: 3200, expectedType: 'number',
-      grid: [["Month","Profit","","Total"],["Jan",2000,"",null],["Feb",-500,"",""],["Mar",1500,"",""],["Apr",-800,"",""],["May",1000,"",""]] },
-    { task: "Find the Total sales across all 10 days.", targetRow: 1, targetCol: 3, expectedValue: 7400, expectedType: 'number',
-      grid: [["Day","Sales","","Total"],["Day1",500,"",null],["Day2",700,"",""],["Day3",650,"",""],["Day4",800,"",""],["Day5",900,"",""],["Day6",750,"",""],["Day7",600,"",""],["Day8",850,"",""],["Day9",950,"",""],["Day10",700,"",""]] },
-    { task: "Find the Total sales for Jan–Mar only (ignore the rest).", targetRow: 1, targetCol: 3, expectedValue: 1850, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",500,"",null],["Feb",700,"",""],["Mar",650,"",""],["Apr",800,"",""],["May",900,"",""],["Jun",750,"",""],["Jul",600,"",""],["Aug",850,"",""],["Sep",950,"",""],["Oct",700,"",""]] },
-    { task: "Find the Total sales — one month has no data, skip it.", targetRow: 1, targetCol: 3, expectedValue: 1800, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",400,"",null],["Feb",600,"",""],["Mar","","",""],["Apr",300,"",""],["May",500,"",""]] },
-    { task: "Find the Total sales — one row is a text note, skip it.", targetRow: 1, targetCol: 3, expectedValue: 7500, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar","N/A","",""],["Apr",1800,"",""],["May",1400,"",""],["Jun",1600,"",""]] },
-    { task: "Find the Total sales (Jan–Apr) plus the Bonus row below.", targetRow: 1, targetCol: 3, expectedValue: 6600, expectedType: 'number',
-      grid: [["Month","Sales","","Total"],["Jan",1200,"",null],["Feb",1500,"",""],["Mar",1100,"",""],["Apr",1800,"",""],["","","",""],["Bonus",1000,"",""]] }
-  ],
-
-  if: [
-    { task: 'Mark Amit\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 1, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
-      grid: [["Student","Score","Result"],["Amit",55,null],["Priya",32,""],["Neha",48,""]] },
-    { task: 'Mark Priya\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 2, targetCol: 2, expectedValue: "Fail", expectedType: 'string',
-      grid: [["Student","Score","Result"],["Amit",55,""],["Priya",32,null],["Neha",48,""]] },
-    { task: 'Mark Neha\'s Result as "Pass" if Score is 40 or above, else "Fail".', targetRow: 3, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
-      grid: [["Student","Score","Result"],["Amit",55,""],["Priya",32,""],["Neha",48,null]] },
-    { task: 'Mark Ravi\'s Result as "Pass" if Score is 50 or above, else "Fail".', targetRow: 1, targetCol: 2, expectedValue: "Fail", expectedType: 'string',
-      grid: [["Student","Score","Result"],["Ravi",45,null],["Sonal",62,""],["Amit",50,""]] },
-    { task: 'Mark Amit\'s Result as "Pass" if Score is 50 or above, else "Fail".', targetRow: 3, targetCol: 2, expectedValue: "Pass", expectedType: 'string',
-      grid: [["Student","Score","Result"],["Ravi",45,""],["Sonal",62,""],["Amit",50,null]] },
-    { task: 'Mark Karan\'s Grade as "Low" if Score is below 60, else "High".', targetRow: 2, targetCol: 2, expectedValue: "Low", expectedType: 'string',
-      grid: [["Student","Score","Grade"],["Meera",70,""],["Karan",55,null],["Divya",60,""]] },
-    { task: 'Mark Divya\'s Grade as "Low" if Score is below 60, else "High".', targetRow: 3, targetCol: 2, expectedValue: "High", expectedType: 'string',
-      grid: [["Student","Score","Grade"],["Meera",70,""],["Karan",55,""],["Divya",60,null]] },
-    { task: 'Give Riya a Bonus of 500 if Sales exceed 1000, else 0.', targetRow: 2, targetCol: 2, expectedValue: 0, expectedType: 'number',
-      grid: [["Rep","Sales","Bonus"],["Aman",1200,""],["Riya",900,null],["Karan",1500,""]] },
-    { task: 'Give Karan a Bonus of 500 if Sales exceed 1000, else 0.', targetRow: 3, targetCol: 2, expectedValue: 500, expectedType: 'number',
-      grid: [["Rep","Sales","Bonus"],["Aman",1200,""],["Riya",900,""],["Karan",1500,null]] },
-    { task: 'Mark WidgetB\'s Status as "Match" if Actual equals Target, else "Mismatch".', targetRow: 2, targetCol: 3, expectedValue: "Mismatch", expectedType: 'string',
-      grid: [["Item","Target","Actual","Status"],["WidgetA",100,100,""],["WidgetB",150,140,null],["WidgetC",80,80,""]] }
-  ],
-
-  countif: [
-    { task: 'Count how many employees are in the "Finance" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
-      grid: [["Employee","Department","","Finance Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""]] },
-    { task: 'Count how many employees are in the "Finance" department.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
-      grid: [["Employee","Department","","Finance Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
-    { task: 'Count how many employees are in the "IT" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
-      grid: [["Employee","Department","","IT Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
-    { task: 'Count how many employees are in the "HR" department.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
-      grid: [["Employee","Department","","HR Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
-    { task: 'Count how many employees are in the "Marketing" department.', targetRow: 1, targetCol: 3, expectedValue: 1, expectedType: 'number',
-      grid: [["Employee","Department","","Marketing Count"],["Aman","Finance","",null],["Riya","HR","",""],["Karan","Finance","",""],["Simran","IT","",""],["Neha","IT","",""],["Priya","Finance","",""],["Vikram","HR","",""],["Aditya","Marketing","",""]] },
-    { task: 'Count how many reps had Sales greater than 1000.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
-      grid: [["Rep","Sales","","Count >1000"],["Aman",1200,"",null],["Riya",900,"",""],["Karan",1500,"",""],["Simran",800,"",""],["Neha",1100,"",""]] },
-    { task: 'Count how many reps had Sales of 1000 or less.', targetRow: 1, targetCol: 3, expectedValue: 2, expectedType: 'number',
-      grid: [["Rep","Sales","","Count <=1000"],["Aman",1200,"",null],["Riya",900,"",""],["Karan",1500,"",""],["Simran",800,"",""],["Neha",1100,"",""]] },
-    { task: 'Count how many employees are in an "IT" department (IT Support or IT Infra) — try a wildcard.', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
-      grid: [["Employee","Department","","IT* Count"],["Aman","IT Support","",null],["Riya","HR","",""],["Karan","IT Infra","",""],["Simran","Finance","",""],["Neha","IT Support","",""]] },
-    { task: 'Count how many days attendance was marked "Present".', targetRow: 1, targetCol: 3, expectedValue: 3, expectedType: 'number',
-      grid: [["Day","Attendance","","Present Count"],["Mon","Present","",null],["Tue","Absent","",""],["Wed","Present","",""],["Thu","Present","",""],["Fri","Absent","",""]] },
-    { task: 'Count how many employees match the department shown in the Target cell (use a cell reference, not typed text).', targetRow: 1, targetCol: 4, expectedValue: 4, expectedType: 'number',
-      grid: [["Employee","Department","","Target","Result"],["E1","Finance","","Finance",null],["E2","HR","","",""],["E3","Finance","","",""],["E4","IT","","",""],["E5","Finance","","",""],["E6","Marketing","","",""],["E7","HR","","",""],["E8","Finance","","",""],["E9","IT","","",""],["E10","HR","","",""]] }
-  ],
-
-  hlookup: [
-    { task: 'Find the Sales figure for March.', targetRow: 3, targetCol: 4, expectedValue: 1100, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr"],["Sales",1200,1500,1100,1800],[""],["Lookup Month","Mar","","Result",null]] },
-    { task: 'Find the Sales figure for January.', targetRow: 3, targetCol: 4, expectedValue: 1200, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr"],["Sales",1200,1500,1100,1800],[""],["Lookup Month","Jan","","Result",null]] },
-    { task: 'Find the Costs figure for February (row_index_num 3).', targetRow: 4, targetCol: 4, expectedValue: 800, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr"],["Sales",1200,1500,1100,1800],["Costs",700,800,650,900],[""],["Lookup Month","Feb","","Result",null]] },
-    { task: 'Find the Sales figure for April (row_index_num 2).', targetRow: 4, targetCol: 4, expectedValue: 1800, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr"],["Sales",1200,1500,1100,1800],["Costs",700,800,650,900],[""],["Lookup Month","Apr","","Result",null]] },
-    { task: 'Find the Costs figure for June.', targetRow: 4, targetCol: 4, expectedValue: 820, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr","May","Jun"],["Sales",1200,1500,1100,1800,1400,1600],["Costs",700,800,650,900,750,820],[""],["Lookup Month","Jun","","Result",null]] },
-    { task: 'Find the Sales figure for March (same 6-month table).', targetRow: 4, targetCol: 4, expectedValue: 1100, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr","May","Jun"],["Sales",1200,1500,1100,1800,1400,1600],["Costs",700,800,650,900,750,820],[""],["Lookup Month","Mar","","Result",null]] },
-    { task: 'Find the Profit figure for May (row_index_num 4).', targetRow: 5, targetCol: 4, expectedValue: 650, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr","May","Jun"],["Sales",1200,1500,1100,1800,1400,1600],["Costs",700,800,650,900,750,820],["Profit",500,700,450,900,650,780],[""],["Lookup Month","May","","Result",null]] },
-    { task: 'Find the Profit figure for January.', targetRow: 5, targetCol: 4, expectedValue: 500, expectedType: 'number',
-      grid: [["Month","Jan","Feb","Mar","Apr","May","Jun"],["Sales",1200,1500,1100,1800,1400,1600],["Costs",700,800,650,900,750,820],["Profit",500,700,450,900,650,780],[""],["Lookup Month","Jan","","Result",null]] },
-    { task: 'Find the Status for March (row_index_num 5).', targetRow: 6, targetCol: 4, expectedValue: "Low", expectedType: 'string',
-      grid: [["Month","Jan","Feb","Mar","Apr","May","Jun"],["Sales",1200,1500,1100,1800,1400,1600],["Costs",700,800,650,900,750,820],["Profit",500,700,450,900,650,780],["Status","Good","Good","Low","Good","Low","Good"],[""],["Lookup Month","Mar","","Result",null]] },
-    { task: 'Find the Revenue for Quarter 3 (numeric lookup value this time).', targetRow: 3, targetCol: 4, expectedValue: 5800, expectedType: 'number',
-      grid: [["Quarter",1,2,3,4],["Revenue",5000,6200,5800,7000],[""],["Lookup Quarter",3,"","Result",null]] }
-  ],
-
-  index: [
-    { task: 'Return the 3rd Sales value using INDEX.', targetRow: 7, targetCol: 4, expectedValue: 1100, expectedType: 'number',
-      grid: [["Sales"],[1200],[1500],[1100],[1800],[1400],[""],["Row Num",3,"","Result",null]] },
-    { task: 'Return the 5th Sales value using INDEX.', targetRow: 7, targetCol: 4, expectedValue: 1400, expectedType: 'number',
-      grid: [["Sales"],[1200],[1500],[1100],[1800],[1400],[""],["Row Num",5,"","Result",null]] },
-    { task: 'Return row 2, column 2 (Costs) from the table using INDEX.', targetRow: 6, targetCol: 5, expectedValue: 800, expectedType: 'number',
-      grid: [["Sales","Costs"],[1200,700],[1500,800],[1100,650],[1800,900],[""],["Row Num",2,"Col Num",2,"Result",null]] },
-    { task: 'Return row 4, column 1 (Sales) from the table using INDEX.', targetRow: 6, targetCol: 5, expectedValue: 1800, expectedType: 'number',
-      grid: [["Sales","Costs"],[1200,700],[1500,800],[1100,650],[1800,900],[""],["Row Num",4,"Col Num",1,"Result",null]] },
-    { task: 'Return row 3, column 3 (Profit) using INDEX.', targetRow: 6, targetCol: 5, expectedValue: 450, expectedType: 'number',
-      grid: [["Sales","Costs","Profit"],[1200,700,500],[1500,800,700],[1100,650,450],[1800,900,900],[""],["Row Num",3,"Col Num",3,"Result",null]] },
-    { task: 'Return row 1, column 2 (Costs) using INDEX.', targetRow: 6, targetCol: 5, expectedValue: 700, expectedType: 'number',
-      grid: [["Sales","Costs","Profit"],[1200,700,500],[1500,800,700],[1100,650,450],[1800,900,900],[""],["Row Num",1,"Col Num",2,"Result",null]] },
-    { task: 'Return the 3rd Employee name using INDEX.', targetRow: 7, targetCol: 4, expectedValue: "Karan", expectedType: 'string',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],[""],["Row Num",3,"","Result",null]] },
-    { task: 'Return the 5th Employee name using INDEX.', targetRow: 7, targetCol: 4, expectedValue: "Neha", expectedType: 'string',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],[""],["Row Num",5,"","Result",null]] },
-    { task: 'Return row 4, column 2 (Department) using INDEX.', targetRow: 7, targetCol: 5, expectedValue: "Finance", expectedType: 'string',
-      grid: [["Name","Department"],["Aman","Finance"],["Riya","HR"],["Karan","IT"],["Simran","Finance"],["Neha","Marketing"],[""],["Row Num",4,"Col Num",2,"Result",null]] },
-    { task: 'Return row 6, column 3 (Salary) from the full table using INDEX.', targetRow: 9, targetCol: 5, expectedValue: 58000, expectedType: 'number',
-      grid: [["Name","Department","Salary"],["Aman","Finance",55000],["Riya","HR",48000],["Karan","IT",62000],["Simran","Finance",51000],["Neha","Marketing",45000],["Aditya","IT",58000],["Priya","HR",39000],[""],["Row Num",6,"Col Num",3,"Result",null]] }
-  ],
-
-  match: [
-    { task: 'Find the position of "Mar" in the Month list using MATCH.', targetRow: 6, targetCol: 4, expectedValue: 3, expectedType: 'number',
-      grid: [["Month"],["Jan"],["Feb"],["Mar"],["Apr"],[""],["Find","Mar","","Position",null]] },
-    { task: 'Find the position of "Jan" in the Month list.', targetRow: 6, targetCol: 4, expectedValue: 1, expectedType: 'number',
-      grid: [["Month"],["Jan"],["Feb"],["Mar"],["Apr"],[""],["Find","Jan","","Position",null]] },
-    { task: 'Find the position of "Apr" in the Month list.', targetRow: 6, targetCol: 4, expectedValue: 4, expectedType: 'number',
-      grid: [["Month"],["Jan"],["Feb"],["Mar"],["Apr"],[""],["Find","Apr","","Position",null]] },
-    { task: 'Find the position of 62000 in the Salary list.', targetRow: 7, targetCol: 4, expectedValue: 3, expectedType: 'number',
-      grid: [["Salary"],[55000],[48000],[62000],[51000],[45000],[""],["Find",62000,"","Position",null]] },
-    { task: 'Find the position of 45000 in the Salary list.', targetRow: 7, targetCol: 4, expectedValue: 5, expectedType: 'number',
-      grid: [["Salary"],[55000],[48000],[62000],[51000],[45000],[""],["Find",45000,"","Position",null]] },
-    { task: 'Find the position of "Simran" in the Employee list.', targetRow: 7, targetCol: 4, expectedValue: 4, expectedType: 'number',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],[""],["Find","Simran","","Position",null]] },
-    { task: 'Find the position of "Aman" in the Employee list.', targetRow: 7, targetCol: 4, expectedValue: 1, expectedType: 'number',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],[""],["Find","Aman","","Position",null]] },
-    { task: 'Find the position of "Priya" in the 7-person Employee list.', targetRow: 9, targetCol: 4, expectedValue: 7, expectedType: 'number',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],["Aditya"],["Priya"],[""],["Find","Priya","","Position",null]] },
-    { task: 'Find the position of "Karan" in the 7-person Employee list.', targetRow: 9, targetCol: 4, expectedValue: 3, expectedType: 'number',
-      grid: [["Employee"],["Aman"],["Riya"],["Karan"],["Simran"],["Neha"],["Aditya"],["Priya"],[""],["Find","Karan","","Position",null]] },
-    { task: 'Find the position of the FIRST 20 in this value list (MATCH always returns the first match).', targetRow: 10, targetCol: 4, expectedValue: 2, expectedType: 'number',
-      grid: [["Value"],[10],[20],[30],[20],[40],[50],[20],[60],[""],["Find",20,"","Position",null]] }
-  ],
-
-  choose: [
-    { task: 'Use CHOOSE to return the 3rd item: "Monday","Tuesday","Wednesday","Thursday" (index is in B1).', targetRow: 0, targetCol: 3, expectedValue: "Wednesday", expectedType: 'string',
-      grid: [["Index",3,"Result",null]] },
-    { task: 'Use CHOOSE to return the 1st item: "Monday","Tuesday","Wednesday","Thursday".', targetRow: 0, targetCol: 3, expectedValue: "Monday", expectedType: 'string',
-      grid: [["Index",1,"Result",null]] },
-    { task: 'Use CHOOSE to return the 4th item: "Monday","Tuesday","Wednesday","Thursday".', targetRow: 0, targetCol: 3, expectedValue: "Thursday", expectedType: 'string',
-      grid: [["Index",4,"Result",null]] },
-    { task: 'Use CHOOSE to return the 2nd item: 100, 200, 300, 400, 500.', targetRow: 0, targetCol: 3, expectedValue: 200, expectedType: 'number',
-      grid: [["Index",2,"Result",null]] },
-    { task: 'Use CHOOSE to return the 5th item: 100, 200, 300, 400, 500.', targetRow: 0, targetCol: 3, expectedValue: 500, expectedType: 'number',
-      grid: [["Index",5,"Result",null]] },
-    { task: 'Use CHOOSE to return the 2nd item: "Low","Medium","High".', targetRow: 0, targetCol: 3, expectedValue: "Medium", expectedType: 'string',
-      grid: [["Index",2,"Result",null]] },
-    { task: 'Use CHOOSE to return the 3rd item: "Low","Medium","High".', targetRow: 0, targetCol: 3, expectedValue: "High", expectedType: 'string',
-      grid: [["Index",3,"Result",null]] },
-    { task: 'Use CHOOSE to return the 6th item: 10,20,30,40,50,60,70.', targetRow: 0, targetCol: 3, expectedValue: 60, expectedType: 'number',
-      grid: [["Index",6,"Result",null]] },
-    { task: 'Use CHOOSE to return the 1st item: 10,20,30,40,50,60,70.', targetRow: 0, targetCol: 3, expectedValue: 10, expectedType: 'number',
-      grid: [["Index",1,"Result",null]] },
-    { task: 'Use CHOOSE to return the 7th item: "Jan","Feb","Mar","Apr","May","Jun","Jul".', targetRow: 0, targetCol: 3, expectedValue: "Jul", expectedType: 'string',
-      grid: [["Index",7,"Result",null]] }
-  ]
-};
-
-const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: QUESTION_SETS[m.id] }));
+const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: [] }));
 
 let currentFormula = null;
 let currentQuestionIndex = 0;
@@ -600,6 +415,16 @@ function revealAnswerSheet(question) {
     });
   });
 
+  // Show the "why" behind the answer — syntax and explanation — as a
+  // few extra rows well below the real data, same way Master Control
+  // shows it to the admin.
+  if (question.explanation) {
+    const lines = question.explanation.split('\n').filter(l => l.trim());
+    lines.forEach((line, i) => {
+      cells.push({ r: 20 + i, c: 0, v: { v: line, bg: '#FFF6C9', bl: i === 0 ? 1 : 0 } });
+    });
+  }
+
   createSheet((currentFormula ? currentFormula.name : 'Answer') + ' — Answer', cells);
 }
 
@@ -818,7 +643,8 @@ async function loadAdminQuestions() {
         expectedType: q.expected_type || 'text',
         grid: q.grid,
         answerMode: q.answer_mode || 'single',
-        expectedCells: q.expected_cells || null
+        expectedCells: q.expected_cells || null,
+        explanation: q.explanation || null
       });
     });
   } catch (e) { /* keep working with the built-in questions only */ }
