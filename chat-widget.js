@@ -513,13 +513,18 @@
     div.className = 'chat-msg' + (isOwn ? ' chat-msg-own' : '');
     div.dataset.messageId = msg.id;
     const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const actionIcon = (currentUser && currentUser.isAdmin)
-      ? `<button type="button" class="chat-report-icon chat-admin-delete-icon" title="Delete this message">🗑️</button>`
-      : `<button type="button" class="chat-report-icon" title="Report this message">🚩</button>`;
-
-    const canEdit = !!(currentUser && !currentUser.isAdmin && msg.user_id === currentUser.id && msg.message &&
+    const canEdit = !!(currentUser && isOwn && msg.message &&
       (Date.now() - msgDate.getTime()) < 30 * 60 * 1000);
     const editIcon = canEdit ? `<button type="button" class="chat-report-icon chat-edit-icon" title="Edit (within 30 min of sending)">✏️</button>` : '';
+
+    let actionIcon = '';
+    if (currentUser && currentUser.isAdmin) {
+      // Admin can delete ANY message, including their own.
+      actionIcon = `<button type="button" class="chat-report-icon chat-admin-delete-icon" title="Delete this message">🗑️</button>`;
+    } else if (currentUser && !isOwn) {
+      // Regular users can only ever report someone ELSE's message.
+      actionIcon = `<button type="button" class="chat-report-icon" title="Report this message">🚩</button>`;
+    }
     const editedTag = msg.edited_at ? `<span class="chat-edited-tag">(edited)</span>` : '';
 
     div.innerHTML = `
@@ -609,7 +614,7 @@
       return;
     }
 
-    const btn = div.querySelector('.chat-report-icon');
+    const btn = div.querySelector('.chat-report-icon:not(.chat-edit-icon):not(.chat-admin-delete-icon)');
     if (!btn) return;
     btn.addEventListener('click', () => {
       if (!currentUser) {
