@@ -980,35 +980,87 @@ criteria: The condition to match"></textarea>
   }
 
   // Shared by both the Question Builder's own quick-add button and the
-  // Manage Formulas accordion's quick-add button.
-  async function reflectQuestionToInterviewPrep(q, btnEl) {
-    if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
+  // Manage Formulas accordion's quick-add button. Opens a modal (not
+  // native prompt() dialogs) — nothing here ever touches the original
+  // formula_questions row or the formulas table; it only ever writes a
+  // NEW row into interview_practical, which has its own independent
+  // title/description columns.
+  function ensureInterviewPrepModal() {
+    if (document.getElementById('ipModalOverlay')) return;
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="ipModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(28,35,33,0.55); z-index:100000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:var(--radius); max-width:480px; width:100%; padding:24px; box-shadow:0 12px 40px rgba(28,35,33,0.3);">
+          <h3 style="margin-top:0;">Add to Interview Prep</h3>
+          <p class="sub" style="margin-top:-6px;">This only creates a new Interview Prep card — it never changes the original question or formula.</p>
+          <label>Title</label>
+          <input type="text" id="ipModalTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;">
+          <label>Description</label>
+          <textarea id="ipModalDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px; font-family:inherit;"></textarea>
+          <label>Icon (a single emoji)</label>
+          <input type="text" id="ipModalIcon" value="📊" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+          <div id="ipModalMessage" style="font-size:12px; margin-bottom:10px;"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary" id="ipModalSendBtn" style="flex:1;">Send</button>
+            <button class="admin-mini-btn" id="ipModalCancelBtn" style="flex:1;">Cancel</button>
+          </div>
+        </div>
+      </div>
+    `);
+    document.getElementById('ipModalCancelBtn').addEventListener('click', () => {
+      document.getElementById('ipModalOverlay').style.display = 'none';
+    });
+  }
+
+  function reflectQuestionToInterviewPrep(q, btnEl) {
+    ensureInterviewPrepModal();
     const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
     const defaultTitle = q.task;
     const defaultDescription = (formula && formula.description) || '';
 
-    const title = prompt('Title for this Interview Prep card:', defaultTitle);
-    if (title === null) return;
-    const description = prompt('Description shown under the title:', defaultDescription);
-    if (description === null) return;
-    const icon = prompt('Icon (a single emoji):', '📊');
-    if (icon === null) return;
+    document.getElementById('ipModalTitle').value = defaultTitle;
+    document.getElementById('ipModalDescription').value = defaultDescription;
+    document.getElementById('ipModalIcon').value = '📊';
+    document.getElementById('ipModalMessage').textContent = '';
+    document.getElementById('ipModalOverlay').style.display = 'flex';
 
-    const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
-    const { error } = await supabaseClient.from('interview_practical').insert({
-      icon: icon.trim() || '📊',
-      title: title.trim() || defaultTitle,
-      description: description.trim(),
-      formula_id: q.formula_id,
-      formula_question_id: q.id,
-      order_index: count || 0,
-      enabled: true
+    const sendBtn = document.getElementById('ipModalSendBtn');
+    const newSendBtn = sendBtn.cloneNode(true); // clear any previous listener from an earlier call
+    sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+
+    newSendBtn.addEventListener('click', async () => {
+      const msg = document.getElementById('ipModalMessage');
+      const title = document.getElementById('ipModalTitle').value.trim() || defaultTitle;
+      const description = document.getElementById('ipModalDescription').value.trim();
+      const icon = document.getElementById('ipModalIcon').value.trim() || '📊';
+
+      msg.textContent = 'Sending...';
+      msg.style.color = 'var(--ink-soft)';
+
+      const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
+      const { error } = await supabaseClient.from('interview_practical').insert({
+        icon, title, description,
+        formula_id: q.formula_id,
+        formula_question_id: q.id,
+        order_index: count || 0,
+        enabled: true
+      });
+
+      if (error) {
+        // Show the REAL database error instead of a generic "Failed" —
+        // if the interview_practical table doesn't exist yet, this is
+        // exactly where that would show up (run setup-interview-practical.sql).
+        msg.textContent = error.message;
+        msg.style.color = '#B3261E';
+        if (btnEl) btnEl.textContent = '❌ Failed';
+        return;
+      }
+
+      document.getElementById('ipModalOverlay').style.display = 'none';
+      if (btnEl) {
+        btnEl.textContent = '✅ Added';
+        setTimeout(() => { btnEl.textContent = '🎯 To Interview Prep'; }, 1500);
+      }
     });
-
-    if (btnEl) {
-      btnEl.textContent = error ? '❌ Failed' : '✅ Added';
-      setTimeout(() => { btnEl.textContent = '🎯 To Interview Prep'; }, 1500);
-    }
   }
 
   // ---------- Excel-style per-column filters ----------
@@ -1308,35 +1360,10 @@ criteria: The condition to match"></textarea>
     `).join('');
 
     body.querySelectorAll('[data-reflect-q]').forEach(btn => {
-      btn.addEventListener('click', async () => {
+      btn.addEventListener('click', () => {
         const q = data.find(x => x.id == btn.dataset.reflectQ);
         if (!q) return;
-        if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
-        const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
-
-        const defaultTitle = q.task;
-        const defaultDescription = (formula && formula.description) || '';
-
-        const title = prompt('Title for this Interview Prep card:', defaultTitle);
-        if (title === null) return; // cancelled
-        const description = prompt('Description shown under the title:', defaultDescription);
-        if (description === null) return;
-        const icon = prompt('Icon (a single emoji):', '📊');
-        if (icon === null) return;
-
-        const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
-        const { error } = await supabaseClient.from('interview_practical').insert({
-          icon: icon.trim() || '📊',
-          title: title.trim() || defaultTitle,
-          description: description.trim(),
-          formula_id: q.formula_id,
-          formula_question_id: q.id,
-          order_index: count || 0,
-          enabled: true
-        });
-
-        btn.textContent = error ? '❌ Failed' : '✅ Added';
-        setTimeout(() => { btn.textContent = '🎯 To Interview Prep'; }, 1500);
+        reflectQuestionToInterviewPrep(q, btn);
       });
     });
 
