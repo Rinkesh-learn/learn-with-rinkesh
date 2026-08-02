@@ -61,7 +61,8 @@
   margin: 0;
   padding: 8px;
   overflow-y: auto;
-  max-height: 560px;
+  flex: 1;
+  min-height: 0;
 }
 
 .formula-list-item {
@@ -436,8 +437,10 @@
 }
 
 .formula-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(28,35,33,0.12);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 16px 30px rgba(28,35,33,0.16);
+  z-index: 2;
+  position: relative;
 }
 
 .formula-card-name {
