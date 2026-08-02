@@ -371,6 +371,7 @@ function colLetter(i) { return String.fromCharCode(65 + i); }
 
 function buildCelldata(question) {
   const cells = [];
+  const rendered = new Set();
   const targetCells = new Set();
   if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
     question.expectedCells.forEach(c => targetCells.add(`${c.r},${c.c}`));
@@ -380,7 +381,9 @@ function buildCelldata(question) {
 
   question.grid.forEach((row, r) => {
     row.forEach((val, c) => {
-      const isTarget = targetCells.has(`${r},${c}`);
+      const key = `${r},${c}`;
+      rendered.add(key);
+      const isTarget = targetCells.has(key);
       if (isTarget) {
         cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
       } else if (val !== null && val !== '') {
@@ -388,6 +391,18 @@ function buildCelldata(question) {
       }
     });
   });
+
+  // Defensive: some AI-generated grids leave the target cell entirely
+  // out of its row array (a shorter row than the target column needs),
+  // which would otherwise mean no highlight shows at all. Make sure
+  // every declared target cell renders regardless of the grid's shape.
+  targetCells.forEach(key => {
+    if (!rendered.has(key)) {
+      const [r, c] = key.split(',').map(Number);
+      cells.push({ r, c, v: { v: '', bg: '#FFF6C9', bl: 1 } });
+    }
+  });
+
   return cells;
 }
 
@@ -404,15 +419,24 @@ function revealAnswerSheet(question) {
   }
 
   const cells = [];
+  const rendered = new Set();
   question.grid.forEach((row, r) => {
     row.forEach((val, c) => {
       const key = `${r},${c}`;
+      rendered.add(key);
       if (answerMap[key] !== undefined) {
         cells.push({ r, c, v: { v: answerMap[key], bg: '#D9EFDD', bl: 1 } });
       } else if (val !== null && val !== '') {
         cells.push({ r, c, v: { v: val, bl: r === 0 ? 1 : 0 } });
       }
     });
+  });
+
+  Object.keys(answerMap).forEach(key => {
+    if (!rendered.has(key)) {
+      const [r, c] = key.split(',').map(Number);
+      cells.push({ r, c, v: { v: answerMap[key], bg: '#D9EFDD', bl: 1 } });
+    }
   });
 
   // Show the "why" behind the answer — syntax and explanation — starting
