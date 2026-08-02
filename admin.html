@@ -1053,11 +1053,21 @@ criteria: The condition to match"></textarea>
         if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
         const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
 
+        const defaultTitle = q.task;
+        const defaultDescription = (formula && formula.description) || '';
+
+        const title = prompt('Title for this Interview Prep card:', defaultTitle);
+        if (title === null) return; // cancelled
+        const description = prompt('Description shown under the title:', defaultDescription);
+        if (description === null) return;
+        const icon = prompt('Icon (a single emoji):', '📊');
+        if (icon === null) return;
+
         const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
         const { error } = await supabaseClient.from('interview_practical').insert({
-          icon: '📊',
-          title: q.task,
-          description: (formula && formula.description) || '',
+          icon: icon.trim() || '📊',
+          title: title.trim() || defaultTitle,
+          description: description.trim(),
           formula_id: q.formula_id,
           formula_question_id: q.id,
           order_index: count || 0,
@@ -1812,6 +1822,12 @@ criteria: The condition to match"></textarea>
       <label>Question (from that formula's Question Builder questions)</label>
       <select id="ipQuestionSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
 
+      <label>Title</label>
+      <input type="text" id="ipTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;" placeholder="Auto-fills from the question, edit if you like">
+
+      <label>Description</label>
+      <textarea id="ipDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;" placeholder="Auto-fills from the formula's description, edit if you like"></textarea>
+
       <label>Icon (a single emoji)</label>
       <input type="text" id="ipIcon" value="📊" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
 
@@ -1828,19 +1844,34 @@ criteria: The condition to match"></textarea>
     const formulaSelect = document.getElementById('ipFormulaSelect');
     formulaSelect.innerHTML = allFormulasAdmin.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
+    let ipQuestionsCache = [];
+
     async function loadQuestionOptions(formulaId) {
       const qSelect = document.getElementById('ipQuestionSelect');
       qSelect.innerHTML = '<option>Loading...</option>';
       const { data } = await supabaseClient.from('formula_questions').select('id, task').eq('formula_id', formulaId).order('order_index');
+      ipQuestionsCache = data || [];
       if (!data || data.length === 0) {
         qSelect.innerHTML = '<option value="">No questions built for this formula yet — build one in Question Builder first</option>';
+        updateTitleDescriptionDefaults();
         return;
       }
       qSelect.innerHTML = data.map(q => `<option value="${q.id}">${q.task.length > 70 ? q.task.slice(0, 70) + '...' : q.task}</option>`).join('');
+      updateTitleDescriptionDefaults();
+    }
+
+    function updateTitleDescriptionDefaults() {
+      const formulaId = formulaSelect.value;
+      const questionId = document.getElementById('ipQuestionSelect').value;
+      const formula = allFormulasAdmin.find(f => f.id === formulaId);
+      const question = ipQuestionsCache.find(q => q.id == questionId);
+      document.getElementById('ipTitle').value = question ? question.task : '';
+      document.getElementById('ipDescription').value = (formula && formula.description) || '';
     }
 
     if (allFormulasAdmin.length > 0) loadQuestionOptions(formulaSelect.value);
     formulaSelect.addEventListener('change', (e) => loadQuestionOptions(e.target.value));
+    document.getElementById('ipQuestionSelect').addEventListener('change', updateTitleDescriptionDefaults);
 
     async function loadExistingList() {
       const body = document.getElementById('ipExistingBody');
@@ -1890,25 +1921,19 @@ criteria: The condition to match"></textarea>
       const formulaId = formulaSelect.value;
       const questionId = document.getElementById('ipQuestionSelect').value;
       const icon = document.getElementById('ipIcon').value.trim() || '📊';
+      const title = document.getElementById('ipTitle').value.trim();
+      const description = document.getElementById('ipDescription').value.trim();
 
       if (!questionId) {
         msg.textContent = 'Pick a question — build one in Question Builder first if this formula has none.';
         msg.style.color = '#B3261E';
         return;
       }
-
-      // Title and description come straight from what's already built —
-      // the question's task text is the title, the formula's own
-      // description is the framing text underneath.
-      const { data: qData, error: qError } = await supabaseClient.from('formula_questions').select('task').eq('id', questionId).maybeSingle();
-      if (qError || !qData) {
-        msg.textContent = qError ? qError.message : "Couldn't find that question.";
+      if (!title) {
+        msg.textContent = 'Add a title for this card.';
         msg.style.color = '#B3261E';
         return;
       }
-      const formula = allFormulasAdmin.find(f => f.id === formulaId);
-      const title = qData.task;
-      const description = (formula && formula.description) || '';
 
       const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
 
@@ -1928,6 +1953,8 @@ criteria: The condition to match"></textarea>
 
       msg.textContent = 'Added!';
       msg.style.color = 'var(--excel-green-deep)';
+      document.getElementById('ipTitle').value = '';
+      document.getElementById('ipDescription').value = '';
       loadExistingList();
     });
   }
