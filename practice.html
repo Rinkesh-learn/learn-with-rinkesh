@@ -445,7 +445,12 @@ function revealAnswerSheet(question) {
   const mergeConfig = {};
   if (question.explanation) {
     const lines = question.explanation.split('\n').filter(l => l.trim());
-    const startRow = Math.max(question.targetRow, question.grid.length - 1) + 2;
+    // For range-mode (multi-cell spill answers), the explanation needs
+    // to sit below the LAST answer cell, not just the first/top-left one.
+    const lastAnswerRow = (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length)
+      ? Math.max(...question.expectedCells.map(c => c.r))
+      : question.targetRow;
+    const startRow = Math.max(lastAnswerRow, question.grid.length - 1) + 2;
     lines.forEach((line, i) => {
       const r = startRow + i;
       cells.push({ r, c: 0, v: { v: line, bg: '#FFF6C9', bl: i === 0 ? 1 : 0 } });
