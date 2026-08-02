@@ -175,7 +175,8 @@
   document.body.appendChild(chatWindow);
 
   let pendingImageFile = null;
-  let currentUser = null; // { id, displayName, disclaimerSeen, banned, rawName, hideNameSetting }
+  let currentUser = null; // { id, displayName, disclaimerSeen, banned, rawName, hideNameSetting, isAdmin }
+  const isAdminPage = /\/admin\.html$/.test(window.location.pathname) || window.location.pathname.endsWith('admin.html');
 
   // ---------- Determine identity (logged-in users only) ----------
   async function resolveIdentity() {
@@ -187,7 +188,7 @@
 
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned, chat_banned_until')
+      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned, chat_banned_until, is_admin')
       .eq('id', session.user.id)
       .maybeSingle();
 
@@ -198,14 +199,17 @@
     const isBanned = !!(profile && profile.chat_banned) &&
       (!profile.chat_banned_until || new Date(profile.chat_banned_until) > new Date());
 
+    const isAdmin = isAdminPage && !!(profile && profile.is_admin);
+
     currentUser = {
       id: session.user.id,
-      displayName: name,
+      displayName: isAdmin ? 'Site Team ⭐' : name,
       disclaimerSeen: !!(profile && profile.chat_disclaimer_seen),
       banned: isBanned,
       bannedUntil: (profile && profile.chat_banned_until) || null,
       rawName: profile ? profile.chat_display_name : '',
-      hideNameSetting: !!(profile && profile.chat_hide_name)
+      hideNameSetting: !!(profile && profile.chat_hide_name),
+      isAdmin: isAdmin
     };
   }
 
@@ -229,19 +233,33 @@
 
     const inputRow = document.querySelector('.chat-input-row');
     const bannedNotice = document.getElementById('chatBannedNotice');
+    const messagesArea = document.getElementById('chatMessages');
+
     if (currentUser.banned) {
       inputRow.style.display = 'none';
+      messagesArea.style.display = 'none';
       bannedNotice.style.display = 'block';
+
+      let untilLine;
       if (currentUser.bannedUntil) {
         const untilDate = new Date(currentUser.bannedUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-        bannedNotice.textContent = `You are banned from chat for violation of community guidelines. You can chat again from ${untilDate}.`;
+        untilLine = `You'll be able to chat and view chat history again from <strong>${untilDate}</strong>.`;
       } else {
-        bannedNotice.textContent = 'You are permanently banned from chat for violation of community guidelines.';
+        untilLine = 'This is a <strong>permanent</strong> ban — chat and chat history will not be available on this account again.';
       }
-    } else {
-      inputRow.style.display = 'flex';
-      bannedNotice.style.display = 'none';
+
+      bannedNotice.innerHTML = `
+        <div>🚫 <strong>You are banned from the Community Chat.</strong></div>
+        <div style="margin-top:6px;">This happened because your activity was found to violate our community guidelines — things like offensive language, harassment, or spam.</div>
+        <div style="margin-top:6px;">${untilLine}</div>
+        <div style="margin-top:6px;">If you believe this was a mistake, please reach out through the site's feedback option.</div>
+      `;
+      return;
     }
+
+    inputRow.style.display = 'flex';
+    messagesArea.style.display = 'block';
+    bannedNotice.style.display = 'none';
 
     loadMessages();
     subscribeRealtime();
@@ -479,8 +497,11 @@
     div.className = 'chat-msg';
     div.dataset.messageId = msg.id;
     const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const actionIcon = (currentUser && currentUser.isAdmin)
+      ? `<button type="button" class="chat-report-icon chat-admin-delete-icon" title="Delete this message">🗑️</button>`
+      : `<button type="button" class="chat-report-icon" title="Report this message">🚩</button>`;
     div.innerHTML = `
-      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span> <button type="button" class="chat-report-icon" title="Report this message">🚩</button></div>
+      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span> ${actionIcon}</div>
       ${msg.message ? `<div class="chat-msg-text">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
       ${renderReactionBar(msg.id)}
@@ -491,11 +512,23 @@
     container.scrollTop = container.scrollHeight;
   }
 
-  // ---------- Reporting a message/user ----------
+  // ---------- Reporting a message/user (or, for admins on Master
+  // Control, deleting it directly instead) ----------
   const reportPanel = document.getElementById('chatReportPanel');
   let reportTarget = null; // { messageId, userId, displayName }
 
   function attachReportHandler(div, msg) {
+    if (currentUser && currentUser.isAdmin) {
+      const delBtn = div.querySelector('.chat-admin-delete-icon');
+      if (!delBtn) return;
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this message from the community chat?')) return;
+        await supabaseClient.from('chat_messages').delete().eq('id', msg.id);
+        div.remove();
+      });
+      return;
+    }
+
     const btn = div.querySelector('.chat-report-icon');
     if (!btn) return;
     btn.addEventListener('click', () => {

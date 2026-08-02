@@ -318,6 +318,11 @@
   font-size: 14px;
 }
 
+#chatSaveSettingsBtn {
+  background: var(--chat-theme, var(--sky, #2F80C9)) !important;
+  border-color: var(--chat-theme, var(--sky, #2F80C9)) !important;
+}
+
 .chat-image-preview-row {
   align-items: center;
   gap: 8px;

@@ -6,6 +6,7 @@
 <title>Master Control — Learn With Rinkesh</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="chat-widget.css">
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
@@ -525,6 +526,7 @@ criteria: The condition to match"></textarea>
 <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="chat-widget.js"></script>
 <script src="formulas-data.js"></script>
 <script src="excel-articles-data.js"></script>
 <script>
@@ -607,18 +609,46 @@ criteria: The condition to match"></textarea>
           ${u.email ? `<button class="admin-mini-btn" data-reset-pw="${u.id}" data-email="${u.email}">🔑 Send Reset Link</button><div data-reset-status="${u.id}" style="font-size:11px; color:var(--ink-soft); margin-top:4px;"></div>` : '—'}
         </td>
         <td>
-          <button class="admin-mini-btn danger" data-toggle-ban="${u.id}" data-current="${u.chat_banned}">${u.chat_banned ? 'Unban' : 'Ban from Chat'}</button>
+          ${u.chat_banned
+            ? `<button class="admin-mini-btn danger" data-unban="${u.id}">Unban</button>`
+            : `<div style="display:flex; gap:4px;">
+                <select data-ban-duration-user="${u.id}" style="font-size:11px; padding:3px;">
+                  <option value="7">1 week</option>
+                  <option value="15">15 days</option>
+                  <option value="30">1 month</option>
+                  <option value="90">3 months</option>
+                  <option value="permanent">Permanent</option>
+                </select>
+                <button class="admin-mini-btn danger" data-ban-user-direct="${u.id}">Ban from Chat</button>
+              </div>`
+          }
         </td>
       </tr>
     `).join('');
 
-    body.querySelectorAll('[data-toggle-ban]').forEach(btn => {
+    body.querySelectorAll('[data-unban]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const id = btn.dataset.toggleBan;
-        const current = btn.dataset.current === 'true';
-        const update = { chat_banned: !current };
-        if (current) update.chat_banned_until = null; // unbanning — clear any temp-ban expiry
-        await supabaseClient.from('profiles').update(update).eq('id', id);
+        await supabaseClient.from('profiles').update({ chat_banned: false, chat_banned_until: null }).eq('id', btn.dataset.unban);
+        loadUsers();
+      });
+    });
+    body.querySelectorAll('[data-ban-user-direct]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.banUserDirect;
+        const select = body.querySelector(`[data-ban-duration-user="${userId}"]`);
+        const duration = select.value;
+        const label = select.options[select.selectedIndex].textContent;
+
+        if (!confirm(`Ban this user from chat for ${label}?`)) return;
+
+        let bannedUntil = null;
+        if (duration !== 'permanent') {
+          const d = new Date();
+          d.setDate(d.getDate() + parseInt(duration, 10));
+          bannedUntil = d.toISOString();
+        }
+
+        await supabaseClient.from('profiles').update({ chat_banned: true, chat_banned_until: bannedUntil }).eq('id', userId);
         loadUsers();
       });
     });
