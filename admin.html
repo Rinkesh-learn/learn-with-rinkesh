@@ -211,7 +211,7 @@
           <div id="importStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
           <div style="overflow-x:auto;">
             <table class="admin-table">
-              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Questions</th><th>Practiced</th><th>Popular</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Name</th><th>Category</th><th>Video</th><th>Questions</th><th>Practiced</th><th>Popular</th><th>Difficulty</th><th>Status</th><th></th></tr></thead>
               <tbody id="formulasTableBody"></tbody>
             </table>
           </div>
@@ -765,7 +765,7 @@ criteria: The condition to match"></textarea>
   function renderFormulasAdminTable(list) {
     const body = document.getElementById('formulasTableBody');
     if (list.length === 0) {
-      body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-soft); padding:20px;">No formulas yet — use "One-time Import from Site Data" to bring in the existing 444, or add one manually.</td></tr>';
       return;
     }
     body.innerHTML = list.map(f => `
@@ -776,6 +776,13 @@ criteria: The condition to match"></textarea>
         <td>${questionCounts[f.id] ? `<button class="admin-mini-btn" data-view-questions="${f.id}">${questionCounts[f.id]} — View</button>` : '0'}</td>
         <td>${practiceCounts[f.id] || 0}</td>
         <td><button class="admin-mini-btn" data-toggle-popular="${f.id}" data-current="${f.popular}" style="${f.popular ? 'background:#F6C846; border-color:#F6C846;' : ''}">${f.popular ? '⭐ Popular' : '☆ Mark Popular'}</button></td>
+        <td>
+          <select data-difficulty="${f.id}" style="font-size:11px; padding:3px;">
+            <option value="beginner" ${f.difficulty === 'beginner' ? 'selected' : ''}>Beginner</option>
+            <option value="intermediate" ${(!f.difficulty || f.difficulty === 'intermediate') ? 'selected' : ''}>Intermediate</option>
+            <option value="advanced" ${f.difficulty === 'advanced' ? 'selected' : ''}>Advanced</option>
+          </select>
+        </td>
         <td>${f.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
         <td style="white-space:nowrap;">
           <button class="admin-mini-btn" data-edit-formula="${f.id}">Edit</button>
@@ -785,6 +792,11 @@ criteria: The condition to match"></textarea>
       </tr>
     `).join('');
 
+    body.querySelectorAll('[data-difficulty]').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        await supabaseClient.from('formulas').update({ difficulty: sel.value }).eq('id', sel.dataset.difficulty);
+      });
+    });
     body.querySelectorAll('[data-view-questions]').forEach(btn => {
       btn.addEventListener('click', () => {
         document.getElementById('subTabQuestionsBtn').click();
@@ -1022,13 +1034,37 @@ criteria: The condition to match"></textarea>
           ? `${colIndexToLetter(q.target_col)}${q.target_row + 1}... (${q.expected_cells ? q.expected_cells.length : (q.expected_grid ? q.expected_grid.flat().filter(v => v !== null && v !== '').length : '?')} cells)`
           : `${colIndexToLetter(q.target_col)}${q.target_row + 1} = ${q.expected_value}`}</td>
         <td>${q.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
-        <td>
+        <td style="white-space:nowrap;">
           <button class="admin-mini-btn" data-edit-q="${q.id}">Edit</button>
           <button class="admin-mini-btn" data-toggle-q="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
-          <button class="admin-mini-btn danger" data-delete-q="${q.id}">Delete</button>
+          <button class="admin-mini-btn danger" data-delete-q="${q.id}">Delete</button><br>
+          <button class="admin-mini-btn" data-reflect-q="${q.id}" style="margin-top:3px;">🎯 To Interview Prep</button>
         </td>
       </tr>
     `).join('');
+
+    body.querySelectorAll('[data-reflect-q]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const q = data.find(x => x.id == btn.dataset.reflectQ);
+        if (!q) return;
+        if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
+        const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
+
+        const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
+        const { error } = await supabaseClient.from('interview_practical').insert({
+          icon: '📊',
+          title: q.task,
+          description: (formula && formula.description) || '',
+          formula_id: q.formula_id,
+          formula_question_id: q.id,
+          order_index: count || 0,
+          enabled: true
+        });
+
+        btn.textContent = error ? '❌ Failed' : '✅ Added';
+        setTimeout(() => { btn.textContent = '🎯 To Interview Prep'; }, 1500);
+      });
+    });
 
     body.querySelectorAll('[data-edit-q]').forEach(btn => {
       btn.addEventListener('click', () => {

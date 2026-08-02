@@ -351,7 +351,10 @@ const ADVANCED_FORMULA_IDS = new Set([
   'indirect','offset','cell','formulatext','iferror','ifna'
 ]);
 
+const dbDifficultyMap = {}; // filled in by loadFormulaDifficulty(), admin-set values take priority
+
 function formulaDifficulty(id) {
+  if (dbDifficultyMap[id]) return dbDifficultyMap[id];
   if (BEGINNER_FORMULA_IDS.has(id)) return 'beginner';
   if (ADVANCED_FORMULA_IDS.has(id)) return 'advanced';
   return 'intermediate';
@@ -773,6 +776,15 @@ document.getElementById('swapBtn').addEventListener('click', () => {
 
 renderList();
 
+// Pull in admin-set difficulty levels from Master Control (falls back
+// to the built-in heuristic sets above for any formula without one set).
+async function loadFormulaDifficulty() {
+  try {
+    const { data } = await supabaseClient.from('formulas').select('id, difficulty').not('difficulty', 'is', null);
+    (data || []).forEach(row => { if (row.difficulty) dbDifficultyMap[row.id] = row.difficulty; });
+  } catch (e) { /* keep working with the built-in heuristic only */ }
+}
+
 // Pull in questions built in Master Control's Question Builder and merge
 // them into each formula's question list (in addition to any built-in
 // ones already here), converting each row into the same shape used above.
@@ -825,7 +837,7 @@ window.addEventListener('load', () => {
     // opened straight from a link (e.g. Interview Prep) could render as
     // "no practice questions yet" for a split second before catching up,
     // or worse, permanently if the auto-open logic ran first.
-    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin()]);
+    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin(), loadFormulaDifficulty()]);
     renderList();
 
     const params = new URLSearchParams(window.location.search);
