@@ -2152,6 +2152,28 @@ criteria: The condition to match"></textarea>
     if (allFormulasAdmin.length === 0) await loadFormulasAdmin();
 
     wrap.innerHTML = `
+      <h3 style="margin-top:0;">Page Text</h3>
+      <p class="sub" style="margin-top:0;">Every field below shows the text that's currently live on the site — edit it directly and click Save.</p>
+      <label>Hero title</label>
+      <input type="text" id="ipPcHeroTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;">
+      <label>Hero subtitle</label>
+      <textarea id="ipPcHeroSubtitle" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px; font-family:inherit;"></textarea>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        ${[1, 2, 3, 4].map(n => `
+          <div style="border:1px solid var(--grid-line); border-radius:8px; padding:10px;">
+            <label>Card ${n} title</label>
+            <input type="text" id="ipPcCard${n}Title" style="width:100%; box-sizing:border-box; padding:6px; margin-bottom:8px; font-size:12px;">
+            <label>Card ${n} description</label>
+            <textarea id="ipPcCard${n}Desc" rows="2" style="width:100%; box-sizing:border-box; padding:6px; font-size:12px; font-family:inherit;"></textarea>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-primary" id="ipPcSaveBtn" style="padding:8px 16px; font-size:12px;">Save Page Text</button>
+      <div id="ipPcMessage" style="margin-top:8px; margin-bottom:24px; font-size:13px;"></div>
+
+      <hr style="margin:24px 0; border:none; border-top:1px solid var(--grid-line);">
+
+      <h3 style="margin-top:0;">Practical Questions</h3>
       <p class="sub" style="margin-top:0;">Pick a formula, then pick one of its already-built Question Builder questions — the card is built automatically from that.</p>
 
       <label>Formula</label>
@@ -2170,6 +2192,7 @@ criteria: The condition to match"></textarea>
       <input type="text" id="ipIcon" value="📊" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
 
       <button class="btn btn-primary" id="ipAddBtn" style="padding:8px 16px; font-size:12px;">+ Add Practical Question</button>
+      <button class="admin-mini-btn" id="ipCancelEditBtn" style="display:none; padding:8px 16px; font-size:12px;">Cancel Edit</button>
       <div id="ipAddMessage" style="margin-top:10px; font-size:13px;"></div>
 
       <h3 style="margin-top:28px;">Existing practical questions</h3>
@@ -2177,12 +2200,80 @@ criteria: The condition to match"></textarea>
         <thead><tr><th>#</th><th>Title</th><th>Formula</th><th>Status</th><th></th></tr></thead>
         <tbody id="ipExistingBody"><tr><td colspan="5">Loading...</td></tr></tbody>
       </table>
+
+      <hr style="margin:24px 0; border:none; border-top:1px solid var(--grid-line);">
+
+      <h3 style="margin-top:0;">Theoretical Questions</h3>
+      <p class="sub" style="margin-top:0;">Plain Q&amp;A cards, no formula attached — shown under the "Theoretical" tab on the live page.</p>
+
+      <label>Level</label>
+      <select id="itLevel" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+        <option value="basic">Basic</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+      <label>Question</label>
+      <input type="text" id="itQuestion" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+      <label>Answer</label>
+      <textarea id="itAnswer" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;"></textarea>
+
+      <button class="btn btn-primary" id="itAddBtn" style="padding:8px 16px; font-size:12px;">+ Add Theoretical Question</button>
+      <button class="admin-mini-btn" id="itCancelEditBtn" style="display:none; padding:8px 16px; font-size:12px;">Cancel Edit</button>
+      <div id="itAddMessage" style="margin-top:10px; font-size:13px;"></div>
+
+      <h3 style="margin-top:28px;">Existing theoretical questions</h3>
+      <table class="admin-table" id="itExistingTable">
+        <thead><tr><th>#</th><th>Level</th><th>Question</th><th>Status</th><th></th></tr></thead>
+        <tbody id="itExistingBody"><tr><td colspan="5">Loading...</td></tr></tbody>
+      </table>
     `;
 
+    // ---------- Page Text ----------
+    (async function loadPageTextDefaults() {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'interview_prep');
+      const map = {};
+      (data || []).forEach(row => { map[row.id] = row.content; });
+      document.getElementById('ipPcHeroTitle').value = map['pc-interview_prep-hero-title'] || 'Walk into that interview ready.';
+      document.getElementById('ipPcHeroSubtitle').value = map['pc-interview_prep-hero-subtitle'] || "The questions that actually come up for reporting, analyst, and data-heavy roles — plus how to talk through your answers, not just know them.";
+      const cardDefaults = [
+        ['Say it out loud', "Practice explaining your logic verbally, not just typing formulas. Interviewers grade how you think, not just the answer."],
+        ['Know your own work', "Be ready to walk through any Excel project on your resume in detail — that's where most real follow-up questions come from."],
+        ['Know the trade-offs', "Don't just know VLOOKUP — know why you'd pick it over INDEX-MATCH, and when you wouldn't."],
+        ['Move fast, live', "Live Excel tests are common. Know your shortcuts so you're not hunting for the mouse."]
+      ];
+      cardDefaults.forEach(([t, d], i) => {
+        const n = i + 1;
+        document.getElementById(`ipPcCard${n}Title`).value = map[`pc-interview_prep-card${n}-title`] || t;
+        document.getElementById(`ipPcCard${n}Desc`).value = map[`pc-interview_prep-card${n}-desc`] || d;
+      });
+    })();
+
+    document.getElementById('ipPcSaveBtn').addEventListener('click', async () => {
+      const msg = document.getElementById('ipPcMessage');
+      const rows = [
+        { id: 'pc-interview_prep-hero-title', page: 'interview_prep', label: 'Hero title', content: document.getElementById('ipPcHeroTitle').value.trim() },
+        { id: 'pc-interview_prep-hero-subtitle', page: 'interview_prep', label: 'Hero subtitle', content: document.getElementById('ipPcHeroSubtitle').value.trim() }
+      ];
+      [1, 2, 3, 4].forEach(n => {
+        rows.push({ id: `pc-interview_prep-card${n}-title`, page: 'interview_prep', label: `Card ${n} title`, content: document.getElementById(`ipPcCard${n}Title`).value.trim() });
+        rows.push({ id: `pc-interview_prep-card${n}-desc`, page: 'interview_prep', label: `Card ${n} description`, content: document.getElementById(`ipPcCard${n}Desc`).value.trim() });
+      });
+      const { error } = await supabaseClient.from('page_content').upsert(rows.filter(r => r.content));
+      if (error) {
+        msg.textContent = error.message;
+        msg.style.color = '#B3261E';
+        return;
+      }
+      msg.textContent = 'Saved! Changes are live on the site now.';
+      msg.style.color = 'var(--excel-green-deep)';
+    });
+
+    // ---------- Practical Questions ----------
     const formulaSelect = document.getElementById('ipFormulaSelect');
     formulaSelect.innerHTML = allFormulasAdmin.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
     let ipQuestionsCache = [];
+    let ipEditingId = null;
 
     async function loadQuestionOptions(formulaId) {
       const qSelect = document.getElementById('ipQuestionSelect');
@@ -2191,11 +2282,11 @@ criteria: The condition to match"></textarea>
       ipQuestionsCache = data || [];
       if (!data || data.length === 0) {
         qSelect.innerHTML = '<option value="">No questions built for this formula yet — build one in Question Builder first</option>';
-        updateTitleDescriptionDefaults();
+        if (!ipEditingId) updateTitleDescriptionDefaults();
         return;
       }
       qSelect.innerHTML = data.map(q => `<option value="${q.id}">${q.task.length > 70 ? q.task.slice(0, 70) + '...' : q.task}</option>`).join('');
-      updateTitleDescriptionDefaults();
+      if (!ipEditingId) updateTitleDescriptionDefaults();
     }
 
     function updateTitleDescriptionDefaults() {
@@ -2209,7 +2300,16 @@ criteria: The condition to match"></textarea>
 
     if (allFormulasAdmin.length > 0) loadQuestionOptions(formulaSelect.value);
     formulaSelect.addEventListener('change', (e) => loadQuestionOptions(e.target.value));
-    document.getElementById('ipQuestionSelect').addEventListener('change', updateTitleDescriptionDefaults);
+    document.getElementById('ipQuestionSelect').addEventListener('change', () => { if (!ipEditingId) updateTitleDescriptionDefaults(); });
+
+    function resetPracticalForm() {
+      ipEditingId = null;
+      document.getElementById('ipAddBtn').textContent = '+ Add Practical Question';
+      document.getElementById('ipCancelEditBtn').style.display = 'none';
+      document.getElementById('ipIcon').value = '📊';
+      updateTitleDescriptionDefaults();
+    }
+    document.getElementById('ipCancelEditBtn').addEventListener('click', resetPracticalForm);
 
     async function loadExistingList() {
       const body = document.getElementById('ipExistingBody');
@@ -2230,13 +2330,32 @@ criteria: The condition to match"></textarea>
           <td>${item.icon || ''} ${item.title}</td>
           <td>${item.formulas ? item.formulas.name : '—'}</td>
           <td>${item.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
-          <td>
+          <td style="white-space:nowrap;">
+            <button class="admin-mini-btn" data-edit-ip="${item.id}">Edit</button>
             <button class="admin-mini-btn" data-toggle-ip="${item.id}" data-current="${item.enabled}">${item.enabled ? 'Disable' : 'Enable'}</button>
             <button class="admin-mini-btn danger" data-delete-ip="${item.id}">Delete</button>
           </td>
         </tr>
       `).join('');
 
+      body.querySelectorAll('[data-edit-ip]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = data.find(x => x.id == btn.dataset.editIp);
+          if (!item) return;
+          ipEditingId = item.id;
+          formulaSelect.value = item.formula_id;
+          loadQuestionOptions(item.formula_id).then(() => {
+            document.getElementById('ipQuestionSelect').value = item.formula_question_id;
+          });
+          document.getElementById('ipTitle').value = item.title;
+          document.getElementById('ipDescription').value = item.description;
+          document.getElementById('ipIcon').value = item.icon || '📊';
+          document.getElementById('ipAddBtn').textContent = 'Update Practical Question';
+          document.getElementById('ipCancelEditBtn').style.display = 'inline-block';
+          document.getElementById('ipAddMessage').textContent = '';
+          wrap.scrollIntoView({ behavior: 'smooth' });
+        });
+      });
       body.querySelectorAll('[data-toggle-ip]').forEach(btn => {
         btn.addEventListener('click', async () => {
           const current = btn.dataset.current === 'true';
@@ -2273,15 +2392,21 @@ criteria: The condition to match"></textarea>
         return;
       }
 
-      const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
-
-      const { error } = await supabaseClient.from('interview_practical').insert({
-        icon, title, description,
-        formula_id: formulaId,
-        formula_question_id: questionId,
-        order_index: count || 0,
-        enabled: true
-      });
+      let error;
+      if (ipEditingId) {
+        ({ error } = await supabaseClient.from('interview_practical').update({
+          icon, title, description, formula_id: formulaId, formula_question_id: questionId
+        }).eq('id', ipEditingId));
+      } else {
+        const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
+        ({ error } = await supabaseClient.from('interview_practical').insert({
+          icon, title, description,
+          formula_id: formulaId,
+          formula_question_id: questionId,
+          order_index: count || 0,
+          enabled: true
+        }));
+      }
 
       if (error) {
         msg.textContent = error.message;
@@ -2289,11 +2414,113 @@ criteria: The condition to match"></textarea>
         return;
       }
 
-      msg.textContent = 'Added!';
+      msg.textContent = ipEditingId ? 'Updated!' : 'Added!';
       msg.style.color = 'var(--excel-green-deep)';
-      document.getElementById('ipTitle').value = '';
-      document.getElementById('ipDescription').value = '';
+      resetPracticalForm();
       loadExistingList();
+    });
+
+    // ---------- Theoretical Questions ----------
+    let itEditingId = null;
+
+    function resetTheoryForm() {
+      itEditingId = null;
+      document.getElementById('itLevel').value = 'basic';
+      document.getElementById('itQuestion').value = '';
+      document.getElementById('itAnswer').value = '';
+      document.getElementById('itAddBtn').textContent = '+ Add Theoretical Question';
+      document.getElementById('itCancelEditBtn').style.display = 'none';
+    }
+    document.getElementById('itCancelEditBtn').addEventListener('click', resetTheoryForm);
+
+    async function loadTheoryList() {
+      const body = document.getElementById('itExistingBody');
+      const { data, error } = await supabaseClient.from('interview_theory').select('*').order('order_index');
+
+      if (error) {
+        body.innerHTML = `<tr><td colspan="5">Couldn't load: ${error.message}</td></tr>`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:16px;">No theoretical questions added yet.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = data.map((item, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td style="text-transform:capitalize;">${item.level}</td>
+          <td>${item.question.length > 70 ? item.question.slice(0, 70) + '...' : item.question}</td>
+          <td>${item.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
+          <td style="white-space:nowrap;">
+            <button class="admin-mini-btn" data-edit-it="${item.id}">Edit</button>
+            <button class="admin-mini-btn" data-toggle-it="${item.id}" data-current="${item.enabled}">${item.enabled ? 'Disable' : 'Enable'}</button>
+            <button class="admin-mini-btn danger" data-delete-it="${item.id}">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+
+      body.querySelectorAll('[data-edit-it]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = data.find(x => x.id == btn.dataset.editIt);
+          if (!item) return;
+          itEditingId = item.id;
+          document.getElementById('itLevel').value = item.level;
+          document.getElementById('itQuestion').value = item.question;
+          document.getElementById('itAnswer').value = item.answer;
+          document.getElementById('itAddBtn').textContent = 'Update Theoretical Question';
+          document.getElementById('itCancelEditBtn').style.display = 'inline-block';
+          document.getElementById('itAddMessage').textContent = '';
+          wrap.scrollIntoView({ behavior: 'smooth' });
+        });
+      });
+      body.querySelectorAll('[data-toggle-it]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const current = btn.dataset.current === 'true';
+          await supabaseClient.from('interview_theory').update({ enabled: !current }).eq('id', btn.dataset.toggleIt);
+          loadTheoryList();
+        });
+      });
+      body.querySelectorAll('[data-delete-it]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this theoretical question?')) return;
+          await supabaseClient.from('interview_theory').delete().eq('id', btn.dataset.deleteIt);
+          loadTheoryList();
+        });
+      });
+    }
+    loadTheoryList();
+
+    document.getElementById('itAddBtn').addEventListener('click', async () => {
+      const msg = document.getElementById('itAddMessage');
+      const level = document.getElementById('itLevel').value;
+      const question = document.getElementById('itQuestion').value.trim();
+      const answer = document.getElementById('itAnswer').value.trim();
+
+      if (!question || !answer) {
+        msg.textContent = 'Fill in both the question and the answer.';
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      let error;
+      if (itEditingId) {
+        ({ error } = await supabaseClient.from('interview_theory').update({ level, question, answer }).eq('id', itEditingId));
+      } else {
+        const { count } = await supabaseClient.from('interview_theory').select('*', { count: 'exact', head: true });
+        ({ error } = await supabaseClient.from('interview_theory').insert({ level, question, answer, order_index: count || 0, enabled: true }));
+      }
+
+      if (error) {
+        msg.textContent = error.message;
+        msg.style.color = '#B3261E';
+        return;
+      }
+
+      msg.textContent = itEditingId ? 'Updated!' : 'Added!';
+      msg.style.color = 'var(--excel-green-deep)';
+      resetTheoryForm();
+      loadTheoryList();
     });
   }
 

@@ -37,13 +37,13 @@
   </div>
 </div>
 
-<div class="ip-hero">
+<div class="ip-hero" style="padding-top:10px; padding-bottom:8px;">
   <div class="ip-hero-icon">🎯</div>
-  <h1>Walk into that interview ready.</h1>
-  <p>The questions that actually come up for reporting, analyst, and data-heavy roles — plus how to talk through your answers, not just know them.</p>
+  <h1 id="pc-interview_prep-hero-title">Walk into that interview ready.</h1>
+  <p id="pc-interview_prep-hero-subtitle">The questions that actually come up for reporting, analyst, and data-heavy roles — plus how to talk through your answers, not just know them.</p>
 </div>
 
-<div class="ip-tips-shell">
+<div class="ip-tips-shell" style="margin-top:8px; margin-bottom:8px;">
   <div class="sheet-header">
     <span class="colletter">B</span>
     <h2>Before you walk in</h2>
@@ -51,34 +51,34 @@
   <div class="ip-tips-grid" id="ipTipsGrid">
     <div class="ip-tip-card">
       <div class="icon">🗣️</div>
-      <h3>Say it out loud</h3>
-      <p>Practice explaining your logic verbally, not just typing formulas. Interviewers grade how you think, not just the answer.</p>
+      <h3 id="pc-interview_prep-card1-title">Say it out loud</h3>
+      <p id="pc-interview_prep-card1-desc">Practice explaining your logic verbally, not just typing formulas. Interviewers grade how you think, not just the answer.</p>
     </div>
     <div class="ip-tip-card">
       <div class="icon">📁</div>
-      <h3>Know your own work</h3>
-      <p>Be ready to walk through any Excel project on your resume in detail — that's where most real follow-up questions come from.</p>
+      <h3 id="pc-interview_prep-card2-title">Know your own work</h3>
+      <p id="pc-interview_prep-card2-desc">Be ready to walk through any Excel project on your resume in detail — that's where most real follow-up questions come from.</p>
     </div>
     <div class="ip-tip-card">
       <div class="icon">⚖️</div>
-      <h3>Know the trade-offs</h3>
-      <p>Don't just know VLOOKUP — know why you'd pick it over INDEX-MATCH, and when you wouldn't.</p>
+      <h3 id="pc-interview_prep-card3-title">Know the trade-offs</h3>
+      <p id="pc-interview_prep-card3-desc">Don't just know VLOOKUP — know why you'd pick it over INDEX-MATCH, and when you wouldn't.</p>
     </div>
     <div class="ip-tip-card">
       <div class="icon">⌨️</div>
-      <h3>Move fast, live</h3>
-      <p>Live Excel tests are common. <a href="shortcuts.html" style="color:var(--excel-green-deep);">Know your shortcuts</a> so you're not hunting for the mouse.</p>
+      <h3 id="pc-interview_prep-card4-title">Move fast, live</h3>
+      <p id="pc-interview_prep-card4-desc">Live Excel tests are common. <a href="shortcuts.html" style="color:var(--excel-green-deep);">Know your shortcuts</a> so you're not hunting for the mouse.</p>
     </div>
   </div>
 </div>
 
-<div class="ip-shell">
+<div class="ip-shell" style="margin-top:8px;">
   <div class="sheet-header">
     <span class="colletter">C</span>
     <h2>Common interview questions</h2>
   </div>
 
-  <div class="ip-level-tabs" id="ipModeTabs" style="margin-bottom:14px;">
+  <div class="ip-level-tabs" id="ipModeTabs" style="margin-bottom:10px;">
     <div class="ip-level-tab active" data-mode="theoretical" style="background:var(--excel-green); color:#fff; border-color:var(--excel-green);">📖 Theoretical</div>
     <div class="ip-level-tab" data-mode="practical">⌨️ Practical</div>
   </div>
@@ -107,7 +107,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-const QUESTIONS = [
+const FALLBACK_QUESTIONS = [
   { level: "basic", q: "What's the difference between a formula and a function?", a: "A formula is anything you write starting with '=' that calculates a result — it can be as simple as =A1+B1. A function is a predefined formula built into Excel, like SUM or VLOOKUP, that you use inside a formula to do a specific job." },
   { level: "basic", q: "What's the difference between COUNT, COUNTA, and COUNTIF?", a: "COUNT counts only cells containing numbers. COUNTA counts any non-empty cell, numbers or text. COUNTIF counts cells that match a specific condition you set, like counting only cells that say \"Finance\"." },
   { level: "basic", q: "What's the difference between relative and absolute cell references?", a: "A relative reference like A1 shifts automatically when you copy the formula elsewhere. An absolute reference like $A$1 stays locked to that exact cell no matter where you copy it — you toggle between them with the F4 key." },
@@ -132,6 +132,7 @@ const QUESTIONS = [
   { level: "advanced", q: "Tell me about a time you used Excel to solve a real business problem.", a: "This is a behavioral question, not a formula question — the interviewer wants a specific story: what the problem was, what you built (a tracker, a dashboard, an automated report), and what the measurable outcome was (hours saved, errors reduced). Have one real example from your own work ready before the interview, not a hypothetical." }
 ];
 
+let QUESTIONS = FALLBACK_QUESTIONS;
 let currentLevel = 'all';
 let openIndex = null;
 
@@ -168,6 +169,20 @@ document.querySelectorAll('#ipTabs .ip-level-tab').forEach(tab => {
 });
 
 renderQA();
+
+(async function loadLiveTheoryQuestions() {
+  try {
+    const { data } = await supabaseClient
+      .from('interview_theory')
+      .select('level, question, answer')
+      .eq('enabled', true)
+      .order('order_index');
+    if (data && data.length > 0) {
+      QUESTIONS = data.map(row => ({ level: row.level, q: row.question, a: row.answer }));
+      renderQA();
+    }
+  } catch (e) { /* keep working with the built-in questions only */ }
+})();
 
 // ---------- Practical exercises (pulled from Master Control's Interview Prep manager) ----------
 async function renderPracticalGrid() {
@@ -240,6 +255,19 @@ document.querySelectorAll('.ip-tip-card').forEach((el, i) => {
         a.classList.add('current-page');
       }
     });
+  })();
+</script>
+
+<script>
+  (async function loadPageContent() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'interview_prep');
+      (data || []).forEach(row => {
+        const el = document.getElementById(row.id);
+        if (!el) return;
+        el.innerHTML = row.content;
+      });
+    } catch (e) { /* keep default text */ }
   })();
 </script>
 
