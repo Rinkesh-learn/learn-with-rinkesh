@@ -145,3 +145,44 @@ function openPasswordModal(email) {
 }
 
 renderNavAuth();
+
+// ---------- Back to top floating button (every page) ----------
+(function () {
+  const btn = document.createElement('button');
+  btn.id = 'backToTopBtn';
+  btn.innerHTML = '&uarr;';
+  btn.title = 'Back to top';
+  btn.style.cssText = `
+    display: none;
+    position: fixed;
+    right: 24px;
+    bottom: 90px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--excel-green, #1F5E3E);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    z-index: 9998;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+  `;
+  document.body.appendChild(btn);
+
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) {
+      btn.style.display = 'block';
+      requestAnimationFrame(() => { btn.style.opacity = '1'; });
+    } else {
+      btn.style.opacity = '0';
+      setTimeout(() => { if (window.scrollY <= 400) btn.style.display = 'none'; }, 200);
+    }
+  });
+})();

@@ -666,6 +666,7 @@ function startPractice(formula, qIndex) {
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
+  document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
   document.getElementById('checkBtn').onclick = () => checkAnswer(question);
 }
 

@@ -500,16 +500,80 @@
     const actionIcon = (currentUser && currentUser.isAdmin)
       ? `<button type="button" class="chat-report-icon chat-admin-delete-icon" title="Delete this message">🗑️</button>`
       : `<button type="button" class="chat-report-icon" title="Report this message">🚩</button>`;
+
+    const canEdit = !!(currentUser && !currentUser.isAdmin && msg.user_id === currentUser.id && msg.message &&
+      (Date.now() - msgDate.getTime()) < 30 * 60 * 1000);
+    const editIcon = canEdit ? `<button type="button" class="chat-report-icon chat-edit-icon" title="Edit (within 30 min of sending)">✏️</button>` : '';
+    const editedTag = msg.edited_at ? `<span class="chat-edited-tag">(edited)</span>` : '';
+
     div.innerHTML = `
-      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span> ${actionIcon}</div>
-      ${msg.message ? `<div class="chat-msg-text">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
+      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}</div>
+      ${msg.message ? `<div class="chat-msg-text" data-raw-text="${msg.message.replace(/"/g, '&quot;')}">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
       ${renderReactionBar(msg.id)}
     `;
     container.appendChild(div);
     attachReactionHandlers(div, msg.id);
     attachReportHandler(div, msg);
+    attachEditHandler(div, msg);
     container.scrollTop = container.scrollHeight;
+  }
+
+  // ---------- Editing your own recent message ----------
+  function attachEditHandler(div, msg) {
+    const editBtn = div.querySelector('.chat-edit-icon');
+    if (!editBtn) return;
+
+    editBtn.addEventListener('click', () => {
+      const textDiv = div.querySelector('.chat-msg-text');
+      if (!textDiv) return;
+      const currentText = textDiv.dataset.rawText;
+
+      textDiv.outerHTML = `
+        <div class="chat-msg-edit-box">
+          <textarea class="chat-msg-edit-input" rows="2">${currentText}</textarea>
+          <div class="chat-msg-edit-actions">
+            <button type="button" class="admin-mini-btn chat-edit-save-btn">Save</button>
+            <button type="button" class="admin-mini-btn chat-edit-cancel-btn">Cancel</button>
+          </div>
+        </div>
+      `;
+
+      const editBox = div.querySelector('.chat-msg-edit-box');
+      const textarea = editBox.querySelector('.chat-msg-edit-input');
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+      editBox.querySelector('.chat-edit-cancel-btn').addEventListener('click', () => {
+        editBox.outerHTML = `<div class="chat-msg-text" data-raw-text="${currentText.replace(/"/g, '&quot;')}">${currentText.replace(/</g, '&lt;')}</div>`;
+      });
+
+      editBox.querySelector('.chat-edit-save-btn').addEventListener('click', async () => {
+        const newText = textarea.value.trim();
+        if (!newText) return;
+        if (containsOffensiveLanguage(newText)) {
+          alert("This message looks offensive — please be respectful in the community chat.");
+          return;
+        }
+
+        const { error } = await supabaseClient
+          .from('chat_messages')
+          .update({ message: newText, edited_at: new Date().toISOString() })
+          .eq('id', msg.id);
+
+        if (error) {
+          alert("Couldn't save your edit — try again.");
+          return;
+        }
+
+        msg.message = newText;
+        msg.edited_at = new Date().toISOString();
+        editBox.outerHTML = `<div class="chat-msg-text" data-raw-text="${newText.replace(/"/g, '&quot;')}">${newText.replace(/</g, '&lt;')}</div>`;
+        if (!div.querySelector('.chat-edited-tag')) {
+          div.querySelector('.chat-msg-name').insertAdjacentHTML('beforeend', '<span class="chat-edited-tag">(edited)</span>');
+        }
+      });
+    });
   }
 
   // ---------- Reporting a message/user (or, for admins on Master

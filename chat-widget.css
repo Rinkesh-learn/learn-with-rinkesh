@@ -257,6 +257,21 @@
 .chat-msg-name { font-size: 11px; font-weight: 700; color: var(--excel-green-deep); font-family: 'IBM Plex Mono', monospace; }
 .chat-msg-time { font-weight: 400; color: var(--ink-soft); margin-left: 4px; }
 .chat-msg-text { font-size: 13px; color: var(--ink); background: #fff; padding: 8px 10px; border-radius: 8px; margin-top: 3px; display: inline-block; max-width: 100%; word-wrap: break-word; }
+
+.chat-edited-tag { font-size: 10px; color: var(--ink-soft); font-weight: 400; margin-left: 4px; }
+
+.chat-msg-edit-box { margin-top: 4px; }
+.chat-msg-edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid var(--grid-line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+.chat-msg-edit-actions { display: flex; gap: 6px; margin-top: 4px; }
 .chat-msg-image { display: block; max-width: 180px; border-radius: 8px; margin-top: 5px; }
 
 .chat-date-divider {
