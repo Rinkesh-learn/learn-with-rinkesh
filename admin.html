@@ -830,6 +830,7 @@ criteria: The condition to match"></textarea>
 
   let expandedFormulaId = null;
   let expandedFormulaQuestions = [];
+  let expandedFormulaInterviewPrepIds = new Set();
   let currentFilteredList = [];
 
   function renderFormulasAdminTable(list) {
@@ -879,17 +880,23 @@ criteria: The condition to match"></textarea>
       if (qs.length === 0) {
         html += '<p class="sub" style="margin:0;">No questions built yet for this formula.</p>';
       } else {
-        html += qs.map((q, i) => `
+        html += qs.map((q, i) => {
+          const inPrep = expandedFormulaInterviewPrepIds.has(q.id);
+          const reflectBtn = inPrep
+            ? `<button class="admin-mini-btn" data-acc-remove-reflect="${q.id}" style="background:#D9EFDD; border-color:var(--excel-green); color:var(--excel-green-deep);" title="Click to remove from Interview Prep">✅ In Interview Prep</button>`
+            : `<button class="admin-mini-btn" data-acc-reflect="${q.id}">🎯 To Interview Prep</button>`;
+          return `
           <div class="formula-accordion-item">
             <div class="fa-task">${i + 1}. ${q.task}</div>
             <div class="fa-actions">
               <button class="admin-mini-btn" data-acc-edit="${q.id}">Edit</button>
               <button class="admin-mini-btn" data-acc-toggle="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
               <button class="admin-mini-btn danger" data-acc-delete="${q.id}">Delete</button>
-              <button class="admin-mini-btn" data-acc-reflect="${q.id}">🎯 To Interview Prep</button>
+              ${reflectBtn}
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
       return html;
     }
@@ -908,6 +915,7 @@ criteria: The condition to match"></textarea>
         renderFormulasAdminTable(currentFilteredList);
         const { data } = await supabaseClient.from('formula_questions').select('*').eq('formula_id', id).order('order_index');
         expandedFormulaQuestions = data || [];
+        expandedFormulaInterviewPrepIds = await fetchInterviewPrepStatus(expandedFormulaQuestions.map(q => q.id));
         renderFormulasAdminTable(currentFilteredList);
       });
     });
@@ -945,6 +953,15 @@ criteria: The condition to match"></textarea>
         const q = expandedFormulaQuestions.find(x => x.id == btn.dataset.accReflect);
         if (!q) return;
         await reflectQuestionToInterviewPrep(q, btn);
+      });
+    });
+    body.querySelectorAll('[data-acc-remove-reflect]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this from Interview Prep?')) return;
+        const qId = btn.dataset.accRemoveReflect;
+        await supabaseClient.from('interview_practical').delete().eq('formula_question_id', qId);
+        expandedFormulaInterviewPrepIds.delete(Number(qId));
+        renderFormulasAdminTable(currentFilteredList);
       });
     });
 
@@ -985,6 +1002,12 @@ criteria: The condition to match"></textarea>
   // formula_questions row or the formulas table; it only ever writes a
   // NEW row into interview_practical, which has its own independent
   // title/description columns.
+  async function fetchInterviewPrepStatus(questionIds) {
+    if (!questionIds || questionIds.length === 0) return new Set();
+    const { data } = await supabaseClient.from('interview_practical').select('formula_question_id').in('formula_question_id', questionIds);
+    return new Set((data || []).map(r => r.formula_question_id));
+  }
+
   function ensureInterviewPrepModal() {
     if (document.getElementById('ipModalOverlay')) return;
     document.body.insertAdjacentHTML('beforeend', `
@@ -1056,7 +1079,19 @@ criteria: The condition to match"></textarea>
       }
 
       document.getElementById('ipModalOverlay').style.display = 'none';
-      if (btnEl) {
+
+      let refreshedSomewhere = false;
+      if (expandedFormulaId === q.formula_id) {
+        expandedFormulaInterviewPrepIds.add(q.id);
+        renderFormulasAdminTable(currentFilteredList);
+        refreshedSomewhere = true;
+      }
+      const qbFormulaSelectEl = document.getElementById('qbFormulaSelect');
+      if (qbFormulaSelectEl && qbFormulaSelectEl.value === q.formula_id && document.getElementById('qbQuestionsListWrap').style.display !== 'none') {
+        loadQuestionsForFormula(q.formula_id);
+        refreshedSomewhere = true;
+      }
+      if (!refreshedSomewhere && btnEl) {
         btnEl.textContent = '✅ Added';
         setTimeout(() => { btnEl.textContent = '🎯 To Interview Prep'; }, 1500);
       }
@@ -1342,7 +1377,14 @@ criteria: The condition to match"></textarea>
       return;
     }
 
-    body.innerHTML = data.map((q, i) => `
+    const qbInterviewPrepIds = await fetchInterviewPrepStatus(data.map(q => q.id));
+
+    body.innerHTML = data.map((q, i) => {
+      const inPrep = qbInterviewPrepIds.has(q.id);
+      const reflectBtn = inPrep
+        ? `<button class="admin-mini-btn" data-qb-remove-reflect="${q.id}" style="background:#D9EFDD; border-color:var(--excel-green); color:var(--excel-green-deep); margin-top:3px;" title="Click to remove from Interview Prep">✅ In Interview Prep</button>`
+        : `<button class="admin-mini-btn" data-reflect-q="${q.id}" style="margin-top:3px;">🎯 To Interview Prep</button>`;
+      return `
       <tr>
         <td>${i + 1}</td>
         <td>${q.task.length > 60 ? q.task.slice(0, 60) + '...' : q.task}</td>
@@ -1354,16 +1396,24 @@ criteria: The condition to match"></textarea>
           <button class="admin-mini-btn" data-edit-q="${q.id}">Edit</button>
           <button class="admin-mini-btn" data-toggle-q="${q.id}" data-current="${q.enabled}">${q.enabled ? 'Disable' : 'Enable'}</button>
           <button class="admin-mini-btn danger" data-delete-q="${q.id}">Delete</button><br>
-          <button class="admin-mini-btn" data-reflect-q="${q.id}" style="margin-top:3px;">🎯 To Interview Prep</button>
+          ${reflectBtn}
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
 
     body.querySelectorAll('[data-reflect-q]').forEach(btn => {
       btn.addEventListener('click', () => {
         const q = data.find(x => x.id == btn.dataset.reflectQ);
         if (!q) return;
         reflectQuestionToInterviewPrep(q, btn);
+      });
+    });
+    body.querySelectorAll('[data-qb-remove-reflect]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Remove this from Interview Prep?')) return;
+        await supabaseClient.from('interview_practical').delete().eq('formula_question_id', btn.dataset.qbRemoveReflect);
+        loadQuestionsForFormula(formulaId);
       });
     });
 
