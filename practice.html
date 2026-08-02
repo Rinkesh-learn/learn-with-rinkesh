@@ -640,6 +640,32 @@ async function loadFormulaDifficulty() {
   } catch (e) { /* keep working with the built-in heuristic only */ }
 }
 
+// Merge in formulas that exist in the database but NOT in the static
+// formulas-data.js file — this is exactly the combo/nested formulas
+// (INDEX+MATCH, RIGHT+FIND, etc.) added later straight to Supabase.
+// Without this, any question for one of them gets silently dropped
+// below in loadAdminQuestions(), since FORMULAS.find() would never
+// find a match for its formula_id at all.
+async function loadMissingFormulasFromDB() {
+  try {
+    const { data } = await supabaseClient.from('formulas').select('*').eq('enabled', true);
+    (data || []).forEach(row => {
+      if (FORMULAS.some(f => f.id === row.id)) return; // already in the static file
+      FORMULAS.push({
+        id: row.id,
+        name: row.name,
+        category: row.category,
+        syntax: row.syntax,
+        description: row.description,
+        params: row.params || [],
+        useCase: row.use_case || '',
+        videoUrl: row.video_url || null,
+        questions: []
+      });
+    });
+  } catch (e) { /* keep working with just the static list */ }
+}
+
 // Pull in video URLs set from Master Control's Manage Formulas — this was
 // missing entirely before, so admin-added video links never showed up
 // here; the page only ever read the static videoUrl baked into
@@ -708,6 +734,7 @@ window.addEventListener('load', () => {
     // opened straight from a link (e.g. Interview Prep) could render as
     // "no practice questions yet" for a split second before catching up,
     // or worse, permanently if the auto-open logic ran first.
+    await loadMissingFormulasFromDB();
     await Promise.all([loadAdminQuestions(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
     renderList();
 

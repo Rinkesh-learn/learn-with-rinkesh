@@ -108,6 +108,41 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script>
+  // Two live fixes: (1) formulas that only exist in Supabase (the
+  // combo/nested ones like INDEX+MATCH, RIGHT+FIND — never in the
+  // static formulas-data.js file) were invisible here entirely;
+  // (2) the "Practice this" dot used a hardcoded 8-formula list left
+  // over from before questions moved fully to the database — now
+  // checks which formulas genuinely have enabled questions right now.
+  (async function loadLiveFormulaData() {
+    try {
+      const [{ data: allFormulas }, { data: questionRows }] = await Promise.all([
+        supabaseClient.from('formulas').select('*').eq('enabled', true),
+        supabaseClient.from('formula_questions').select('formula_id').eq('enabled', true)
+      ]);
+
+      (allFormulas || []).forEach(row => {
+        if (categories[row.category] && categories[row.category].some(f => f.id === row.id)) return;
+        if (!categories[row.category]) categories[row.category] = [];
+        categories[row.category].push({
+          id: row.id,
+          name: row.name,
+          category: row.category,
+          description: row.description || ''
+        });
+      });
+
+      if (questionRows && questionRows.length) {
+        const liveIds = Array.from(new Set(questionRows.map(r => r.formula_id)));
+        PRACTICE_ENABLED_IDS.length = 0;
+        PRACTICE_ENABLED_IDS.push(...liveIds);
+      }
+
+      renderFormulas(document.getElementById('allFormulaSearch').value);
+    } catch (e) { /* keep working with the static list only */ }
+  })();
+</script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
