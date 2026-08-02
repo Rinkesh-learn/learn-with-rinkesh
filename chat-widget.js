@@ -123,6 +123,9 @@
       <label>Your display name</label>
       <input type="text" id="chatNameInput" placeholder="How you appear in chat">
       <label class="chat-checkbox-row"><input type="checkbox" id="chatHideNameToggle"> Hide my name (show as "Anonymous")</label>
+      <div id="chatAdminOption" style="display:none;">
+        <label class="chat-checkbox-row"><input type="checkbox" id="chatAdminSiteTeamToggle"> Post as "Site Team ⭐" instead of my own name</label>
+      </div>
       <label>Chat window color</label>
       <div class="chat-theme-swatches" id="chatThemeSwatches">
         <span class="chat-swatch" data-color="#2F80C9" style="background:#2F80C9;" title="Blue"></span>
@@ -188,7 +191,7 @@
 
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned, chat_banned_until, is_admin')
+      .select('name, chat_display_name, chat_hide_name, chat_disclaimer_seen, chat_banned, chat_banned_until, is_admin, chat_admin_show_as_site_team')
       .eq('id', session.user.id)
       .maybeSingle();
 
@@ -200,16 +203,20 @@
       (!profile.chat_banned_until || new Date(profile.chat_banned_until) > new Date());
 
     const isAdmin = isAdminPage && !!(profile && profile.is_admin);
+    const adminShowAsSiteTeam = !profile || profile.chat_admin_show_as_site_team === null || profile.chat_admin_show_as_site_team === undefined
+      ? true
+      : profile.chat_admin_show_as_site_team;
 
     currentUser = {
       id: session.user.id,
-      displayName: isAdmin ? 'Site Team ⭐' : name,
+      displayName: isAdmin ? (adminShowAsSiteTeam ? 'Site Team ⭐' : name) : name,
       disclaimerSeen: !!(profile && profile.chat_disclaimer_seen),
       banned: isBanned,
       bannedUntil: (profile && profile.chat_banned_until) || null,
       rawName: profile ? profile.chat_display_name : '',
       hideNameSetting: !!(profile && profile.chat_hide_name),
-      isAdmin: isAdmin
+      isAdmin: isAdmin,
+      adminShowAsSiteTeam: adminShowAsSiteTeam
     };
   }
 
@@ -229,6 +236,8 @@
     sessionStorage.setItem(OPEN_STATE_KEY, '1');
     document.getElementById('chatNameInput').value = currentUser.rawName || '';
     document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
+    document.getElementById('chatAdminOption').style.display = currentUser.isAdmin ? 'block' : 'none';
+    document.getElementById('chatAdminSiteTeamToggle').checked = currentUser.adminShowAsSiteTeam;
     applyTheme();
 
     const inputRow = document.querySelector('.chat-input-row');
@@ -388,16 +397,22 @@
     if (!currentUser) return;
     const newName = document.getElementById('chatNameInput').value.trim();
     const hideName = document.getElementById('chatHideNameToggle').checked;
+    const adminShowAsSiteTeam = currentUser.isAdmin ? document.getElementById('chatAdminSiteTeamToggle').checked : currentUser.adminShowAsSiteTeam;
+
+    const updatePayload = {
+      chat_display_name: newName || null,
+      chat_hide_name: hideName
+    };
+    if (currentUser.isAdmin) updatePayload.chat_admin_show_as_site_team = adminShowAsSiteTeam;
 
     try {
-      await supabaseClient.from('profiles').update({
-        chat_display_name: newName || null,
-        chat_hide_name: hideName
-      }).eq('id', currentUser.id);
+      await supabaseClient.from('profiles').update(updatePayload).eq('id', currentUser.id);
     } catch (e) {}
     currentUser.rawName = newName;
     currentUser.hideNameSetting = hideName;
-    currentUser.displayName = hideName ? 'Anonymous' : (newName || currentUser.displayName);
+    currentUser.adminShowAsSiteTeam = adminShowAsSiteTeam;
+    const ownName = hideName ? 'Anonymous' : (newName || currentUser.displayName);
+    currentUser.displayName = currentUser.isAdmin ? (adminShowAsSiteTeam ? 'Site Team ⭐' : ownName) : ownName;
     document.getElementById('chatSettingsPanel').classList.remove('open');
   });
 
@@ -494,7 +509,8 @@
     }
 
     const div = document.createElement('div');
-    div.className = 'chat-msg';
+    const isOwn = !!(currentUser && msg.user_id === currentUser.id);
+    div.className = 'chat-msg' + (isOwn ? ' chat-msg-own' : '');
     div.dataset.messageId = msg.id;
     const time = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const actionIcon = (currentUser && currentUser.isAdmin)

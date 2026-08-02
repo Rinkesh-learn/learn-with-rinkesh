@@ -418,8 +418,8 @@ footer {
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  padding: 4px 10px 4px 4px;
-  border-radius: 20px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 8px 8px 0 0;
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .nav-account-btn:hover { background: rgba(255,255,255,0.22); }
@@ -514,15 +514,15 @@ nav.mainnav .nav-account-menu a {
   color: var(--ink) !important;
   background: transparent !important;
   border-radius: 0 !important;
+  border-bottom: 1px solid var(--grid-line);
   line-height: 1.4;
   transition: background 0.15s ease, padding-left 0.15s ease;
 }
+.nav-account-menu a:last-child { border-bottom: none; }
 .nav-account-menu a:hover { background: #F0F5F1 !important; padding-left: 20px; }
 
 .nav-account-menu-logout {
-  border-top: 1px solid var(--grid-line);
   color: #B3261E !important;
-  margin-top: 4px;
 }
 .nav-account-menu-logout:hover { background: #FBE6E2 !important; }
 

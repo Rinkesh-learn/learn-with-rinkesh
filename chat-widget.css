@@ -258,6 +258,11 @@
 .chat-msg-time { font-weight: 400; color: var(--ink-soft); margin-left: 4px; }
 .chat-msg-text { font-size: 13px; color: var(--ink); background: #fff; padding: 8px 10px; border-radius: 8px; margin-top: 3px; display: inline-block; max-width: 100%; word-wrap: break-word; }
 
+.chat-msg-own { display: flex; flex-direction: column; align-items: flex-end; }
+.chat-msg-own .chat-msg-text { background: var(--chat-theme, var(--sky, #2F80C9)); color: #fff; }
+.chat-msg-own .chat-msg-image { margin-left: auto; }
+.chat-msg-own .chat-reaction-row { flex-direction: row-reverse; }
+
 .chat-edited-tag { font-size: 10px; color: var(--ink-soft); font-weight: 400; margin-left: 4px; }
 
 .chat-msg-edit-box { margin-top: 4px; }

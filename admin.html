@@ -1036,6 +1036,7 @@ criteria: The condition to match"></textarea>
 
   function reflectQuestionToInterviewPrep(q, btnEl) {
     ensureInterviewPrepModal();
+    document.querySelector('#ipModalOverlay h3').textContent = 'Add to Interview Prep';
     const formula = allFormulasAdmin.find(f => f.id === q.formula_id);
     const defaultTitle = q.task;
     const defaultDescription = (formula && formula.description) || '';
@@ -2174,28 +2175,8 @@ criteria: The condition to match"></textarea>
       <hr style="margin:24px 0; border:none; border-top:1px solid var(--grid-line);">
 
       <h3 style="margin-top:0;">Practical Questions</h3>
-      <p class="sub" style="margin-top:0;">Pick a formula, then pick one of its already-built Question Builder questions — the card is built automatically from that.</p>
+      <p class="sub" style="margin-top:0;">These come from the 🎯 To Interview Prep button in Manage Formulas or Question Builder — go build a question there, then send it here. Editing an already-sent one only happens below.</p>
 
-      <label>Formula</label>
-      <select id="ipFormulaSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
-
-      <label>Question (from that formula's Question Builder questions)</label>
-      <select id="ipQuestionSelect" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;"></select>
-
-      <label>Title</label>
-      <input type="text" id="ipTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;" placeholder="Auto-fills from the question, edit if you like">
-
-      <label>Description</label>
-      <textarea id="ipDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;" placeholder="Auto-fills from the formula's description, edit if you like"></textarea>
-
-      <label>Icon (a single emoji)</label>
-      <input type="text" id="ipIcon" value="📊" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
-
-      <button class="btn btn-primary" id="ipAddBtn" style="padding:8px 16px; font-size:12px;">+ Add Practical Question</button>
-      <button class="admin-mini-btn" id="ipCancelEditBtn" style="display:none; padding:8px 16px; font-size:12px;">Cancel Edit</button>
-      <div id="ipAddMessage" style="margin-top:10px; font-size:13px;"></div>
-
-      <h3 style="margin-top:28px;">Existing practical questions</h3>
       <table class="admin-table" id="ipExistingTable">
         <thead><tr><th>#</th><th>Title</th><th>Formula</th><th>Status</th><th></th></tr></thead>
         <tbody id="ipExistingBody"><tr><td colspan="5">Loading...</td></tr></tbody>
@@ -2269,47 +2250,46 @@ criteria: The condition to match"></textarea>
     });
 
     // ---------- Practical Questions ----------
-    const formulaSelect = document.getElementById('ipFormulaSelect');
-    formulaSelect.innerHTML = allFormulasAdmin.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+    function editInterviewPracticalItem(item) {
+      ensureInterviewPrepModal();
+      document.querySelector('#ipModalOverlay h3').textContent = 'Edit Interview Prep Card';
+      document.getElementById('ipModalTitle').value = item.title;
+      document.getElementById('ipModalDescription').value = item.description;
+      document.getElementById('ipModalIcon').value = item.icon || '📊';
+      document.getElementById('ipModalMessage').textContent = '';
+      document.getElementById('ipModalOverlay').style.display = 'flex';
 
-    let ipQuestionsCache = [];
-    let ipEditingId = null;
+      const sendBtn = document.getElementById('ipModalSendBtn');
+      const newSendBtn = sendBtn.cloneNode(true);
+      sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
 
-    async function loadQuestionOptions(formulaId) {
-      const qSelect = document.getElementById('ipQuestionSelect');
-      qSelect.innerHTML = '<option>Loading...</option>';
-      const { data } = await supabaseClient.from('formula_questions').select('id, task').eq('formula_id', formulaId).order('order_index');
-      ipQuestionsCache = data || [];
-      if (!data || data.length === 0) {
-        qSelect.innerHTML = '<option value="">No questions built for this formula yet — build one in Question Builder first</option>';
-        if (!ipEditingId) updateTitleDescriptionDefaults();
-        return;
-      }
-      qSelect.innerHTML = data.map(q => `<option value="${q.id}">${q.task.length > 70 ? q.task.slice(0, 70) + '...' : q.task}</option>`).join('');
-      if (!ipEditingId) updateTitleDescriptionDefaults();
+      newSendBtn.addEventListener('click', async () => {
+        const msg = document.getElementById('ipModalMessage');
+        const title = document.getElementById('ipModalTitle').value.trim();
+        const description = document.getElementById('ipModalDescription').value.trim();
+        const icon = document.getElementById('ipModalIcon').value.trim() || '📊';
+
+        if (!title) {
+          msg.textContent = 'Add a title for this card.';
+          msg.style.color = '#B3261E';
+          return;
+        }
+
+        msg.textContent = 'Saving...';
+        msg.style.color = 'var(--ink-soft)';
+        const { error } = await supabaseClient.from('interview_practical').update({ icon, title, description }).eq('id', item.id);
+
+        if (error) {
+          msg.textContent = error.message;
+          msg.style.color = '#B3261E';
+          return;
+        }
+
+        document.getElementById('ipModalOverlay').style.display = 'none';
+        document.querySelector('#ipModalOverlay h3').textContent = 'Add to Interview Prep';
+        loadExistingList();
+      });
     }
-
-    function updateTitleDescriptionDefaults() {
-      const formulaId = formulaSelect.value;
-      const questionId = document.getElementById('ipQuestionSelect').value;
-      const formula = allFormulasAdmin.find(f => f.id === formulaId);
-      const question = ipQuestionsCache.find(q => q.id == questionId);
-      document.getElementById('ipTitle').value = question ? question.task : '';
-      document.getElementById('ipDescription').value = (formula && formula.description) || '';
-    }
-
-    if (allFormulasAdmin.length > 0) loadQuestionOptions(formulaSelect.value);
-    formulaSelect.addEventListener('change', (e) => loadQuestionOptions(e.target.value));
-    document.getElementById('ipQuestionSelect').addEventListener('change', () => { if (!ipEditingId) updateTitleDescriptionDefaults(); });
-
-    function resetPracticalForm() {
-      ipEditingId = null;
-      document.getElementById('ipAddBtn').textContent = '+ Add Practical Question';
-      document.getElementById('ipCancelEditBtn').style.display = 'none';
-      document.getElementById('ipIcon').value = '📊';
-      updateTitleDescriptionDefaults();
-    }
-    document.getElementById('ipCancelEditBtn').addEventListener('click', resetPracticalForm);
 
     async function loadExistingList() {
       const body = document.getElementById('ipExistingBody');
@@ -2320,7 +2300,7 @@ criteria: The condition to match"></textarea>
         return;
       }
       if (!data || data.length === 0) {
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:16px;">No practical questions added yet.</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:16px;">No practical questions added yet — send one from Manage Formulas or Question Builder.</td></tr>';
         return;
       }
 
@@ -2341,19 +2321,7 @@ criteria: The condition to match"></textarea>
       body.querySelectorAll('[data-edit-ip]').forEach(btn => {
         btn.addEventListener('click', () => {
           const item = data.find(x => x.id == btn.dataset.editIp);
-          if (!item) return;
-          ipEditingId = item.id;
-          formulaSelect.value = item.formula_id;
-          loadQuestionOptions(item.formula_id).then(() => {
-            document.getElementById('ipQuestionSelect').value = item.formula_question_id;
-          });
-          document.getElementById('ipTitle').value = item.title;
-          document.getElementById('ipDescription').value = item.description;
-          document.getElementById('ipIcon').value = item.icon || '📊';
-          document.getElementById('ipAddBtn').textContent = 'Update Practical Question';
-          document.getElementById('ipCancelEditBtn').style.display = 'inline-block';
-          document.getElementById('ipAddMessage').textContent = '';
-          wrap.scrollIntoView({ behavior: 'smooth' });
+          if (item) editInterviewPracticalItem(item);
         });
       });
       body.querySelectorAll('[data-toggle-ip]').forEach(btn => {
@@ -2372,53 +2340,6 @@ criteria: The condition to match"></textarea>
       });
     }
     loadExistingList();
-
-    document.getElementById('ipAddBtn').addEventListener('click', async () => {
-      const msg = document.getElementById('ipAddMessage');
-      const formulaId = formulaSelect.value;
-      const questionId = document.getElementById('ipQuestionSelect').value;
-      const icon = document.getElementById('ipIcon').value.trim() || '📊';
-      const title = document.getElementById('ipTitle').value.trim();
-      const description = document.getElementById('ipDescription').value.trim();
-
-      if (!questionId) {
-        msg.textContent = 'Pick a question — build one in Question Builder first if this formula has none.';
-        msg.style.color = '#B3261E';
-        return;
-      }
-      if (!title) {
-        msg.textContent = 'Add a title for this card.';
-        msg.style.color = '#B3261E';
-        return;
-      }
-
-      let error;
-      if (ipEditingId) {
-        ({ error } = await supabaseClient.from('interview_practical').update({
-          icon, title, description, formula_id: formulaId, formula_question_id: questionId
-        }).eq('id', ipEditingId));
-      } else {
-        const { count } = await supabaseClient.from('interview_practical').select('*', { count: 'exact', head: true });
-        ({ error } = await supabaseClient.from('interview_practical').insert({
-          icon, title, description,
-          formula_id: formulaId,
-          formula_question_id: questionId,
-          order_index: count || 0,
-          enabled: true
-        }));
-      }
-
-      if (error) {
-        msg.textContent = error.message;
-        msg.style.color = '#B3261E';
-        return;
-      }
-
-      msg.textContent = ipEditingId ? 'Updated!' : 'Added!';
-      msg.style.color = 'var(--excel-green-deep)';
-      resetPracticalForm();
-      loadExistingList();
-    });
 
     // ---------- Theoretical Questions ----------
     let itEditingId = null;
