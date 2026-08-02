@@ -785,6 +785,21 @@ async function loadFormulaDifficulty() {
   } catch (e) { /* keep working with the built-in heuristic only */ }
 }
 
+// Pull in video URLs set from Master Control's Manage Formulas — this was
+// missing entirely before, so admin-added video links never showed up
+// here; the page only ever read the static videoUrl baked into
+// formulas-data.js. This overrides that with whatever's in the database.
+async function loadFormulaVideos() {
+  try {
+    const { data } = await supabaseClient.from('formulas').select('id, video_url').not('video_url', 'is', null);
+    (data || []).forEach(row => {
+      if (!row.video_url) return;
+      const f = FORMULAS.find(x => x.id === row.id);
+      if (f) f.videoUrl = row.video_url;
+    });
+  } catch (e) { /* keep working with the static videoUrl only */ }
+}
+
 // Pull in questions built in Master Control's Question Builder and merge
 // them into each formula's question list (in addition to any built-in
 // ones already here), converting each row into the same shape used above.
@@ -837,7 +852,7 @@ window.addEventListener('load', () => {
     // opened straight from a link (e.g. Interview Prep) could render as
     // "no practice questions yet" for a split second before catching up,
     // or worse, permanently if the auto-open logic ran first.
-    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin(), loadFormulaDifficulty()]);
+    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
     renderList();
 
     const params = new URLSearchParams(window.location.search);

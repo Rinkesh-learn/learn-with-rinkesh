@@ -320,6 +320,9 @@ criteria: The condition to match"></textarea>
                 <div id="qbHighlightRangePreview" style="font-size:12px; color:var(--ink-soft); max-height:120px; overflow-y:auto;"></div>
               </div>
 
+              <label>Explanation (admin-only — shown as extra rows in this answer sheet when reviewing, never sent to students)</label>
+              <textarea id="qbExplanation" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;" placeholder="Explanation: Adds up all values in the given range.&#10;Syntax: =SUM(range)&#10;Here, =SUM(B2:B5) adds every sales value from B2 through B5."></textarea>
+
               <button class="btn btn-primary" id="qbSaveQuestionBtn" style="width:100%; margin-bottom:8px;">Save Question</button>
               <button class="admin-mini-btn" id="qbBackBtn" style="width:100%; margin-bottom:8px;">&larr; Back</button>
               <button class="admin-mini-btn" id="qbCancelBtn2" style="width:100%;">Cancel</button>
@@ -1317,6 +1320,7 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbPhase2Controls').style.display = 'block';
 
     document.getElementById('qbTask').value = q.task || '';
+    document.getElementById('qbExplanation').value = q.explanation || '';
     const inputDisplay = document.getElementById('qbInputCellDisplay');
     inputDisplay.textContent = qbInputCell ? `Marked: ${colIndexToLetter(qbInputCell.c)}${qbInputCell.r + 1}` : 'No input cell marked yet.';
     inputDisplay.style.color = qbInputCell ? 'var(--excel-green-deep)' : 'var(--ink-soft)';
@@ -1366,11 +1370,12 @@ criteria: The condition to match"></textarea>
     if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
     }
+    const explanationCells = explanationToCelldata(q.explanation, EXPLANATION_START_ROW);
     luckysheet.create({
       container: 'qbAnswerSheetContainer',
       lang: 'en',
       showinfobar: false,
-      data: [{ name: 'Answer', celldata: Object.values(cellMap), row: 40, column: 20, status: 1 }]
+      data: [{ name: 'Answer', celldata: Object.values(cellMap).concat(explanationCells), row: 40, column: 20, status: 1 }]
     });
     qbAnswerSheetReady = true;
 
@@ -1403,6 +1408,7 @@ criteria: The condition to match"></textarea>
     document.getElementById('qbPhase2Controls').style.display = 'block';
     document.getElementById('qbSheetContainer').style.display = 'none';
     document.getElementById('qbAnswerSheetContainer').style.display = 'block';
+    document.getElementById('qbExplanation').value = '';
 
     if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
@@ -1458,6 +1464,33 @@ criteria: The condition to match"></textarea>
     });
   });
 
+  // Renders the admin's explanation text as extra rows well below any
+  // real question data, purely for on-screen review in Master Control.
+  // These rows are NEVER written into qbQuestionGrid/expected_cells, so
+  // they can't leak into what students see on the live Practice page.
+  function explanationToCelldata(text, startRow) {
+    if (!text) return [];
+    const lines = text.split('\n').filter(l => l.trim());
+    return lines.map((line, i) => ({
+      r: startRow + i,
+      c: 0,
+      v: { v: line, bg: '#FFF6C9', bl: i === 0 ? 1 : 0 }
+    }));
+  }
+
+  const EXPLANATION_START_ROW = 20;
+  const EXPLANATION_MAX_LINES = 6;
+
+  function syncExplanationToSheet() {
+    if (!window.luckysheet || !qbAnswerSheetReady) return;
+    const text = document.getElementById('qbExplanation').value;
+    const lines = text.split('\n').filter(l => l.trim()).slice(0, EXPLANATION_MAX_LINES);
+    for (let i = 0; i < EXPLANATION_MAX_LINES; i++) {
+      try { luckysheet.setCellValue(EXPLANATION_START_ROW + i, 0, lines[i] || ''); } catch (e) {}
+    }
+  }
+  document.getElementById('qbExplanation').addEventListener('input', syncExplanationToSheet);
+
   document.getElementById('qbSaveQuestionBtn').addEventListener('click', async () => {
     const msg = document.getElementById('qbMessage');
     const formulaId = document.getElementById('qbFormulaSelect').value;
@@ -1477,7 +1510,7 @@ criteria: The condition to match"></textarea>
 
     try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
 
-    let payload = { formula_id: formulaId, task, grid: qbQuestionGrid, answer_mode: answerMode };
+    let payload = { formula_id: formulaId, task, grid: qbQuestionGrid, answer_mode: answerMode, explanation: document.getElementById('qbExplanation').value.trim() || null };
 
     if (answerMode === 'single') {
       const rowInput = parseInt(document.getElementById('qbAnswerRow').value, 10);
