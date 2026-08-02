@@ -320,7 +320,7 @@ criteria: The condition to match"></textarea>
                 <div id="qbHighlightRangePreview" style="font-size:12px; color:var(--ink-soft); max-height:120px; overflow-y:auto;"></div>
               </div>
 
-              <label>Explanation (admin-only — shown as extra rows in this answer sheet when reviewing, never sent to students)</label>
+              <label>Explanation — students see this too, when they click "See Answer" after a wrong attempt</label>
               <textarea id="qbExplanation" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;" placeholder="Explanation: Adds up all values in the given range.&#10;Syntax: =SUM(range)&#10;Here, =SUM(B2:B5) adds every sales value from B2 through B5."></textarea>
 
               <button class="btn btn-primary" id="qbSaveQuestionBtn" style="width:100%; margin-bottom:8px;">Save Question</button>
@@ -1370,12 +1370,15 @@ criteria: The condition to match"></textarea>
     if (qbAnswerSheetReady && window.luckysheet && window.luckysheet.destroy) {
       try { luckysheet.destroy(); } catch (e) {}
     }
-    const explanationCells = explanationToCelldata(q.explanation, EXPLANATION_START_ROW);
+    const explanationStartRow = Math.max(q.target_row || 0, (q.grid || []).length - 1) + 2;
+    const explanationCells = explanationToCelldata(q.explanation, explanationStartRow);
+    const explanationMerge = {};
+    explanationCells.forEach(c => { explanationMerge[`${c.r}_0`] = { r: c.r, c: 0, rs: 1, cs: 8 }; });
     luckysheet.create({
       container: 'qbAnswerSheetContainer',
       lang: 'en',
       showinfobar: false,
-      data: [{ name: 'Answer', celldata: Object.values(cellMap).concat(explanationCells), row: 40, column: 20, status: 1 }]
+      data: [{ name: 'Answer', celldata: Object.values(cellMap).concat(explanationCells), row: 40, column: 20, status: 1, config: { merge: explanationMerge } }]
     });
     qbAnswerSheetReady = true;
 
@@ -1464,10 +1467,12 @@ criteria: The condition to match"></textarea>
     });
   });
 
-  // Renders the admin's explanation text as extra rows well below any
-  // real question data, purely for on-screen review in Master Control.
-  // These rows are NEVER written into qbQuestionGrid/expected_cells, so
-  // they can't leak into what students see on the live Practice page.
+  // Renders the explanation text as extra rows well below the real
+  // question data — this is a preview of what students will see on the
+  // live Practice page when they click "See Answer" (stored separately
+  // in formula_questions.explanation, never mixed into the saved
+  // grid/expected_cells, so it can't accidentally show up early while
+  // the student is still attempting the question).
   function explanationToCelldata(text, startRow) {
     if (!text) return [];
     const lines = text.split('\n').filter(l => l.trim());
@@ -1478,15 +1483,15 @@ criteria: The condition to match"></textarea>
     }));
   }
 
-  const EXPLANATION_START_ROW = 20;
   const EXPLANATION_MAX_LINES = 6;
 
   function syncExplanationToSheet() {
     if (!window.luckysheet || !qbAnswerSheetReady) return;
+    const startRow = (qbQuestionGrid ? qbQuestionGrid.length - 1 : 10) + 2;
     const text = document.getElementById('qbExplanation').value;
     const lines = text.split('\n').filter(l => l.trim()).slice(0, EXPLANATION_MAX_LINES);
     for (let i = 0; i < EXPLANATION_MAX_LINES; i++) {
-      try { luckysheet.setCellValue(EXPLANATION_START_ROW + i, 0, lines[i] || ''); } catch (e) {}
+      try { luckysheet.setCellValue(startRow + i, 0, lines[i] || ''); } catch (e) {}
     }
   }
   document.getElementById('qbExplanation').addEventListener('input', syncExplanationToSheet);

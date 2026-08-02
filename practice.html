@@ -415,23 +415,29 @@ function revealAnswerSheet(question) {
     });
   });
 
-  // Show the "why" behind the answer — syntax and explanation — as a
-  // few extra rows well below the real data, same way Master Control
-  // shows it to the admin.
+  // Show the "why" behind the answer — syntax and explanation — starting
+  // just 2 rows below the real data, and merged across several columns
+  // so a full sentence is never clipped by a neighboring cell.
+  const mergeConfig = {};
   if (question.explanation) {
     const lines = question.explanation.split('\n').filter(l => l.trim());
+    const startRow = Math.max(question.targetRow, question.grid.length - 1) + 2;
     lines.forEach((line, i) => {
-      cells.push({ r: 20 + i, c: 0, v: { v: line, bg: '#FFF6C9', bl: i === 0 ? 1 : 0 } });
+      const r = startRow + i;
+      cells.push({ r, c: 0, v: { v: line, bg: '#FFF6C9', bl: i === 0 ? 1 : 0 } });
+      mergeConfig[`${r}_0`] = { r, c: 0, rs: 1, cs: 8 };
     });
   }
 
-  createSheet((currentFormula ? currentFormula.name : 'Answer') + ' — Answer', cells);
+  createSheet((currentFormula ? currentFormula.name : 'Answer') + ' — Answer', cells, mergeConfig);
 }
 
-function createSheet(name, celldata) {
+function createSheet(name, celldata, mergeConfig) {
   if (sheetReady && window.luckysheet && window.luckysheet.destroy) {
     try { luckysheet.destroy(); } catch (e) {}
   }
+  const config = { columnlen: { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 } };
+  if (mergeConfig && Object.keys(mergeConfig).length) config.merge = mergeConfig;
   luckysheet.create({
     container: 'luckysheetContainer',
     lang: 'en',
@@ -444,7 +450,7 @@ function createSheet(name, celldata) {
       row: 1000,
       column: 100,
       status: 1,
-      config: { columnlen: { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 } }
+      config: config
     }]
   });
   sheetReady = true;
