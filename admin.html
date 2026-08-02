@@ -528,7 +528,7 @@ criteria: The condition to match"></textarea>
         <label>Description</label>
         <textarea id="csDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
 
-        <label>Price (USD — 0 for free)</label>
+        <label>Price (₹ — 0 for free)</label>
         <input type="number" id="csPrice" value="0" min="0" step="0.01" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
 
         <label>Assignment file</label>
@@ -2807,7 +2807,7 @@ criteria: The condition to match"></textarea>
     body.innerHTML = allCaseStudiesAdmin.map(c => `
       <tr>
         <td><strong>${c.title}</strong></td>
-        <td>${c.price > 0 ? '$' + Number(c.price).toFixed(2) : 'Free'}</td>
+        <td>${c.price > 0 ? '₹' + Number(c.price).toFixed(2) : 'Free'}</td>
         <td>${c.file_name ? '📎 ' + c.file_name : '—'}</td>
         <td>${c.downloads || 0}</td>
         <td>${c.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>

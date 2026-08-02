@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Study Assignments | Learn With Rinkesh</title>
+<meta name="description" content="Real-world Excel case study assignments — build an actual sales dashboard, payroll model, or reporting workbook, the kind of work you'll really be asked to do.">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
+<style>
+  .cs-hero { max-width: 900px; margin: 0 auto; padding: 20px 24px 10px; text-align: center; }
+  .cs-hero h1 { font-size: 22px; margin: 0 0 6px; }
+  .cs-hero p { color: var(--ink-soft); font-size: 13px; max-width: 560px; margin: 0 auto; }
+
+  .cs-shell { max-width: 1000px; margin: 16px auto 60px; padding: 0 24px; }
+  .cs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+
+  .cs-card {
+    background: #fff;
+    border: 1px solid var(--grid-line);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+  }
+  .cs-card-title { font-size: 15px; margin: 0 0 8px; }
+  .cs-card-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 14px; flex: 1; }
+  .cs-price-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    width: fit-content;
+  }
+  .cs-price-badge.free { background: #D9EFDD; color: var(--excel-green-deep); }
+  .cs-price-badge.paid { background: #FFF6C9; color: #8A6D00; }
+
+  .cs-download-btn {
+    display: inline-block;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--excel-green);
+    padding: 9px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+  .cs-download-btn:hover { background: var(--excel-green-deep); }
+  .cs-download-btn.disabled { background: var(--grid-line); color: var(--ink-soft); cursor: default; }
+
+  .cs-paid-note { font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
+  .cs-empty { text-align: center; color: var(--ink-soft); padding: 40px 0; grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="subnav-bar">
+  <div class="subnav-inner" id="quickLinksRow">
+    <a href="practice.html" data-page="practice.html">✏️ Practice</a>
+    <a href="excel-guide.html" data-page="excel-guide.html">📘 About Excel</a>
+    <a href="shortcuts.html" data-page="shortcuts.html">⌨️ Shortcuts</a>
+    <a href="formula-example.html" data-page="formula-example.html">📖 All Formulas</a>
+    <a href="interview-prep.html" data-page="interview-prep.html">🎯 Interview Prep</a>
+    <a href="case-studies.html" data-page="case-studies.html">📁 Case Studies</a>
+  </div>
+</div>
+
+<div class="cs-hero">
+  <h1>Case Study Assignments</h1>
+  <p>Real-world assignments — the kind of dashboard, model, or report you'd actually be asked to build on the job. Download, work through it in your own Excel, and see how you did.</p>
+</div>
+
+<div class="cs-shell">
+  <div class="cs-grid" id="csGrid">
+    <p class="cs-empty">Loading assignments...</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+async function renderCaseStudies() {
+  const grid = document.getElementById('csGrid');
+  const { data, error } = await supabaseClient
+    .from('case_studies')
+    .select('*')
+    .eq('enabled', true)
+    .order('order_index');
+
+  if (error || !data || data.length === 0) {
+    grid.innerHTML = '<p class="cs-empty">No assignments available right now — check back soon.</p>';
+    return;
+  }
+
+  grid.innerHTML = data.map(c => {
+    const isFree = !c.price || c.price <= 0;
+    const priceBadge = isFree
+      ? `<span class="cs-price-badge free">FREE</span>`
+      : `<span class="cs-price-badge paid">₹${Number(c.price).toFixed(2)}</span>`;
+
+    const action = isFree && c.file_url
+      ? `<a href="${c.file_url}" class="cs-download-btn" data-download-id="${c.id}" download>Download &darr;</a>`
+      : (!isFree
+          ? `<button class="cs-download-btn disabled" disabled>Download &darr;</button><div class="cs-paid-note">Paid downloads aren't available yet — check back soon.</div>`
+          : `<button class="cs-download-btn disabled" disabled>File coming soon</button>`);
+
+    return `
+      <div class="cs-card">
+        <h3 class="cs-card-title">${c.title}</h3>
+        ${priceBadge}
+        <p class="cs-card-desc">${c.description}</p>
+        ${action}
+      </div>
+    `;
+  }).join('');
+
+  grid.querySelectorAll('[data-download-id]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.downloadId;
+      try {
+        const item = data.find(x => x.id == id);
+        await supabaseClient.from('case_studies').update({ downloads: (item.downloads || 0) + 1 }).eq('id', id);
+      } catch (e) { /* download still proceeds even if the counter update fails */ }
+    });
+  });
+}
+renderCaseStudies();
+</script>
+<script src="feedback-widget.js"></script>
+<script src="chat-widget.js"></script>
+<script src="auth-nav.js"></script>
+
+</body>
+</html>
