@@ -555,6 +555,17 @@
     }
     const editedTag = msg.edited_at ? `<span class="chat-edited-tag">(edited)</span>` : '';
 
+    // Admin-only: if the user isn't showing their real name (hidden, or
+    // a custom display alias), show their real profiles.name in
+    // brackets right next to it, so moderation still knows who's who.
+    let nameHtml = msg.display_name;
+    if (currentUser && currentUser.isAdmin && msg.user_id) {
+      const realName = realNameCache[msg.user_id];
+      if (realName && realName !== msg.display_name) {
+        nameHtml = `${msg.display_name} <span class="chat-real-name">(${realName})</span>`;
+      }
+    }
+
     const quotedOriginal = msg.reply_to_id ? messagesById[msg.reply_to_id] : null;
     const quotedHtml = quotedOriginal
       ? `<div class="chat-quoted-block" data-jump-to="${quotedOriginal.id}">
@@ -564,7 +575,7 @@
       : (msg.reply_to_id ? `<div class="chat-quoted-block"><span class="qtext">Original message not loaded</span></div>` : '');
 
     div.innerHTML = `
-      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}${replyIcon}</div>
+      <div class="chat-msg-name">${nameHtml} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}${replyIcon}</div>
       ${quotedHtml}
       ${msg.message ? `<div class="chat-msg-text" data-raw-text="${msg.message.replace(/"/g, '&quot;')}">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
@@ -763,6 +774,10 @@
         .limit(100);
       if (error) throw error;
 
+      if (currentUser && currentUser.isAdmin && data && data.length) {
+        await fetchRealNames([...new Set(data.map(m => m.user_id).filter(Boolean))]);
+      }
+
       container.innerHTML = '';
       (data || []).forEach(msg => {
         renderedMessageIds.add(msg.id);
@@ -786,15 +801,29 @@
 
   let realtimeSubscribed = false;
   const renderedMessageIds = new Set();
+  const realNameCache = {}; // user_id -> real profiles.name, admin-only lookup
+
+  async function fetchRealNames(userIds) {
+    const missing = userIds.filter(id => id && !(id in realNameCache));
+    if (missing.length === 0) return;
+    try {
+      const { data } = await supabaseClient.from('profiles').select('id, name').in('id', missing);
+      missing.forEach(id => { realNameCache[id] = null; }); // mark checked even if not found
+      (data || []).forEach(row => { realNameCache[row.id] = row.name || null; });
+    } catch (e) { /* real names just won't show for these */ }
+  }
 
   function subscribeRealtime() {
     if (realtimeSubscribed) return;
     realtimeSubscribed = true;
     supabaseClient
       .channel('public:chat_messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, async (payload) => {
         if (renderedMessageIds.has(payload.new.id)) return;
         renderedMessageIds.add(payload.new.id);
+        if (currentUser && currentUser.isAdmin) {
+          await fetchRealNames([payload.new.user_id]);
+        }
         renderMessage(payload.new);
       })
       .subscribe();
