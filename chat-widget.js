@@ -116,7 +116,7 @@
         <button id="chatGuidelinesBtn" title="Community guidelines">&excl;</button>
         <button id="chatSettingsBtn" title="Chat settings">⚙️</button>
         <button id="chatMaximizeBtn" title="Maximize">⛶</button>
-        <button id="chatMinimizeBtn" title="Minimize">&minus;</button>
+        <button id="chatMinimizeBtn" title="Close">&times;</button>
       </div>
     </div>
     <div class="chat-settings-panel" id="chatSettingsPanel">
