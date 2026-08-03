@@ -138,6 +138,11 @@
       <button class="btn btn-primary" id="chatSaveSettingsBtn" style="width:100%; margin-top:8px;">Save</button>
     </div>
     <div id="chatBannedNotice" class="chat-banned-notice" style="display:none;"></div>
+    <div id="chatLoggedOutNotice" class="chat-banned-notice" style="display:none;">
+      <div>👋 <strong>You're viewing the Community Chat.</strong></div>
+      <div style="margin-top:4px;">Log in to send messages, reply, or react.</div>
+      <button type="button" class="admin-mini-btn" id="chatLoggedOutLoginBtn" style="margin-top:8px;">Log In</button>
+    </div>
     <div class="chat-messages" id="chatMessages"></div>
     <div class="chat-report-panel" id="chatReportPanel">
       <div class="chat-report-header">
@@ -160,6 +165,13 @@
     </div>
     <div class="chat-emoji-panel" id="chatEmojiPanel">
       <div class="chat-emoji-grid" id="chatEmojiGrid"></div>
+    </div>
+    <div id="chatReplyPreview" class="chat-reply-preview" style="display:none;">
+      <div class="chat-reply-preview-content">
+        <div class="chat-reply-preview-name"></div>
+        <div class="chat-reply-preview-text"></div>
+      </div>
+      <button type="button" id="chatReplyCancelBtn" title="Cancel reply">✕</button>
     </div>
     <div id="chatComposeWarning" class="chat-compose-warning" style="display:none;"></div>
     <div class="chat-input-row">
@@ -223,52 +235,59 @@
   // ---------- Open / close flow ----------
   async function openChat() {
     await resolveIdentity();
-
-    if (!currentUser) {
-      loginPromptOverlay.classList.add('open');
-      return;
-    }
     showChatWindow();
   }
 
   function showChatWindow() {
     chatWindow.classList.add('open');
     sessionStorage.setItem(OPEN_STATE_KEY, '1');
-    document.getElementById('chatNameInput').value = currentUser.rawName || '';
-    document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
-    document.getElementById('chatAdminOption').style.display = currentUser.isAdmin ? 'block' : 'none';
-    document.getElementById('chatAdminSiteTeamToggle').checked = currentUser.adminShowAsSiteTeam;
     applyTheme();
 
     const inputRow = document.querySelector('.chat-input-row');
     const bannedNotice = document.getElementById('chatBannedNotice');
+    const loggedOutNotice = document.getElementById('chatLoggedOutNotice');
     const messagesArea = document.getElementById('chatMessages');
 
-    if (currentUser.banned) {
+    // Viewing is open to everyone now — messages always load. Only the
+    // compose box itself gets replaced, for the two restricted cases.
+    messagesArea.style.display = 'block';
+
+    if (!currentUser) {
       inputRow.style.display = 'none';
-      messagesArea.style.display = 'none';
+      bannedNotice.style.display = 'none';
+      loggedOutNotice.style.display = 'block';
+      document.getElementById('chatAdminOption').style.display = 'none';
+    } else if (currentUser.banned) {
+      document.getElementById('chatNameInput').value = currentUser.rawName || '';
+      document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
+      document.getElementById('chatAdminOption').style.display = 'none';
+
+      inputRow.style.display = 'none';
+      loggedOutNotice.style.display = 'none';
       bannedNotice.style.display = 'block';
 
       let untilLine;
       if (currentUser.bannedUntil) {
         const untilDate = new Date(currentUser.bannedUntil).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-        untilLine = `You'll be able to chat and view chat history again from <strong>${untilDate}</strong>.`;
+        untilLine = `You'll be able to chat again from <strong>${untilDate}</strong>.`;
       } else {
-        untilLine = 'This is a <strong>permanent</strong> ban — chat and chat history will not be available on this account again.';
+        untilLine = 'This is a <strong>permanent</strong> ban — chat will not be available on this account again.';
       }
 
       bannedNotice.innerHTML = `
-        <div>🚫 <strong>You are banned from the Community Chat.</strong></div>
-        <div style="margin-top:6px;">This happened because your activity was found to violate our community guidelines — things like offensive language, harassment, or spam.</div>
-        <div style="margin-top:6px;">${untilLine}</div>
-        <div style="margin-top:6px;">If you believe this was a mistake, please reach out through the site's feedback option.</div>
+        <div>🚫 <strong>You're banned from posting in the Community Chat.</strong></div>
+        <div style="margin-top:4px;">You can still read messages, but can't send, reply, or react. ${untilLine}</div>
       `;
-      return;
-    }
+    } else {
+      document.getElementById('chatNameInput').value = currentUser.rawName || '';
+      document.getElementById('chatHideNameToggle').checked = currentUser.hideNameSetting;
+      document.getElementById('chatAdminOption').style.display = currentUser.isAdmin ? 'block' : 'none';
+      document.getElementById('chatAdminSiteTeamToggle').checked = currentUser.adminShowAsSiteTeam;
 
-    inputRow.style.display = 'flex';
-    messagesArea.style.display = 'block';
-    bannedNotice.style.display = 'none';
+      inputRow.style.display = 'flex';
+      bannedNotice.style.display = 'none';
+      loggedOutNotice.style.display = 'none';
+    }
 
     loadMessages();
     subscribeRealtime();
@@ -393,6 +412,10 @@
     document.getElementById('chatSettingsPanel').classList.toggle('open');
   });
 
+  document.getElementById('chatLoggedOutLoginBtn').addEventListener('click', () => {
+    loginPromptOverlay.classList.add('open');
+  });
+
   document.getElementById('chatSaveSettingsBtn').addEventListener('click', async () => {
     if (!currentUser) return;
     const newName = document.getElementById('chatNameInput').value.trim();
@@ -496,7 +519,10 @@
 
   let lastRenderedDateKey = null;
 
+  const messagesById = {}; // for looking up quoted originals when rendering a reply
+
   function renderMessage(msg) {
+    messagesById[msg.id] = msg;
     const container = document.getElementById('chatMessages');
     const msgDate = new Date(msg.created_at);
     const dateKey = msgDate.toDateString();
@@ -516,6 +542,8 @@
     const canEdit = !!(currentUser && isOwn && msg.message &&
       (Date.now() - msgDate.getTime()) < 30 * 60 * 1000);
     const editIcon = canEdit ? `<button type="button" class="chat-report-icon chat-edit-icon" title="Edit (within 30 min of sending)">✏️</button>` : '';
+    // Reply is available on every message, own or not, no time limit.
+    const replyIcon = `<button type="button" class="chat-report-icon chat-reply-icon" title="Reply">↩️</button>`;
 
     let actionIcon = '';
     if (currentUser && currentUser.isAdmin) {
@@ -527,8 +555,17 @@
     }
     const editedTag = msg.edited_at ? `<span class="chat-edited-tag">(edited)</span>` : '';
 
+    const quotedOriginal = msg.reply_to_id ? messagesById[msg.reply_to_id] : null;
+    const quotedHtml = quotedOriginal
+      ? `<div class="chat-quoted-block" data-jump-to="${quotedOriginal.id}">
+           <span class="qname">${quotedOriginal.display_name}</span>
+           <span class="qtext">${quotedOriginal.message ? quotedOriginal.message.replace(/</g, '&lt;') : (quotedOriginal.image_url ? '📷 Photo' : '')}</span>
+         </div>`
+      : (msg.reply_to_id ? `<div class="chat-quoted-block"><span class="qtext">Original message not loaded</span></div>` : '');
+
     div.innerHTML = `
-      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}</div>
+      <div class="chat-msg-name">${msg.display_name} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}${replyIcon}</div>
+      ${quotedHtml}
       ${msg.message ? `<div class="chat-msg-text" data-raw-text="${msg.message.replace(/"/g, '&quot;')}">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
       ${renderReactionBar(msg.id)}
@@ -537,6 +574,7 @@
     attachReactionHandlers(div, msg.id);
     attachReportHandler(div, msg);
     attachEditHandler(div, msg);
+    attachReplyHandler(div, msg);
     container.scrollTop = container.scrollHeight;
   }
 
@@ -597,6 +635,58 @@
     });
   }
 
+  // ---------- Replying to a message (quote-style, like WhatsApp) ----------
+  let pendingReplyTo = null; // { id, displayName, snippet }
+
+  function setPendingReply(msg) {
+    const snippet = msg.message
+      ? (msg.message.length > 60 ? msg.message.slice(0, 60) + '...' : msg.message)
+      : (msg.image_url ? '📷 Photo' : '');
+    pendingReplyTo = { id: msg.id, displayName: msg.display_name, snippet };
+    const preview = document.getElementById('chatReplyPreview');
+    preview.querySelector('.chat-reply-preview-name').textContent = `Replying to ${msg.display_name}`;
+    preview.querySelector('.chat-reply-preview-text').textContent = snippet;
+    preview.style.display = 'flex';
+    const textInput = document.getElementById('chatTextInput');
+    if (textInput) textInput.focus();
+  }
+
+  function clearPendingReply() {
+    pendingReplyTo = null;
+    document.getElementById('chatReplyPreview').style.display = 'none';
+  }
+
+  document.getElementById('chatReplyCancelBtn').addEventListener('click', clearPendingReply);
+
+  function attachReplyHandler(div, msg) {
+    const replyBtn = div.querySelector('.chat-reply-icon');
+    if (!replyBtn) return;
+    replyBtn.addEventListener('click', () => {
+      if (!currentUser) {
+        loginPromptOverlay.classList.add('open');
+        return;
+      }
+      if (currentUser.banned) return;
+      setPendingReply(msg);
+    });
+
+    // Clicking a quoted block jumps to (and briefly highlights) the original message.
+    const quoted = div.querySelector('.chat-quoted-block');
+    if (quoted) {
+      quoted.addEventListener('click', () => {
+        const targetId = quoted.dataset.jumpTo;
+        if (!targetId) return;
+        const targetEl = document.querySelector(`.chat-msg[data-message-id="${targetId}"]`);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.style.transition = 'background 0.3s ease';
+          targetEl.style.background = '#FFF6C9';
+          setTimeout(() => { targetEl.style.background = ''; }, 1200);
+        }
+      });
+    }
+  }
+
   // ---------- Reporting a message/user (or, for admins on Master
   // Control, deleting it directly instead) ----------
   const reportPanel = document.getElementById('chatReportPanel');
@@ -614,7 +704,7 @@
       return;
     }
 
-    const btn = div.querySelector('.chat-report-icon:not(.chat-edit-icon):not(.chat-admin-delete-icon)');
+    const btn = div.querySelector('.chat-report-icon:not(.chat-edit-icon):not(.chat-admin-delete-icon):not(.chat-reply-icon)');
     if (!btn) return;
     btn.addEventListener('click', () => {
       if (!currentUser) {
@@ -742,7 +832,11 @@
   });
 
   async function sendMessage() {
-    if (!currentUser || currentUser.banned) return;
+    if (!currentUser) {
+      loginPromptOverlay.classList.add('open');
+      return;
+    }
+    if (currentUser.banned) return;
 
     const textInput = document.getElementById('chatTextInput');
     const text = textInput.value.trim();
@@ -778,7 +872,8 @@
           user_id: currentUser.id,
           display_name: currentUser.displayName,
           message: text || null,
-          image_url: imageUrl
+          image_url: imageUrl,
+          reply_to_id: pendingReplyTo ? pendingReplyTo.id : null
         })
         .select()
         .single();
@@ -787,6 +882,7 @@
       } else if (inserted) {
         renderedMessageIds.add(inserted.id);
         renderMessage(inserted);
+        clearPendingReply();
       }
     } catch (e) {
       sendError = e;
