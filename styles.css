@@ -434,22 +434,22 @@ footer {
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  padding: 10px 16px 10px 10px;
+  padding: 8px 16px 8px 10px;
   border-radius: 8px 8px 0 0;
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .nav-account-btn:hover { background: rgba(255,255,255,0.22); }
 
 .nav-avatar-img {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
 }
 
 .nav-avatar-initial {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #fff;
   color: var(--excel-green-deep);
@@ -457,7 +457,7 @@ footer {
   align-items: center;
   justify-content: center;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
 }
 
