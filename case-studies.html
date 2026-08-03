@@ -19,13 +19,37 @@
   .cs-card {
     background: #fff;
     border: 1px solid var(--grid-line);
+    border-top: 3px solid var(--excel-green);
     border-radius: var(--radius);
     padding: 18px;
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    transform: translateY(14px);
+    animation: csCardIn 0.45s ease forwards;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-top-color 0.2s ease;
   }
-  .cs-card-title { font-size: 15px; margin: 0 0 8px; }
-  .cs-card-desc { font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 14px; flex: 1; }
+  .cs-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 26px rgba(28,35,33,0.12);
+    border-top-color: var(--coral, #C96F4A);
+  }
+  @keyframes csCardIn { to { opacity: 1; transform: translateY(0); } }
+
+  .cs-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .cs-card-title { font-size: 15px; margin: 0 0 8px; line-height: 1.3; }
+  .cs-card-desc {
+    font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 12px; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .cs-details-btn {
+    background: none; border: none; color: var(--excel-green-deep); font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace; font-weight: 700; cursor: pointer;
+    padding: 0; margin: 0 0 12px; text-align: left; text-decoration: underline; text-decoration-style: dotted;
+    width: fit-content;
+  }
+  .cs-details-btn:hover { color: var(--excel-green); }
+
   .cs-price-badge {
     display: inline-block;
     font-family: 'IBM Plex Mono', monospace;
@@ -37,7 +61,13 @@
     width: fit-content;
   }
   .cs-price-badge.free { background: #D9EFDD; color: var(--excel-green-deep); }
-  .cs-price-badge.paid { background: #FFF6C9; color: #8A6D00; }
+  .cs-price-badge.paid {
+    background: linear-gradient(100deg, #FFF6C9 30%, #FFFDF0 45%, #FFF6C9 60%);
+    background-size: 250% 100%;
+    color: #8A6D00;
+    animation: csShine 3.5s ease-in-out infinite;
+  }
+  @keyframes csShine { 0% { background-position: 200% 0; } 100% { background-position: -50% 0; } }
 
   .cs-download-btn {
     display: inline-block;
@@ -52,12 +82,64 @@
     text-decoration: none;
     border: none;
     cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
   }
   .cs-download-btn:hover { background: var(--excel-green-deep); }
+  .cs-download-btn:active { transform: scale(0.97); }
   .cs-download-btn.disabled { background: var(--grid-line); color: var(--ink-soft); cursor: default; }
+  .cs-download-btn.disabled:active { transform: none; }
 
   .cs-paid-note { font-size: 11px; color: var(--ink-soft); margin-top: 6px; }
   .cs-empty { text-align: center; color: var(--ink-soft); padding: 40px 0; grid-column: 1 / -1; }
+
+  /* ---------- Full-details modal ---------- */
+  .cs-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(28,35,33,0.5);
+    z-index: 100000;
+    align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  .cs-modal-overlay.open { display: flex; opacity: 1; }
+  .cs-modal {
+    background: #fff;
+    border-radius: var(--radius);
+    max-width: 560px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px;
+    position: relative;
+    transform: scale(0.94) translateY(8px);
+    transition: transform 0.18s ease;
+  }
+  .cs-modal-overlay.open .cs-modal { transform: scale(1) translateY(0); }
+  .cs-modal-close {
+    position: absolute; top: 14px; right: 14px;
+    background: var(--paper); border: 1px solid var(--grid-line);
+    width: 30px; height: 30px; border-radius: 50%;
+    font-size: 16px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .cs-modal-close:hover { background: var(--grid-line); color: var(--ink); }
+  .cs-modal-title { font-size: 19px; margin: 0 26px 10px 0; }
+  .cs-modal-desc { font-size: 13px; color: var(--ink); line-height: 1.65; white-space: pre-wrap; margin: 14px 0 20px; }
+  .cs-modal-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .cs-chat-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: 1px solid var(--grid-line);
+    color: var(--ink-soft); font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .cs-chat-link:hover { background: var(--paper); color: var(--excel-green-deep); border-color: var(--excel-green); }
 </style>
 </head>
 <body>
@@ -98,9 +180,39 @@
   </div>
 </div>
 
+<div class="cs-modal-overlay" id="csModalOverlay">
+  <div class="cs-modal" id="csModal">
+    <button type="button" class="cs-modal-close" id="csModalCloseBtn" title="Close">✕</button>
+    <h2 class="cs-modal-title" id="csModalTitle"></h2>
+    <div id="csModalPriceBadge"></div>
+    <div class="cs-modal-desc" id="csModalDesc"></div>
+    <div class="cs-modal-actions" id="csModalActions"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
+let csItems = [];
+
+function priceBadgeHtml(c) {
+  const isFree = !c.price || c.price <= 0;
+  return isFree
+    ? `<span class="cs-price-badge free">FREE</span>`
+    : `<span class="cs-price-badge paid">₹${Number(c.price).toFixed(2)}</span>`;
+}
+
+function downloadActionHtml(c) {
+  const isFree = !c.price || c.price <= 0;
+  if (isFree && c.file_url) {
+    return `<a href="${c.file_url}" class="cs-download-btn" data-download-id="${c.id}" download>Download &darr;</a>`;
+  }
+  if (!isFree) {
+    return `<button class="cs-download-btn disabled" disabled>Download &darr;</button><div class="cs-paid-note">Paid downloads aren't available yet — check back soon.</div>`;
+  }
+  return `<button class="cs-download-btn disabled" disabled>File coming soon</button>`;
+}
+
 async function renderCaseStudies() {
   const grid = document.getElementById('csGrid');
   const { data, error } = await supabaseClient
@@ -114,39 +226,82 @@ async function renderCaseStudies() {
     return;
   }
 
-  grid.innerHTML = data.map(c => {
-    const isFree = !c.price || c.price <= 0;
-    const priceBadge = isFree
-      ? `<span class="cs-price-badge free">FREE</span>`
-      : `<span class="cs-price-badge paid">₹${Number(c.price).toFixed(2)}</span>`;
+  csItems = data;
 
-    const action = isFree && c.file_url
-      ? `<a href="${c.file_url}" class="cs-download-btn" data-download-id="${c.id}" download>Download &darr;</a>`
-      : (!isFree
-          ? `<button class="cs-download-btn disabled" disabled>Download &darr;</button><div class="cs-paid-note">Paid downloads aren't available yet — check back soon.</div>`
-          : `<button class="cs-download-btn disabled" disabled>File coming soon</button>`);
-
-    return `
-      <div class="cs-card">
+  grid.innerHTML = data.map((c, i) => `
+    <div class="cs-card" style="animation-delay:${Math.min(i * 0.06, 0.4)}s">
+      <div class="cs-card-top">
         <h3 class="cs-card-title">${c.title}</h3>
-        ${priceBadge}
-        <p class="cs-card-desc">${c.description}</p>
-        ${action}
       </div>
-    `;
-  }).join('');
+      ${priceBadgeHtml(c)}
+      <p class="cs-card-desc">${c.description}</p>
+      <button type="button" class="cs-details-btn" data-view-details="${c.id}">View full details &rarr;</button>
+      ${downloadActionHtml(c)}
+    </div>
+  `).join('');
 
   grid.querySelectorAll('[data-download-id]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.downloadId;
       try {
-        const item = data.find(x => x.id == id);
+        const item = csItems.find(x => x.id == id);
         await supabaseClient.from('case_studies').update({ downloads: (item.downloads || 0) + 1 }).eq('id', id);
       } catch (e) { /* download still proceeds even if the counter update fails */ }
     });
   });
+
+  grid.querySelectorAll('[data-view-details]').forEach(btn => {
+    btn.addEventListener('click', () => openDetailsModal(btn.dataset.viewDetails));
+  });
 }
 renderCaseStudies();
+
+// ---------- Full-details modal ----------
+const csModalOverlay = document.getElementById('csModalOverlay');
+
+function openDetailsModal(id) {
+  const c = csItems.find(x => x.id == id);
+  if (!c) return;
+
+  document.getElementById('csModalTitle').textContent = c.title;
+  document.getElementById('csModalPriceBadge').innerHTML = priceBadgeHtml(c);
+  document.getElementById('csModalDesc').textContent = c.description;
+  document.getElementById('csModalActions').innerHTML = `
+    ${downloadActionHtml(c)}
+    <a href="#" class="cs-chat-link" id="csModalChatLink">💬 Ask about this assignment</a>
+  `;
+
+  const dlBtn = document.getElementById('csModalActions').querySelector('[data-download-id]');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', async () => {
+      try {
+        await supabaseClient.from('case_studies').update({ downloads: (c.downloads || 0) + 1 }).eq('id', c.id);
+      } catch (e) { /* download still proceeds */ }
+    });
+  }
+
+  document.getElementById('csModalChatLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    closeDetailsModal();
+    if (window.openCommunityChat) {
+      window.openCommunityChat(`Question about "${c.title}": `);
+    }
+  });
+
+  csModalOverlay.classList.add('open');
+}
+
+function closeDetailsModal() {
+  csModalOverlay.classList.remove('open');
+}
+
+document.getElementById('csModalCloseBtn').addEventListener('click', closeDetailsModal);
+csModalOverlay.addEventListener('click', (e) => {
+  if (e.target === csModalOverlay) closeDetailsModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && csModalOverlay.classList.contains('open')) closeDetailsModal();
+});
 </script>
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>

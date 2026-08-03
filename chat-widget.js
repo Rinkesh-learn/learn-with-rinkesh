@@ -238,6 +238,22 @@
     showChatWindow();
   }
 
+  // Lets other pages (e.g. case-studies.html's "Ask a question" link)
+  // open the chat and pre-fill the compose box with a starter message.
+  window.openCommunityChat = function(prefillText) {
+    openChat();
+    if (prefillText) {
+      setTimeout(() => {
+        const input = document.getElementById('chatTextInput');
+        if (input) {
+          input.value = prefillText;
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+      }, 300);
+    }
+  };
+
   function showChatWindow() {
     chatWindow.classList.add('open');
     sessionStorage.setItem(OPEN_STATE_KEY, '1');
