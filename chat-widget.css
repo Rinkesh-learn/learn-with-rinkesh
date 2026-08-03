@@ -328,17 +328,21 @@
 }
 
 .chat-report-icon {
-  background: none;
+  background: rgba(0,0,0,0.05);
   border: none;
-  font-size: 10px;
+  font-size: 13px;
   cursor: pointer;
   opacity: 0;
-  padding: 0 0 0 4px;
+  padding: 3px 8px;
+  margin-left: 4px;
+  border-radius: 12px;
   vertical-align: middle;
-  transition: opacity 0.15s ease;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
-.chat-msg:hover .chat-report-icon { opacity: 0.85; }
-.chat-report-icon:hover { opacity: 1; }
+.chat-msg-own .chat-report-icon { background: rgba(255,255,255,0.2); }
+.chat-msg:hover .chat-report-icon { opacity: 0.9; }
+.chat-report-icon:hover { opacity: 1; background: rgba(0,0,0,0.12); }
+.chat-msg-own .chat-report-icon:hover { background: rgba(255,255,255,0.35); }
 
 .chat-input-row {
   display: flex;

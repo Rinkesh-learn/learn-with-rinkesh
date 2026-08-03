@@ -406,6 +406,22 @@ footer {
 /* ---------- Logged-in account nav ---------- */
 
 .nav-account { position: relative; }
+#navAuthArea { display: inline-flex; align-items: flex-end; }
+.nav-login-link {
+  text-decoration: none;
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.12);
+  padding: 10px 18px;
+  border-radius: 8px 8px 0 0;
+  display: inline-block;
+  line-height: 1.2;
+  box-sizing: border-box;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+.nav-login-link:hover { background: rgba(255,255,255,0.22); color: #fff; }
+
 
 .nav-account-btn {
   display: flex;
@@ -418,7 +434,7 @@ footer {
   font-size: 11px;
   font-weight: 700;
   color: #fff;
-  padding: 8px 14px 8px 8px;
+  padding: 10px 16px 10px 10px;
   border-radius: 8px 8px 0 0;
   transition: background 0.2s ease, transform 0.15s ease;
 }

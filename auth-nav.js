@@ -11,7 +11,7 @@ async function renderNavAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {
-    area.innerHTML = '<a href="login.html">Log In</a>';
+    area.innerHTML = '<a href="login.html" class="nav-login-link">Log In</a>';
     return;
   }
 
