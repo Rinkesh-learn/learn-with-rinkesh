@@ -112,13 +112,13 @@ nav.mainnav {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 7px 15px;
+  border-radius: 14px;
   background: var(--excel-green);
   color: #fff;
   text-decoration: none;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   transition: background 0.2s ease, transform 0.15s ease;
 }

@@ -41,7 +41,14 @@
   <p class="lede" style="margin-bottom:14px;">Browse by category. Click any formula to see how it works and jump straight into practicing it.</p>
   <a href="shortcuts.html" style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border-bottom:2px solid var(--amber);">⌨️ View all keyboard shortcuts &rarr;</a>
   <div style="max-width:420px; margin-top:16px;">
-    <input type="text" id="allFormulaSearch" placeholder="🔍 Search all 444 formulas..." style="width:100%; box-sizing:border-box; padding:10px 16px; border:1px solid var(--grid-line); border-radius:22px; font-family:'IBM Plex Sans',sans-serif; font-size:14px; box-shadow:0 3px 10px rgba(28,35,33,0.06);">
+    <input type="text" id="allFormulaSearch" placeholder="🔍 Search all 500+ formulas..." style="width:100%; box-sizing:border-box; padding:10px 16px; border:1px solid var(--grid-line); border-radius:22px; font-family:'IBM Plex Sans',sans-serif; font-size:14px; box-shadow:0 3px 10px rgba(28,35,33,0.06);">
+  </div>
+  <div style="display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;">
+    <button class="formula-filter-btn active" id="allFilterAllBtn" style="flex:none; padding:6px 14px;">All</button>
+    <button class="formula-filter-btn" id="allFilterPopularBtn" style="flex:none; padding:6px 14px;">⭐ Popular</button>
+    <button class="formula-filter-btn" id="allFilterBeginnerBtn" style="flex:none; padding:6px 14px;">Beginner</button>
+    <button class="formula-filter-btn" id="allFilterIntermediateBtn" style="flex:none; padding:6px 14px;">Intermediate</button>
+    <button class="formula-filter-btn" id="allFilterAdvancedBtn" style="flex:none; padding:6px 14px;">Advanced</button>
   </div>
 </div>
 
@@ -63,6 +70,64 @@
   const container = document.getElementById('formulaCategories');
   const noResults = document.getElementById('noFormulaResults');
 
+  // Same Popular/Beginner/Advanced heuristic used on the Practice page,
+  // so filtering here matches what a student sees over there. Admin-set
+  // values (from Master Control) override these once loaded from the DB.
+  const POPULAR_FORMULA_IDS = new Set([
+    'vlookup','hlookup','xlookup','index','match','choose',
+    'sum','sumif','sumifs','average','averageif','averageifs',
+    'count','counta','countif','countifs','max','min',
+    'round','roundup','rounddown',
+    'if','ifs','and','or','not','iferror','ifna',
+    'concatenate','concat','textjoin','left','right','mid','len','trim','upper','lower','proper','substitute','find',
+    'today','now','date','datedif','day','month','year','networkdays','workday',
+    'isblank','iserror','isnumber'
+  ]);
+  const BEGINNER_FORMULA_IDS = new Set([
+    'sum','average','min','max','count','counta','countblank',
+    'if','and','or','not',
+    'concatenate','concat','len','left','right','mid','upper','lower','proper','trim',
+    'round','roundup','rounddown','abs','sqrt','power','mod','int',
+    'today','now',
+    'sumif','countif','rand','randbetween'
+  ]);
+  const ADVANCED_FORMULA_IDS = new Set([
+    'xlookup','vlookup','hlookup','index','match','indirect','offset','choose',
+    'sumproduct','sumifs','countifs','averageifs','array_formula',
+    'filter','sort','sortby','unique','sequence','let','lambda',
+    'byrow','bycol','makearray','reduce','scan','map',
+    'textsplit','textjoin','regexextract','regexmatch','regexreplace',
+    'npv','irr','xirr','xnpv','pmt','ipmt','ppmt','fv','pv','rate',
+    'forecast','trend','linest','logest','growth',
+    'indirect','offset','cell','formulatext','iferror','ifna'
+  ]);
+  const dbDifficultyMap = {}; // filled in by the live DB load below
+  function formulaDifficulty(id) {
+    if (dbDifficultyMap[id]) return dbDifficultyMap[id];
+    if (BEGINNER_FORMULA_IDS.has(id)) return 'beginner';
+    if (ADVANCED_FORMULA_IDS.has(id)) return 'advanced';
+    return 'intermediate';
+  }
+
+  let allFormulaFilterMode = 'all';
+  const ALL_FILTER_BTN_IDS = {
+    all: 'allFilterAllBtn',
+    popular: 'allFilterPopularBtn',
+    beginner: 'allFilterBeginnerBtn',
+    intermediate: 'allFilterIntermediateBtn',
+    advanced: 'allFilterAdvancedBtn'
+  };
+  function setAllFormulaFilter(mode) {
+    allFormulaFilterMode = mode;
+    Object.entries(ALL_FILTER_BTN_IDS).forEach(([key, id]) => {
+      document.getElementById(id).classList.toggle('active', key === mode);
+    });
+    renderFormulas(document.getElementById('allFormulaSearch').value);
+  }
+  Object.entries(ALL_FILTER_BTN_IDS).forEach(([mode, id]) => {
+    document.getElementById(id).addEventListener('click', () => setAllFormulaFilter(mode));
+  });
+
   function renderFormulas(term) {
     term = (term || '').trim().toLowerCase();
     container.innerHTML = '';
@@ -70,7 +135,13 @@
 
     CATEGORY_ORDER.forEach(cat => {
       if (!categories[cat]) return;
-      const matches = categories[cat].filter(f =>
+      let categoryFormulas = categories[cat];
+      if (allFormulaFilterMode === 'popular') {
+        categoryFormulas = categoryFormulas.filter(f => POPULAR_FORMULA_IDS.has(f.id));
+      } else if (allFormulaFilterMode === 'beginner' || allFormulaFilterMode === 'intermediate' || allFormulaFilterMode === 'advanced') {
+        categoryFormulas = categoryFormulas.filter(f => formulaDifficulty(f.id) === allFormulaFilterMode);
+      }
+      const matches = categoryFormulas.filter(f =>
         !term || f.name.toLowerCase().includes(term) || f.description.toLowerCase().includes(term)
       );
       if (matches.length === 0) return;
@@ -117,9 +188,11 @@
   // checks which formulas genuinely have enabled questions right now.
   (async function loadLiveFormulaData() {
     try {
-      const [{ data: allFormulas }, { data: questionRows }] = await Promise.all([
+      const [{ data: allFormulas }, { data: questionRows }, { data: popularRows }, { data: difficultyRows }] = await Promise.all([
         supabaseClient.from('formulas').select('*').eq('enabled', true),
-        supabaseClient.from('formula_questions').select('formula_id').eq('enabled', true)
+        supabaseClient.from('formula_questions').select('formula_id').eq('enabled', true),
+        supabaseClient.from('formulas').select('id').eq('popular', true),
+        supabaseClient.from('formulas').select('id, difficulty').not('difficulty', 'is', null)
       ]);
 
       (allFormulas || []).forEach(row => {
@@ -138,6 +211,12 @@
         PRACTICE_ENABLED_IDS.length = 0;
         PRACTICE_ENABLED_IDS.push(...liveIds);
       }
+
+      if (popularRows && popularRows.length) {
+        POPULAR_FORMULA_IDS.clear();
+        popularRows.forEach(row => POPULAR_FORMULA_IDS.add(row.id));
+      }
+      (difficultyRows || []).forEach(row => { if (row.difficulty) dbDifficultyMap[row.id] = row.difficulty; });
 
       renderFormulas(document.getElementById('allFormulaSearch').value);
     } catch (e) { /* keep working with the static list only */ }
