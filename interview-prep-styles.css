@@ -108,18 +108,14 @@
   padding: 12px 14px;
   opacity: 0;
   transform: translateY(16px);
-  cursor: pointer;
   transition: opacity 0.4s ease, transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .ip-qa-item.visible { opacity: 1; transform: translateY(0); }
-.ip-qa-item.visible:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 8px 20px rgba(28,35,33,0.12); }
-.ip-qa-item.expanded {
-  transform: scale(1.02);
+.ip-qa-item.visible:hover {
+  transform: translateY(-3px) scale(1.015);
   box-shadow: 0 12px 28px rgba(28,35,33,0.18);
   border-color: var(--excel-green);
-  border-left-width: 4px;
 }
-.ip-qa-item.expanded:hover { transform: scale(1.02); }
 .ip-qa-item.basic { border-left-color: var(--excel-green); }
 .ip-qa-item.intermediate { border-left-color: var(--amber); }
 .ip-qa-item.advanced { border-left-color: var(--coral); }
@@ -141,7 +137,7 @@
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.25s ease;
 }
-.ip-qa-item.expanded .ip-qa-answer { max-height: 400px; opacity: 1; margin-top: 8px; }
+.ip-qa-item:hover .ip-qa-answer { max-height: 400px; opacity: 1; margin-top: 8px; }
 
 .ip-qa-badge {
   display: inline-block;

@@ -134,7 +134,6 @@ const FALLBACK_QUESTIONS = [
 
 let QUESTIONS = FALLBACK_QUESTIONS;
 let currentLevel = 'all';
-let openIndex = null;
 let qaHasRenderedOnce = false;
 
 function renderQA() {
@@ -145,16 +144,11 @@ function renderQA() {
 
   filtered.forEach((item, i) => {
     const div = document.createElement('div');
-    div.className = `ip-qa-item ${item.level}` + (openIndex === i ? ' expanded' : '');
+    div.className = `ip-qa-item ${item.level}`;
     div.innerHTML = `
       <div class="ip-qa-question"><span class="ip-qa-badge ${item.level}">${item.level}</span>${item.q}</div>
       <div class="ip-qa-answer">${item.a}</div>
     `;
-    div.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openIndex = (openIndex === i) ? null : i;
-      renderQA();
-    });
     list.appendChild(div);
   });
 
@@ -169,13 +163,6 @@ function renderQA() {
     qaHasRenderedOnce = true;
   });
 }
-
-document.addEventListener('click', () => {
-  if (openIndex !== null) {
-    openIndex = null;
-    renderQA();
-  }
-});
 
 document.querySelectorAll('#ipTabs .ip-level-tab').forEach(tab => {
   tab.addEventListener('click', () => {
