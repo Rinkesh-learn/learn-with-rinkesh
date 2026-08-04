@@ -89,6 +89,12 @@
       <div class="ip-level-tab" data-level="intermediate">Intermediate</div>
       <div class="ip-level-tab" data-level="advanced">Advanced</div>
     </div>
+    <div class="ip-level-tabs" id="ipPracticalTabs" style="display:none;">
+      <div class="ip-level-tab active" data-plevel="all">All</div>
+      <div class="ip-level-tab" data-plevel="basic">Basic</div>
+      <div class="ip-level-tab" data-plevel="intermediate">Intermediate</div>
+      <div class="ip-level-tab" data-plevel="advanced">Advanced</div>
+    </div>
   </div>
 
   <div id="theoreticalView">
@@ -97,12 +103,6 @@
 
   <div id="practicalView" style="display:none;">
     <p style="color:var(--ink-soft); font-size:14px; margin-bottom:10px;">Real interview scenarios — solve each one in an actual spreadsheet, not just multiple choice.</p>
-    <div class="ip-level-tabs" id="ipPracticalTabs">
-      <div class="ip-level-tab active" data-plevel="all">All</div>
-      <div class="ip-level-tab" data-plevel="basic">Basic</div>
-      <div class="ip-level-tab" data-plevel="intermediate">Intermediate</div>
-      <div class="ip-level-tab" data-plevel="advanced">Advanced</div>
-    </div>
     <div class="ip-tips-grid" id="ipPracticalGrid" style="grid-template-columns:repeat(2,1fr);"></div>
   </div>
 </div>
@@ -265,6 +265,7 @@ document.querySelectorAll('#ipModeTabs .ip-level-tab').forEach(tab => {
     document.getElementById('theoreticalView').style.display = mode === 'theoretical' ? 'block' : 'none';
     document.getElementById('practicalView').style.display = mode === 'practical' ? 'block' : 'none';
     document.getElementById('ipTabs').style.display = mode === 'theoretical' ? 'flex' : 'none';
+    document.getElementById('ipPracticalTabs').style.display = mode === 'practical' ? 'flex' : 'none';
   });
 });
 
