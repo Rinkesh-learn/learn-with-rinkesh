@@ -76,6 +76,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .formula-video-icon {
@@ -94,7 +95,7 @@
 }
 .formula-video-icon.faded:hover { transform: none; }
 
-.formula-list-item:hover { background: #F0F5F1; }
+.formula-list-item:hover { background: #F0F5F1; transform: translateX(3px) scale(1.015); box-shadow: 0 4px 10px rgba(28,35,33,0.08); }
 
 .formula-list-category {
   font-family: 'IBM Plex Mono', monospace;

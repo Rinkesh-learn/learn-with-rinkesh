@@ -226,6 +226,7 @@
     <a data-view="articles">📘 Articles</a>
     <a data-view="chat_moderation">💬 Community Chat Moderation</a>
     <a data-view="case_studies">📁 Case Studies</a>
+    <a data-view="climb_boy">🧗 Climb Animation</a>
     <a data-view="bookings">📅 1-on-1 Bookings</a>
   </div>
 
@@ -564,6 +565,31 @@ criteria: The condition to match"></textarea>
           <button class="admin-mini-btn" id="csCancelBtn">Cancel</button>
         </div>
         <div id="csMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-climb_boy" style="display:none;">
+      <h1>Climb Animation</h1>
+      <p class="sub">The little climbing character on the homepage — turn it on/off and edit what he says.</p>
+      <div class="admin-panel" style="max-width:600px;">
+        <label class="chat-checkbox-row" style="font-weight:700; margin-bottom:16px;">
+          <input type="checkbox" id="cbEnabledToggle"> Show the climb animation on the homepage
+        </label>
+
+        <label>Climb messages (one per line — shown in order as he climbs)</label>
+        <textarea id="cbClimbMessages" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px; font-family:inherit;"></textarea>
+
+        <label>Hover message 1 (shown first if a visitor hovers over him)</label>
+        <input type="text" id="cbHoverMsg1" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+
+        <label>Hover message 2 (shown right after)</label>
+        <input type="text" id="cbHoverMsg2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:14px;">
+
+        <label>Goodbye message (shown right before he waves and disappears)</label>
+        <input type="text" id="cbGoodbyeMsg" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:16px;">
+
+        <button class="btn btn-primary" id="cbSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
+        <div id="cbMessage" style="margin-top:10px; font-size:13px;"></div>
       </div>
     </div>
 
@@ -3137,6 +3163,41 @@ criteria: The condition to match"></textarea>
     loadAvailability();
   });
 
+  async function loadClimbBoySettings() {
+    const msg = document.getElementById('cbMessage');
+    const { data, error } = await supabaseClient.from('climbing_boy_settings').select('*').eq('id', 1).maybeSingle();
+    if (error || !data) {
+      if (msg) { msg.textContent = "Couldn't load settings — has add-climbing-boy-settings.sql been run yet?"; msg.style.color = '#B3261E'; }
+      return;
+    }
+    document.getElementById('cbEnabledToggle').checked = data.enabled !== false;
+    document.getElementById('cbClimbMessages').value = (data.climb_messages || []).join('\n');
+    document.getElementById('cbHoverMsg1').value = data.hover_message_1 || '';
+    document.getElementById('cbHoverMsg2').value = data.hover_message_2 || '';
+    document.getElementById('cbGoodbyeMsg').value = data.goodbye_message || '';
+  }
+
+  document.getElementById('cbSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('cbMessage');
+    const messages = document.getElementById('cbClimbMessages').value.split('\n').map(l => l.trim()).filter(Boolean);
+    const { error } = await supabaseClient.from('climbing_boy_settings').update({
+      enabled: document.getElementById('cbEnabledToggle').checked,
+      climb_messages: messages,
+      hover_message_1: document.getElementById('cbHoverMsg1').value.trim(),
+      hover_message_2: document.getElementById('cbHoverMsg2').value.trim(),
+      goodbye_message: document.getElementById('cbGoodbyeMsg').value.trim(),
+      updated_at: new Date().toISOString()
+    }).eq('id', 1);
+
+    if (error) {
+      msg.textContent = error.message;
+      msg.style.color = '#B3261E';
+      return;
+    }
+    msg.textContent = 'Saved! Changes apply the next time someone loads the homepage.';
+    msg.style.color = 'var(--excel-green-deep)';
+  });
+
   async function loadBookings() {
     const body = document.getElementById('bookingsTableBody');
     const { data, error } = await supabaseClient
@@ -3176,6 +3237,7 @@ criteria: The condition to match"></textarea>
     loadCaseStudiesAdmin();
     loadAvailability();
     loadBookings();
+    loadClimbBoySettings();
     populatePageSelect();
 
     const savedView = sessionStorage.getItem('adminActiveView');

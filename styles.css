@@ -54,7 +54,7 @@ a { color: inherit; }
 }
 
 .topbar-inner {
-  max-width: 1080px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 14px 24px 0;
   display: flex;
@@ -99,7 +99,7 @@ nav.mainnav {
 }
 
 .subnav-inner {
-  max-width: 1080px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
@@ -165,7 +165,7 @@ nav.mainnav a.active {
 /* ---------- Hero: literal formula bar ---------- */
 
 .hero {
-  max-width: 1080px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 64px 24px 40px;
 }
@@ -250,7 +250,7 @@ nav.mainnav a.active {
 /* ---------- Grid section: feature "cells" ---------- */
 
 .sheet {
-  max-width: 1080px;
+  max-width: 1320px;
   margin: 40px auto 80px;
   padding: 0 24px;
 }
