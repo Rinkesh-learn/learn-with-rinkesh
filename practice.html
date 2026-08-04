@@ -240,11 +240,10 @@ function renderList() {
         ? `<a href="${f.videoUrl}" target="_blank" rel="noopener" title="Watch tutorial" class="formula-video-icon" onclick="event.stopPropagation();">${playIcon}</a>`
         : `<span class="formula-video-icon faded" title="Video coming soon">${playIcon}</span>`;
       li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>${videoIcon}`;
-      li.addEventListener('click', async () => {
+      li.addEventListener('click', () => {
         currentFormula = f;
         renderList();
-        await ensureQuestionsLoaded(f);
-        openModal(f);
+        openModal(f); // instant — no network fetch just to preview "how it works"
       });
       list.appendChild(li);
     });
@@ -304,9 +303,10 @@ function openModal(formula) {
     overlay.classList.remove('open');
   });
 
-  document.getElementById('readyBtn').addEventListener('click', () => {
+  document.getElementById('readyBtn').addEventListener('click', async () => {
     overlay.classList.remove('open');
     if (hasPractice) {
+      await ensureQuestionsLoaded(formula); // only fetch now — the point the user actually asked to practice
       startPractice(formula, 0);
     } else {
       startFreePractice(formula);
@@ -819,13 +819,12 @@ if (requestedFormulaId) {
   // a case-study chat message, etc.) — this less-common path still waits
   // for the sidebar data first, so it doesn't briefly show the wrong
   // formula or a "no questions yet" flash before catching up.
-  sidebarDataPromise.then(async () => {
+  sidebarDataPromise.then(() => {
     const match = FORMULAS.find(f => f.id === requestedFormulaId);
     if (match) {
       currentFormula = match;
       renderList();
-      await ensureQuestionsLoaded(match);
-      openModal(match);
+      openModal(match); // instant here too — Ready-click now handles the fetch
       setTimeout(() => {
         const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
         if (targetLi) targetLi.scrollIntoView({ block: 'center', behavior: 'smooth' });
