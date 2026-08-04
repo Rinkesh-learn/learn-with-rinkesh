@@ -240,8 +240,12 @@
 
   // Lets other pages (e.g. case-studies.html's "Ask a question" link)
   // open the chat and pre-fill the compose box with a starter message.
-  window.openCommunityChat = function(prefillText) {
+  // If a case study id/title is passed, the resulting message carries a
+  // clickable reference back to that assignment for other community
+  // members to jump straight to it.
+  window.openCommunityChat = function(prefillText, caseStudyId, caseStudyTitle) {
     openChat();
+    if (caseStudyId) pendingCaseStudyRef = { id: caseStudyId, title: caseStudyTitle || '' };
     if (prefillText) {
       setTimeout(() => {
         const input = document.getElementById('chatTextInput');
@@ -590,9 +594,14 @@
          </div>`
       : (msg.reply_to_id ? `<div class="chat-quoted-block"><span class="qtext">Original message not loaded</span></div>` : '');
 
+    const caseStudyChip = msg.case_study_id
+      ? `<a class="chat-case-study-chip" href="case-studies.html?id=${msg.case_study_id}">📁 ${(msg.case_study_title || 'View assignment').replace(/</g, '&lt;')}</a>`
+      : '';
+
     div.innerHTML = `
       <div class="chat-msg-name">${nameHtml} <span class="chat-msg-time">${time}</span>${editedTag} ${actionIcon}${editIcon}${replyIcon}</div>
       ${quotedHtml}
+      ${caseStudyChip}
       ${msg.message ? `<div class="chat-msg-text" data-raw-text="${msg.message.replace(/"/g, '&quot;')}">${msg.message.replace(/</g, '&lt;')}</div>` : ''}
       ${msg.image_url ? `<img class="chat-msg-image" src="${msg.image_url}" alt="Attached image">` : ''}
       ${renderReactionBar(msg.id)}
@@ -664,6 +673,7 @@
 
   // ---------- Replying to a message (quote-style, like WhatsApp) ----------
   let pendingReplyTo = null; // { id, displayName, snippet }
+  let pendingCaseStudyRef = null; // { id, title } — set by openCommunityChat(), attached to the next message sent
 
   function setPendingReply(msg) {
     const snippet = msg.message
@@ -918,7 +928,9 @@
           display_name: currentUser.displayName,
           message: text || null,
           image_url: imageUrl,
-          reply_to_id: pendingReplyTo ? pendingReplyTo.id : null
+          reply_to_id: pendingReplyTo ? pendingReplyTo.id : null,
+          case_study_id: pendingCaseStudyRef ? pendingCaseStudyRef.id : null,
+          case_study_title: pendingCaseStudyRef ? pendingCaseStudyRef.title : null
         })
         .select()
         .single();
@@ -928,6 +940,7 @@
         renderedMessageIds.add(inserted.id);
         renderMessage(inserted);
         clearPendingReply();
+        pendingCaseStudyRef = null;
       }
     } catch (e) {
       sendError = e;

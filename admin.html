@@ -277,7 +277,10 @@
             </div>
           </div>
           <div id="importStatus" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;"></div>
-          <div id="formulaRowCount" style="font-size:12px; color:var(--ink-soft); margin-bottom:10px; font-family:'IBM Plex Mono', monospace;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div id="formulaRowCount" style="font-size:12px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;"></div>
+            <button class="admin-mini-btn" id="exportFormulasBtn">⬇ Export filtered to CSV</button>
+          </div>
           <div style="overflow-x:auto; position:relative;">
             <table class="admin-table">
               <thead><tr>
@@ -854,6 +857,23 @@ criteria: The condition to match"></textarea>
     URL.revokeObjectURL(url);
   });
 
+  document.getElementById('exportFormulasBtn').addEventListener('click', () => {
+    const list = currentFilteredList.length ? currentFilteredList : allFormulasAdmin;
+    const headers = ['Name', 'Category', 'Has Video', 'Questions', 'Practiced', 'Popular', 'Difficulty', 'Status'];
+    const rows = list.map(f => [
+      f.name, f.category, f.video_url ? 'Yes' : 'No', questionCounts[f.id] || 0, practiceCounts[f.id] || 0,
+      f.popular ? 'Yes' : 'No', f.difficulty || heuristicDifficulty(f.id), f.enabled ? 'Enabled' : 'Disabled'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'learn-with-rinkesh-formulas-filtered.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
   // ---------- Sub-tabs within Formulas view ----------
   document.getElementById('subTabFormulasBtn').addEventListener('click', () => {
     document.getElementById('subTabFormulasBtn').style.background = 'var(--excel-green)';
@@ -940,9 +960,9 @@ criteria: The condition to match"></textarea>
         <td><button class="admin-mini-btn" data-toggle-popular="${f.id}" data-current="${f.popular}" style="${f.popular ? 'background:#F6C846; border-color:#F6C846;' : ''}">${f.popular ? '⭐ Popular' : '☆ Mark Popular'}</button></td>
         <td>
           <select data-difficulty="${f.id}" style="font-size:11px; padding:3px;">
-            <option value="beginner" ${f.difficulty === 'beginner' ? 'selected' : ''}>Beginner</option>
-            <option value="intermediate" ${(!f.difficulty || f.difficulty === 'intermediate') ? 'selected' : ''}>Intermediate</option>
-            <option value="advanced" ${f.difficulty === 'advanced' ? 'selected' : ''}>Advanced</option>
+            <option value="beginner" ${(f.difficulty || heuristicDifficulty(f.id)) === 'beginner' ? 'selected' : ''}>Beginner</option>
+            <option value="intermediate" ${(f.difficulty || heuristicDifficulty(f.id)) === 'intermediate' ? 'selected' : ''}>Intermediate</option>
+            <option value="advanced" ${(f.difficulty || heuristicDifficulty(f.id)) === 'advanced' ? 'selected' : ''}>Advanced</option>
           </select>
         </td>
         <td>${f.enabled ? '<span class="admin-badge ok">Enabled</span>' : '<span class="admin-badge banned">Disabled</span>'}</td>
@@ -1190,6 +1210,36 @@ criteria: The condition to match"></textarea>
   }
 
   // ---------- Excel-style per-column filters ----------
+  // Same heuristic used on the student-facing Practice page — a formula
+  // with no explicit difficulty set in the DB still shows as Beginner/
+  // Advanced here if it's in one of these lists, instead of every
+  // unset formula silently defaulting to Intermediate (which made the
+  // Beginner/Advanced filters here show almost nothing, out of sync
+  // with what students actually see).
+  const BEGINNER_FORMULA_IDS_ADMIN = new Set([
+    'sum','average','min','max','count','counta','countblank',
+    'if','and','or','not',
+    'concatenate','concat','len','left','right','mid','upper','lower','proper','trim',
+    'round','roundup','rounddown','abs','sqrt','power','mod','int',
+    'today','now',
+    'sumif','countif','rand','randbetween'
+  ]);
+  const ADVANCED_FORMULA_IDS_ADMIN = new Set([
+    'xlookup','vlookup','hlookup','index','match','indirect','offset','choose',
+    'sumproduct','sumifs','countifs','averageifs','array_formula',
+    'filter','sort','sortby','unique','sequence','let','lambda',
+    'byrow','bycol','makearray','reduce','scan','map',
+    'textsplit','textjoin','regexextract','regexmatch','regexreplace',
+    'npv','irr','xirr','xnpv','pmt','ipmt','ppmt','fv','pv','rate',
+    'forecast','trend','linest','logest','growth',
+    'indirect','offset','cell','formulatext','iferror','ifna'
+  ]);
+  function heuristicDifficulty(id) {
+    if (BEGINNER_FORMULA_IDS_ADMIN.has(id)) return 'beginner';
+    if (ADVANCED_FORMULA_IDS_ADMIN.has(id)) return 'advanced';
+    return 'intermediate';
+  }
+
   const columnFilters = { category: new Set(), video: new Set(), questions: new Set(), practiced: new Set(), popular: new Set(), difficulty: new Set(), status: new Set() };
 
   function getColumnValue(f, col) {
@@ -1199,7 +1249,7 @@ criteria: The condition to match"></textarea>
       case 'questions': return questionCounts[f.id] ? 'yes' : 'no';
       case 'practiced': return practiceCounts[f.id] ? 'yes' : 'no';
       case 'popular': return f.popular ? 'yes' : 'no';
-      case 'difficulty': return f.difficulty || 'intermediate';
+      case 'difficulty': return f.difficulty || heuristicDifficulty(f.id);
       case 'status': return f.enabled ? 'enabled' : 'disabled';
       default: return '';
     }

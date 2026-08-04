@@ -24,6 +24,7 @@
     padding: 18px;
     display: flex;
     flex-direction: column;
+    position: relative;
     opacity: 0;
     transform: translateY(14px);
     animation: csCardIn 0.45s ease forwards;
@@ -36,19 +37,31 @@
   }
   @keyframes csCardIn { to { opacity: 1; transform: translateY(0); } }
 
-  .cs-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .cs-card-top { padding-right: 74px; }
   .cs-card-title { font-size: 15px; margin: 0 0 8px; line-height: 1.3; }
   .cs-card-desc {
-    font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 12px; flex: 1;
+    font-size: 13px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 14px; flex: 1;
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }
   .cs-details-btn {
-    background: none; border: none; color: var(--excel-green-deep); font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace; font-weight: 700; cursor: pointer;
-    padding: 0; margin: 0 0 12px; text-align: left; text-decoration: underline; text-decoration-style: dotted;
-    width: fit-content;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--paper);
+    border: 1px solid var(--grid-line);
+    color: var(--ink-soft);
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 9px;
+    border-radius: 12px;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
-  .cs-details-btn:hover { color: var(--excel-green); }
+  .cs-details-btn:hover { background: var(--excel-green); color: #fff; border-color: var(--excel-green); }
 
   .cs-price-badge {
     display: inline-block;
@@ -96,7 +109,7 @@
   .cs-modal-overlay {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(28,35,33,0.5);
+    background: rgba(28,35,33,0.55);
     z-index: 100000;
     align-items: center; justify-content: center;
     padding: 20px;
@@ -107,39 +120,53 @@
   .cs-modal {
     background: #fff;
     border-radius: var(--radius);
+    border-top: 4px solid var(--excel-green);
     max-width: 560px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
-    padding: 28px;
+    padding: 30px 28px 28px;
     position: relative;
+    box-shadow: 0 20px 50px rgba(28,35,33,0.25);
     transform: scale(0.94) translateY(8px);
     transition: transform 0.18s ease;
   }
   .cs-modal-overlay.open .cs-modal { transform: scale(1) translateY(0); }
   .cs-modal-close {
-    position: absolute; top: 14px; right: 14px;
+    position: absolute; top: 16px; right: 16px;
     background: var(--paper); border: 1px solid var(--grid-line);
     width: 30px; height: 30px; border-radius: 50%;
     font-size: 16px; line-height: 1; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft);
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
   }
-  .cs-modal-close:hover { background: var(--grid-line); color: var(--ink); }
+  .cs-modal-close:hover { background: var(--grid-line); color: var(--ink); transform: rotate(90deg); }
   .cs-modal-title { font-size: 19px; margin: 0 26px 10px 0; }
-  .cs-modal-desc { font-size: 13px; color: var(--ink); line-height: 1.65; white-space: pre-wrap; margin: 14px 0 20px; }
-  .cs-modal-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .cs-modal-desc { font-size: 13px; color: var(--ink); line-height: 1.65; white-space: pre-wrap; margin: 14px 0 22px; }
+  .cs-modal-actions { display: flex; align-items: center; gap: 10px; }
 
-  .cs-chat-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: none; border: 1px solid var(--grid-line);
-    color: var(--ink-soft); font-size: 12px; font-family: 'IBM Plex Mono', monospace;
-    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  .cs-chat-icon-btn {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px;
+    background: var(--paper);
+    border: 1px solid var(--grid-line);
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
     text-decoration: none;
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   }
-  .cs-chat-link:hover { background: var(--paper); color: var(--excel-green-deep); border-color: var(--excel-green); }
+  .cs-chat-icon-btn:hover { background: var(--sky, #2F80C9); border-color: var(--sky, #2F80C9); transform: scale(1.08); }
+  .cs-chat-icon-btn .cs-chat-tip {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; font-size: 11px; font-family: 'IBM Plex Mono', monospace;
+    padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+  .cs-chat-icon-btn:hover .cs-chat-tip { opacity: 1; }
 </style>
 </head>
 <body>
@@ -235,7 +262,7 @@ async function renderCaseStudies() {
       </div>
       ${priceBadgeHtml(c)}
       <p class="cs-card-desc">${c.description}</p>
-      <button type="button" class="cs-details-btn" data-view-details="${c.id}">View full details &rarr;</button>
+      <button type="button" class="cs-details-btn" data-view-details="${c.id}">🔍 Details</button>
       ${downloadActionHtml(c)}
     </div>
   `).join('');
@@ -253,6 +280,9 @@ async function renderCaseStudies() {
   grid.querySelectorAll('[data-view-details]').forEach(btn => {
     btn.addEventListener('click', () => openDetailsModal(btn.dataset.viewDetails));
   });
+
+  const deepLinkId = new URLSearchParams(window.location.search).get('id');
+  if (deepLinkId) openDetailsModal(deepLinkId);
 }
 renderCaseStudies();
 
@@ -268,7 +298,10 @@ function openDetailsModal(id) {
   document.getElementById('csModalDesc').textContent = c.description;
   document.getElementById('csModalActions').innerHTML = `
     ${downloadActionHtml(c)}
-    <a href="#" class="cs-chat-link" id="csModalChatLink">💬 Ask about this assignment</a>
+    <a href="#" class="cs-chat-icon-btn" id="csModalChatLink" title="">
+      💬
+      <span class="cs-chat-tip">Ask in community chat</span>
+    </a>
   `;
 
   const dlBtn = document.getElementById('csModalActions').querySelector('[data-download-id]');
@@ -284,7 +317,7 @@ function openDetailsModal(id) {
     e.preventDefault();
     closeDetailsModal();
     if (window.openCommunityChat) {
-      window.openCommunityChat(`Question about "${c.title}": `);
+      window.openCommunityChat(`Question about "${c.title}": `, c.id, c.title);
     }
   });
 
