@@ -676,3 +676,28 @@
 .formula-list-item.practiced .flname {
   color: #2563EB;
 }
+
+/* ---------- Clickable active formula title (re-opens the info popup) ---------- */
+
+#activeTitle.clickable-title {
+  cursor: pointer;
+}
+#activeTitle .active-title-tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 3;
+}
+#activeTitle.clickable-title:hover .active-title-tip {
+  opacity: 1;
+}

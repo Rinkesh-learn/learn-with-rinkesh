@@ -72,7 +72,7 @@
       <div class="practice-active" style="width:100%;">
         <div id="sheetInstructionBanner" style="display:none; width:fit-content; margin:0 auto 4px; font-size:11px; font-weight:600; background:#FFF6C9; border-radius:12px; padding:3px 10px; text-align:center;"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:1px;">
-          <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; line-height:1.2;"></h2>
+          <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; line-height:1.2; position:relative;"></h2>
           <div id="questionNavGroup" style="display:none; flex-shrink:0; gap:6px; align-items:center;">
             <button class="admin-mini-btn" id="prevQuestionBtn" title="Previous question" style="padding:6px 9px; font-size:12px;">◀</button>
             <button class="btn btn-primary" id="checkBtn" style="padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
@@ -487,18 +487,25 @@ function createSheet(name, celldata, mergeConfig) {
 
 function setFormulaTitle(name) {
   const el = document.getElementById('activeTitle');
+  const tip = currentFormula ? `<span class="active-title-tip">Click to see how it works</span>` : '';
+  el.classList.toggle('clickable-title', !!currentFormula);
   const parenIndex = name.indexOf('(');
   if (parenIndex === -1) {
-    el.innerHTML = `<span style="font-size:clamp(14px, 2.2vw, 20px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">${name}</span>`;
+    el.innerHTML = `${tip}<span style="font-size:clamp(14px, 2.2vw, 20px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">${name}</span>`;
     return;
   }
   const mainPart = name.slice(0, parenIndex).trim();
   const descPart = name.slice(parenIndex).trim();
   el.innerHTML = `
+    ${tip}
     <span style="font-size:clamp(14px, 2.2vw, 20px); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${mainPart}</span>
     <span style="font-size:11px; font-weight:400; color:var(--ink-soft); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${descPart}</span>
   `;
 }
+
+document.getElementById('activeTitle').addEventListener('click', () => {
+  if (currentFormula) openModal(currentFormula);
+});
 
 function startBlankSheet() {
   currentFormula = null;
