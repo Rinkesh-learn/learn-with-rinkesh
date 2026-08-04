@@ -51,9 +51,15 @@
   padding: 12px 14px;
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 .ip-tip-card.visible { opacity: 1; transform: translateY(0); }
+.ip-tip-card.visible:hover {
+  transform: scale(1.15);
+  box-shadow: 0 16px 30px rgba(28,35,33,0.18);
+  z-index: 5;
+  position: relative;
+}
 .ip-tip-card:nth-child(2) { border-top-color: var(--coral); }
 .ip-tip-card:nth-child(3) { border-top-color: var(--sky); }
 .ip-tip-card:nth-child(4) { border-top-color: var(--amber); }
@@ -69,7 +75,7 @@
 /* ---------- Q&A accordion ---------- */
 
 .ip-shell {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto 40px;
   padding: 0 24px;
 }
