@@ -799,19 +799,28 @@ async function loadPopularFromAdmin() {
   });
 })();
 
-window.addEventListener('load', () => {
-  setTimeout(async () => {
-    // Load admin data BEFORE deciding what to show — otherwise a formula
-    // opened straight from a link (e.g. Interview Prep) could render as
-    // "no practice questions yet" for a split second before catching up,
-    // or worse, permanently if the auto-open logic ran first.
-    await loadMissingFormulasFromDB();
-    await Promise.all([loadFormulaHasQuestionsSet(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
-    renderList();
+// The sidebar's own data (dots, Popular/Beginner tags, admin-set video
+// links, and any DB-only combo formulas) loads in the background here —
+// completely independent of the spreadsheet itself, which needs none of
+// this to appear. renderList() re-runs once it's ready to fill these in.
+async function loadSidebarDataInBackground() {
+  await loadMissingFormulasFromDB();
+  await Promise.all([loadFormulaHasQuestionsSet(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
+  renderList();
+}
 
-    const params = new URLSearchParams(window.location.search);
-    const requested = params.get('formula');
-    const match = requested ? FORMULAS.find(f => f.id === requested) : null;
+const sidebarDataPromise = loadSidebarDataInBackground();
+
+const initParams = new URLSearchParams(window.location.search);
+const requestedFormulaId = initParams.get('formula');
+
+if (requestedFormulaId) {
+  // Arrived via a direct link to one specific formula (from Interview Prep,
+  // a case-study chat message, etc.) — this less-common path still waits
+  // for the sidebar data first, so it doesn't briefly show the wrong
+  // formula or a "no questions yet" flash before catching up.
+  sidebarDataPromise.then(async () => {
+    const match = FORMULAS.find(f => f.id === requestedFormulaId);
     if (match) {
       currentFormula = match;
       renderList();
@@ -824,8 +833,13 @@ window.addEventListener('load', () => {
     } else {
       startBlankSheet();
     }
-  }, 200);
-});
+  });
+} else {
+  // The common case — just opening the Practice page with nothing specific
+  // requested. Show the working spreadsheet immediately: it doesn't need
+  // any database data, so there's no reason to make it wait on the sidebar.
+  startBlankSheet();
+}
 </script>
 
 <script src="feedback-widget.js"></script>
