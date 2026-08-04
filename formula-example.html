@@ -40,7 +40,7 @@
   <h1 style="font-size:32px;">The formula reference.</h1>
   <p class="lede" style="margin-bottom:14px;">Browse by category. Click any formula to see how it works and jump straight into practicing it.</p>
   <a href="shortcuts.html" style="display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--excel-green-deep); text-decoration:none; border-bottom:2px solid var(--amber);">⌨️ View all keyboard shortcuts &rarr;</a>
-  <div style="max-width:420px; margin-top:16px;">
+  <div style="max-width:640px; margin-top:16px;">
     <input type="text" id="allFormulaSearch" placeholder="🔍 Search all 500+ formulas..." style="width:100%; box-sizing:border-box; padding:10px 16px; border:1px solid var(--grid-line); border-radius:22px; font-family:'IBM Plex Sans',sans-serif; font-size:14px; box-shadow:0 3px 10px rgba(28,35,33,0.06);">
   </div>
   <div style="display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;">
@@ -128,6 +128,14 @@
     document.getElementById(id).addEventListener('click', () => setAllFormulaFilter(mode));
   });
 
+  function videoIconMarkup(f) {
+    const hasVideo = !!f.videoUrl;
+    const playIcon = `<svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="11" fill="${hasVideo ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>`;
+    return hasVideo
+      ? `<span class="formula-video-icon" title="Watch tutorial" onclick="event.preventDefault(); event.stopPropagation(); window.open('${f.videoUrl}', '_blank', 'noopener');">${playIcon}</span>`
+      : `<span class="formula-video-icon faded" title="Video coming soon">${playIcon}</span>`;
+  }
+
   function renderFormulas(term) {
     term = (term || '').trim().toLowerCase();
     container.innerHTML = '';
@@ -157,7 +165,10 @@
         <div class="formula-card-grid">
           ${matches.map(f => `
             <a class="formula-card" href="practice.html?formula=${f.id}">
-              <div class="formula-card-name">${f.name}${PRACTICE_ENABLED_IDS.includes(f.id) ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</div>
+              <div class="formula-card-name" style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                <span style="flex:1; min-width:0;">${f.name}${PRACTICE_ENABLED_IDS.includes(f.id) ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>
+                <span style="flex-shrink:0; margin-top:2px;">${videoIconMarkup(f)}</span>
+              </div>
               <div class="formula-card-desc">${f.description}</div>
               <div class="formula-card-cta">${PRACTICE_ENABLED_IDS.includes(f.id) ? 'Practice this' : 'Try it freely'} &rarr;</div>
             </a>
@@ -204,6 +215,18 @@
           category: row.category,
           description: row.description || ''
         });
+      });
+
+      // Same data already includes video_url for every enabled formula —
+      // reuse it to set/override videoUrl on every card (both the ones
+      // already in the static file and the combo formulas merged in above)
+      // instead of firing a separate request just for this.
+      const formulaById = {};
+      Object.values(categories).forEach(list => list.forEach(f => { formulaById[f.id] = f; }));
+      (allFormulas || []).forEach(row => {
+        if (!row.video_url) return;
+        const f = formulaById[row.id];
+        if (f) f.videoUrl = row.video_url;
       });
 
       if (questionRows && questionRows.length) {

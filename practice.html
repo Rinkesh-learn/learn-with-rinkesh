@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Practice Excel Formulas Online Free — Real Spreadsheet | Learn With Rinkesh</title>
 <meta name="description" content="Practice Excel formulas online in a real, free spreadsheet. Pick from 444+ formulas, get graded practice questions, and see exactly how each formula works.">
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/assets/iconfont/iconfont.css' />
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="feedback-widget.css">
 <link rel="stylesheet" href="chat-widget.css">
@@ -102,8 +102,8 @@
 </div>
 
 <script src="formulas-data.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/luckysheet.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 
@@ -125,6 +125,18 @@ const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: [] }));
 let currentFormula = null;
 let currentQuestionIndex = 0;
 let sheetReady = false;
+
+// Which formulas have at least one graded question — loaded upfront (cheap,
+// ids only) so the yellow dot in the sidebar shows correctly immediately.
+// The actual question CONTENT (sample grid, task text, answers) is fetched
+// separately, only for the one formula the visitor clicks — see
+// ensureQuestionsLoaded() below. This is what keeps the page fast: nobody
+// downloads all ~5,000 questions across all formulas just to see the list.
+let formulaHasQuestionsSet = new Set();
+function formulaHasPractice(f) {
+  if (f.questions && f.questions.length) return true;
+  return formulaHasQuestionsSet.has(f.id);
+}
 
 // ---------- Sidebar ----------
 let formulaSearchTerm = '';
@@ -214,7 +226,7 @@ function renderList() {
     list.appendChild(header);
 
     byCategory[cat].forEach(f => {
-      const hasPractice = !!(f.questions && f.questions.length);
+      const hasPractice = formulaHasPractice(f);
       const li = document.createElement('li');
       const isSelected = currentFormula && currentFormula.id === f.id;
       const isPracticed = practicedFormulas.has(f.id);
@@ -228,9 +240,10 @@ function renderList() {
         ? `<a href="${f.videoUrl}" target="_blank" rel="noopener" title="Watch tutorial" class="formula-video-icon" onclick="event.stopPropagation();">${playIcon}</a>`
         : `<span class="formula-video-icon faded" title="Video coming soon">${playIcon}</span>`;
       li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>${videoIcon}`;
-      li.addEventListener('click', () => {
+      li.addEventListener('click', async () => {
         currentFormula = f;
         renderList();
+        await ensureQuestionsLoaded(f);
         openModal(f);
       });
       list.appendChild(li);
@@ -267,7 +280,7 @@ document.getElementById('formulaSearch').addEventListener('input', (e) => {
 function openModal(formula) {
   const overlay = document.getElementById('modalOverlay');
   const box = document.getElementById('modalBox');
-  const hasPractice = !!(formula.questions && formula.questions.length);
+  const hasPractice = formulaHasPractice(formula);
 
   const paramsSection = (formula.params && formula.params.length)
     ? `<h4>Parameters</h4><table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}</table>`
@@ -708,10 +721,11 @@ async function loadFormulaVideos() {
   } catch (e) { /* keep working with the static videoUrl only */ }
 }
 
-// Pull in questions built in Master Control's Question Builder and merge
-// them into each formula's question list (in addition to any built-in
-// ones already here), converting each row into the same shape used above.
-async function loadAdminQuestions() {
+// Which formulas currently have at least one enabled question — this is
+// intentionally lightweight (formula_id only, no grid/task/answer data) so
+// the yellow "has practice" dot can show correctly the instant the page
+// loads, without downloading every formula's actual question content.
+async function loadFormulaHasQuestionsSet() {
   try {
     let allRows = [];
     let from = 0;
@@ -719,7 +733,7 @@ async function loadAdminQuestions() {
     while (true) {
       const { data, error } = await supabaseClient
         .from('formula_questions')
-        .select('*')
+        .select('formula_id')
         .eq('enabled', true)
         .range(from, from + pageSize - 1);
       if (error || !data || data.length === 0) break;
@@ -727,11 +741,28 @@ async function loadAdminQuestions() {
       if (data.length < pageSize) break;
       from += pageSize;
     }
-    allRows.forEach(q => {
-      const f = FORMULAS.find(x => x.id === q.formula_id);
-      if (!f) return;
-      if (!f.questions) f.questions = [];
-      f.questions.push({
+    formulaHasQuestionsSet = new Set(allRows.map(r => r.formula_id));
+  } catch (e) { /* dot just won't show for anyone if this fails */ }
+}
+
+// Fetches the real question content (sample grid, task, correct answer,
+// explanation) for ONE formula, only when that formula is actually opened —
+// this is the change that keeps the page fast as the question bank grows:
+// a visitor only ever downloads the ~10 questions for the formula they
+// clicked, never all ~5,000 across every formula up front.
+async function ensureQuestionsLoaded(formula) {
+  if (formula.questions && formula.questions.length) return; // already fetched this session
+  if (!formulaHasQuestionsSet.has(formula.id)) return; // known to have none — skip the request entirely
+  try {
+    const { data } = await supabaseClient
+      .from('formula_questions')
+      .select('*')
+      .eq('formula_id', formula.id)
+      .eq('enabled', true)
+      .order('order_index', { ascending: true });
+    if (!formula.questions) formula.questions = [];
+    (data || []).forEach(q => {
+      formula.questions.push({
         task: q.task,
         targetRow: q.target_row,
         targetCol: q.target_col,
@@ -743,7 +774,7 @@ async function loadAdminQuestions() {
         explanation: q.explanation || null
       });
     });
-  } catch (e) { /* keep working with the built-in questions only */ }
+  } catch (e) { /* leave this formula's questions empty on failure */ }
 }
 
 // Pull in which formulas Rinkesh has marked "Popular" from Master Control.
@@ -775,7 +806,7 @@ window.addEventListener('load', () => {
     // "no practice questions yet" for a split second before catching up,
     // or worse, permanently if the auto-open logic ran first.
     await loadMissingFormulasFromDB();
-    await Promise.all([loadAdminQuestions(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
+    await Promise.all([loadFormulaHasQuestionsSet(), loadPopularFromAdmin(), loadFormulaDifficulty(), loadFormulaVideos()]);
     renderList();
 
     const params = new URLSearchParams(window.location.search);
@@ -784,6 +815,7 @@ window.addEventListener('load', () => {
     if (match) {
       currentFormula = match;
       renderList();
+      await ensureQuestionsLoaded(match);
       openModal(match);
       setTimeout(() => {
         const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
