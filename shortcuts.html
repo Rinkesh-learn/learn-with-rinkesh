@@ -157,15 +157,21 @@ const SHORTCUTS = [
 
   // Paste Special
   { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Open the Paste Special dialog" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press V — paste values only, no formulas or formatting" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press F — paste formulas only" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press T — paste formatting only" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press W — paste column widths only" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press E — transpose rows and columns while pasting" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press N — paste data validation rules only" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press D — add copied values to existing values" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press S — subtract copied values from existing values" },
-  { cat: "Paste Special", keys: ["Ctrl", "Alt", "V"], desc: "Then press B — skip blank cells while pasting" }
+  { cat: "Paste Special", keys: ["A"], desc: "Then press A — paste everything (values, formulas, and formatting)" },
+  { cat: "Paste Special", keys: ["V"], desc: "Then press V — paste values only, no formulas or formatting" },
+  { cat: "Paste Special", keys: ["F"], desc: "Then press F — paste formulas only" },
+  { cat: "Paste Special", keys: ["T"], desc: "Then press T — paste formatting only" },
+  { cat: "Paste Special", keys: ["C"], desc: "Then press C — paste comments and notes only" },
+  { cat: "Paste Special", keys: ["N"], desc: "Then press N — paste data validation rules only" },
+  { cat: "Paste Special", keys: ["X"], desc: "Then press X — paste everything except cell borders" },
+  { cat: "Paste Special", keys: ["W"], desc: "Then press W — paste column widths only" },
+  { cat: "Paste Special", keys: ["E"], desc: "Then press E — transpose rows and columns while pasting" },
+  { cat: "Paste Special", keys: ["D"], desc: "Then press D — add copied values to existing values" },
+  { cat: "Paste Special", keys: ["S"], desc: "Then press S — subtract copied values from existing values" },
+  { cat: "Paste Special", keys: ["M"], desc: "Then press M — multiply copied values into existing values" },
+  { cat: "Paste Special", keys: ["I"], desc: "Then press I — divide existing values by copied values" },
+  { cat: "Paste Special", keys: ["B"], desc: "Then press B — skip blank cells while pasting" },
+  { cat: "Paste Special", keys: ["L"], desc: "Then press L — paste a live link to the copied cells instead of their values" }
 ];
 
 const CATEGORY_ICONS = {

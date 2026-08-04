@@ -307,7 +307,7 @@ function openModal(formula) {
     overlay.classList.remove('open');
     if (hasPractice) {
       await ensureQuestionsLoaded(formula); // only fetch now — the point the user actually asked to practice
-      startPractice(formula, 0);
+      startPractice(formula, 0, true);
     } else {
       startFreePractice(formula);
     }
@@ -539,7 +539,7 @@ function startFreePractice(formula) {
   document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function startPractice(formula, qIndex) {
+function startPractice(formula, qIndex, scrollToView) {
   currentFormula = formula;
   currentQuestionIndex = qIndex;
   renderList();
@@ -565,7 +565,14 @@ function startPractice(formula, qIndex) {
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
-  document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Only scroll the page when genuinely entering practice mode for the
+  // first time (from the "Ready" button) — not on every next/prev question
+  // or "Practice Again" click, since the user is already looking at this
+  // area at that point and re-scrolling just yanks the page and hides the
+  // top nav for no reason.
+  if (scrollToView) {
+    document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   document.getElementById('checkBtn').onclick = () => checkAnswer(question);
 }
 
