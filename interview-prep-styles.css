@@ -40,8 +40,12 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 6px;
 }
+
+/* Tighter header spacing on this page specifically (global .sheet-header
+   keeps its normal 18px margin-bottom everywhere else on the site). */
+.ip-tips-shell .sheet-header { margin-bottom: 8px; }
 
 .ip-tip-card {
   background: #fff;
