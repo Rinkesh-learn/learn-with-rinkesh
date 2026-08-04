@@ -45,7 +45,7 @@
   <p class="lede" style="margin-bottom:0; font-size:12px;">Click any formula for a task to solve, or just start typing — it's a real, free-to-use spreadsheet.</p>
 </div>
 
-<div class="sheet" style="margin-top:6px; padding-left:8px; padding-right:8px; max-width:1600px;">
+<div class="sheet" style="margin-top:6px; padding-left:8px; padding-right:8px;">
   <div class="practice-layout" id="practiceLayout">
 
     <div class="formula-list-panel">
@@ -72,7 +72,7 @@
       <div class="practice-active" style="width:100%;">
         <div id="sheetInstructionBanner" style="display:none; width:fit-content; margin-bottom:4px; font-size:11px; font-weight:600; background:#FFF6C9; border-radius:12px; padding:3px 10px;"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:1px;">
-          <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(14px, 2.2vw, 20px);"></h2>
+          <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; line-height:1.2;"></h2>
           <div id="questionNavGroup" style="display:none; flex-shrink:0; gap:6px; align-items:center;">
             <button class="admin-mini-btn" id="prevQuestionBtn" title="Previous question" style="padding:6px 9px; font-size:12px;">◀</button>
             <button class="btn btn-primary" id="checkBtn" style="padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
@@ -485,9 +485,24 @@ function createSheet(name, celldata, mergeConfig) {
   sheetReady = true;
 }
 
+function setFormulaTitle(name) {
+  const el = document.getElementById('activeTitle');
+  const parenIndex = name.indexOf('(');
+  if (parenIndex === -1) {
+    el.innerHTML = `<span style="font-size:clamp(14px, 2.2vw, 20px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;">${name}</span>`;
+    return;
+  }
+  const mainPart = name.slice(0, parenIndex).trim();
+  const descPart = name.slice(parenIndex).trim();
+  el.innerHTML = `
+    <span style="font-size:clamp(14px, 2.2vw, 20px); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${mainPart}</span>
+    <span style="font-size:11px; font-weight:400; color:var(--ink-soft); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${descPart}</span>
+  `;
+}
+
 function startBlankSheet() {
   currentFormula = null;
-  document.getElementById('activeTitle').textContent = 'Free Practice';
+  setFormulaTitle('Free Practice');
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
   document.getElementById('questionNavGroup').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
@@ -496,7 +511,7 @@ function startBlankSheet() {
 
 function startFreePractice(formula) {
   currentFormula = formula;
-  document.getElementById('activeTitle').textContent = formula.name;
+  setFormulaTitle(formula.name);
   document.getElementById('activeTask').innerHTML = `Try <strong>${formula.name}</strong> freely below — real Excel engine, no pre-set answer to check against yet. Syntax: <code>${formula.syntax}</code>`;
   document.getElementById('questionNavGroup').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
@@ -511,7 +526,7 @@ function startPractice(formula, qIndex) {
 
   const question = formula.questions[qIndex];
 
-  document.getElementById('activeTitle').textContent = formula.name;
+  setFormulaTitle(formula.name);
   document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong>`;
   document.getElementById('questionNavGroup').style.display = 'flex';
 

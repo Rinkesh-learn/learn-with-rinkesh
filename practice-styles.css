@@ -3,7 +3,8 @@
 .practice-layout {
   display: flex;
   gap: 0;
-  max-width: 1080px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   min-height: 560px;
   border: 1px solid var(--grid-line);
