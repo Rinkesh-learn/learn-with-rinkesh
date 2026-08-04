@@ -307,7 +307,7 @@ function openModal(formula) {
     overlay.classList.remove('open');
     if (hasPractice) {
       await ensureQuestionsLoaded(formula); // only fetch now — the point the user actually asked to practice
-      startPractice(formula, 0, true);
+      startPractice(formula, 0);
     } else {
       startFreePractice(formula);
     }
@@ -536,10 +536,11 @@ function startFreePractice(formula) {
   document.getElementById('questionNavGroup').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet(formula.name, []);
-  document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll removed here too, same reason as startPractice — Luckysheet's
+  // own init runs after this and was overriding it anyway.
 }
 
-function startPractice(formula, qIndex, scrollToView) {
+function startPractice(formula, qIndex) {
   currentFormula = formula;
   currentQuestionIndex = qIndex;
   renderList();
@@ -565,14 +566,13 @@ function startPractice(formula, qIndex, scrollToView) {
 
   createSheet(formula.name + ' Q' + (qIndex + 1), buildCelldata(question));
 
-  // Only scroll the page when genuinely entering practice mode for the
-  // first time (from the "Ready" button) — not on every next/prev question
-  // or "Practice Again" click, since the user is already looking at this
-  // area at that point and re-scrolling just yanks the page and hides the
-  // top nav for no reason.
-  if (scrollToView) {
-    document.getElementById('practiceMain').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  // No forced scroll here anymore — the spreadsheet library does its own
+  // internal scroll/focus adjustment when it initializes, and it runs
+  // AFTER our own scroll attempt finishes, so it was winning and pushing
+  // the yellow instruction banner out of view regardless of what we did
+  // here. The user is already positioned correctly when they reach this
+  // point (right after the "Ready" popup, or navigating questions), so
+  // there's nothing that actually needs fixing by scrolling.
   document.getElementById('checkBtn').onclick = () => checkAnswer(question);
 }
 
