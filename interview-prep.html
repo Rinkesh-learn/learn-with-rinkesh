@@ -78,19 +78,20 @@
     <h2>Common interview questions</h2>
   </div>
 
-  <div class="ip-level-tabs" id="ipModeTabs" style="margin-bottom:20px;">
-    <div class="ip-level-tab active" data-mode="theoretical" style="background:var(--excel-green); color:#fff; border-color:var(--excel-green);">📖 Theoretical</div>
-    <div class="ip-level-tab" data-mode="practical">⌨️ Practical</div>
-  </div>
-
-  <div id="theoreticalView">
+  <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap; margin-bottom:20px;">
+    <div class="ip-level-tabs" id="ipModeTabs">
+      <div class="ip-level-tab active" data-mode="theoretical" style="background:var(--excel-green); color:#fff; border-color:var(--excel-green);">📖 Theoretical</div>
+      <div class="ip-level-tab" data-mode="practical">⌨️ Practical</div>
+    </div>
     <div class="ip-level-tabs" id="ipTabs">
       <div class="ip-level-tab active" data-level="all">All</div>
       <div class="ip-level-tab" data-level="basic">Basic</div>
       <div class="ip-level-tab" data-level="intermediate">Intermediate</div>
       <div class="ip-level-tab" data-level="advanced">Advanced</div>
     </div>
+  </div>
 
+  <div id="theoreticalView">
     <div id="ipQaList"></div>
   </div>
 
@@ -263,6 +264,7 @@ document.querySelectorAll('#ipModeTabs .ip-level-tab').forEach(tab => {
     const mode = tab.dataset.mode;
     document.getElementById('theoreticalView').style.display = mode === 'theoretical' ? 'block' : 'none';
     document.getElementById('practicalView').style.display = mode === 'practical' ? 'block' : 'none';
+    document.getElementById('ipTabs').style.display = mode === 'theoretical' ? 'flex' : 'none';
   });
 });
 
