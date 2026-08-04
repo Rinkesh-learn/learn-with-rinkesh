@@ -123,6 +123,11 @@ const CELEBRATIONS = [
 const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: [] }));
 
 let currentFormula = null;
+// True when the visitor arrived from a specific Interview Prep practical
+// exercise link — in that case they should solve just that one question
+// and go back to Interview Prep for another, not browse through this
+// formula's other questions via the prev/next arrows.
+let isIsolatedInterviewQuestion = false;
 let currentQuestionIndex = 0;
 let sheetReady = false;
 
@@ -242,6 +247,7 @@ function renderList() {
       li.innerHTML = `<span class="flname">${f.name}${hasPractice ? ' <span class="practice-dot" title="Graded practice available"></span>' : ''}</span>${videoIcon}`;
       li.addEventListener('click', () => {
         currentFormula = f;
+        isIsolatedInterviewQuestion = false; // resuming normal browsing
         renderList();
         openModal(f); // instant — no network fetch just to preview "how it works"
       });
@@ -327,7 +333,7 @@ function showResultModal({ correct, html, question }) {
 
   const fIdx = currentFormula ? FORMULAS.findIndex(f => f.id === currentFormula.id) : -1;
   const nextFormula = fIdx > -1 ? FORMULAS[(fIdx + 1) % FORMULAS.length] : null;
-  const hasNextQuestion = currentFormula && currentQuestionIndex < currentFormula.questions.length - 1;
+  const hasNextQuestion = currentFormula && !isIsolatedInterviewQuestion && currentQuestionIndex < currentFormula.questions.length - 1;
 
   box.className = 'modal-box ' + (correct ? 'result-success' : 'result-fail');
   const icon = correct ? '🎉' : '🤔';
@@ -368,6 +374,7 @@ function showResultModal({ correct, html, question }) {
   if (nextFormula) {
     document.getElementById('resultNextFBtn').addEventListener('click', () => {
       overlay.classList.remove('open');
+      isIsolatedInterviewQuestion = false; // resuming normal browsing
       openModal(nextFormula);
     });
   }
@@ -548,17 +555,29 @@ function startPractice(formula, qIndex) {
   const question = formula.questions[qIndex];
 
   setFormulaTitle(formula.name);
-  document.getElementById('activeTask').innerHTML = `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong>`;
+  document.getElementById('activeTask').innerHTML = isIsolatedInterviewQuestion
+    ? `<strong>${question.task}</strong>`
+    : `<span class="question-progress">Question ${qIndex + 1} of ${formula.questions.length}</span><strong>${question.task}</strong>`;
   document.getElementById('questionNavGroup').style.display = 'flex';
 
   const prevBtn = document.getElementById('prevQuestionBtn');
   const nextBtn = document.getElementById('nextQuestionBtn');
-  prevBtn.disabled = qIndex === 0;
-  prevBtn.style.opacity = qIndex === 0 ? '0.4' : '1';
-  nextBtn.disabled = qIndex === formula.questions.length - 1;
-  nextBtn.style.opacity = qIndex === formula.questions.length - 1 ? '0.4' : '1';
-  prevBtn.onclick = () => { if (qIndex > 0) startPractice(formula, qIndex - 1); };
-  nextBtn.onclick = () => { if (qIndex < formula.questions.length - 1) startPractice(formula, qIndex + 1); };
+  if (isIsolatedInterviewQuestion) {
+    // Arrived from one specific Interview Prep exercise — no browsing to
+    // this formula's other questions here; go back to Interview Prep for
+    // another one instead.
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+  } else {
+    prevBtn.style.display = '';
+    nextBtn.style.display = '';
+    prevBtn.disabled = qIndex === 0;
+    prevBtn.style.opacity = qIndex === 0 ? '0.4' : '1';
+    nextBtn.disabled = qIndex === formula.questions.length - 1;
+    nextBtn.style.opacity = qIndex === formula.questions.length - 1 ? '0.4' : '1';
+    prevBtn.onclick = () => { if (qIndex > 0) startPractice(formula, qIndex - 1); };
+    nextBtn.onclick = () => { if (qIndex < formula.questions.length - 1) startPractice(formula, qIndex + 1); };
+  }
 
   const banner = document.getElementById('sheetInstructionBanner');
   banner.textContent = 'Start your formula in the highlighted cell.';
@@ -770,6 +789,7 @@ async function ensureQuestionsLoaded(formula) {
     if (!formula.questions) formula.questions = [];
     (data || []).forEach(q => {
       formula.questions.push({
+        id: q.id,
         task: q.task,
         targetRow: q.target_row,
         targetCol: q.target_col,
@@ -820,15 +840,29 @@ const sidebarDataPromise = loadSidebarDataInBackground();
 
 const initParams = new URLSearchParams(window.location.search);
 const requestedFormulaId = initParams.get('formula');
+const requestedQuestionId = initParams.get('question'); // set by Interview Prep's "Practice This" links
 
 if (requestedFormulaId) {
   // Arrived via a direct link to one specific formula (from Interview Prep,
   // a case-study chat message, etc.) — this less-common path still waits
   // for the sidebar data first, so it doesn't briefly show the wrong
   // formula or a "no questions yet" flash before catching up.
-  sidebarDataPromise.then(() => {
+  sidebarDataPromise.then(async () => {
     const match = FORMULAS.find(f => f.id === requestedFormulaId);
-    if (match) {
+    if (!match) { startBlankSheet(); return; }
+
+    if (requestedQuestionId) {
+      // A specific Interview Prep exercise — go straight into that exact
+      // question, skip the "how it works" popup, and don't let the visitor
+      // browse this formula's other questions from here; they go back to
+      // Interview Prep for another one instead.
+      await ensureQuestionsLoaded(match);
+      const qIndex = match.questions.findIndex(q => String(q.id) === String(requestedQuestionId));
+      currentFormula = match;
+      isIsolatedInterviewQuestion = true;
+      renderList();
+      startPractice(match, qIndex > -1 ? qIndex : 0);
+    } else {
       currentFormula = match;
       renderList();
       openModal(match); // instant here too — Ready-click now handles the fetch
@@ -836,8 +870,6 @@ if (requestedFormulaId) {
         const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
         if (targetLi) targetLi.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }, 100);
-    } else {
-      startBlankSheet();
     }
   });
 } else {
