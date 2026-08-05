@@ -198,6 +198,19 @@ renderQA();
 })();
 
 // ---------- Practical exercises (pulled from Master Control's Interview Prep manager) ----------
+// A real page refresh (not just navigating here from another page) clears
+// the "already practiced" highlight tracking — matches the same check in
+// practice.html, so both pages agree on when it resets.
+(function() {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    const isReload = nav ? nav.type === 'reload' : false;
+    if (isReload) {
+      Object.keys(sessionStorage).forEach(k => { if (k.startsWith('practicedQuestion_')) sessionStorage.removeItem(k); });
+    }
+  } catch (e) { /* leave sessionStorage as-is on failure */ }
+})();
+
 let PRACTICAL_EXERCISES = [];
 let currentPracticalLevel = 'all';
 
@@ -210,14 +223,17 @@ function renderPracticalCards() {
     return;
   }
 
-  grid.innerHTML = filtered.map(ex => `
-    <div class="ip-tip-card visible">
+  grid.innerHTML = filtered.map(ex => {
+    const practiced = ex.formula_question_id && (() => { try { return !!sessionStorage.getItem('practicedQuestion_' + ex.formula_question_id); } catch (e) { return false; } })();
+    return `
+    <div class="ip-tip-card visible"${practiced ? ' style="border-color:var(--excel-green); background:#F4F8F5;"' : ''}>
       <div class="icon">${ex.icon || '📊'}</div>
-      <h3>${ex.title}</h3>
+      <h3>${ex.title}${practiced ? ' <span style="font-size:11px; font-weight:700; color:var(--excel-green); vertical-align:middle;">✓ Practiced</span>' : ''}</h3>
       <p>${ex.description}</p>
       <a href="practice.html?formula=${ex.formula_id}${ex.formula_question_id ? '&question=' + ex.formula_question_id : ''}" style="display:inline-block; margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#fff; background:var(--excel-green); padding:7px 14px; border-radius:16px; text-decoration:none;">Practice This &rarr;</a>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function renderPracticalGrid() {
@@ -310,6 +326,8 @@ document.querySelectorAll('.ip-tip-card').forEach((el, i) => {
     } catch (e) { /* keep default text */ }
   })();
 </script>
+
+<script src="site-name.js"></script>
 
 </body>
 </html>

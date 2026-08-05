@@ -226,6 +226,7 @@
     <a data-view="articles">📘 Articles</a>
     <a data-view="chat_moderation">💬 Community Chat Moderation</a>
     <a data-view="case_studies">📁 Case Studies</a>
+    <a data-view="site_settings">⚙️ Site Settings</a>
     <a data-view="climb_boy">🧗 Climb Animation</a>
     <a data-view="bookings">📅 1-on-1 Bookings</a>
   </div>
@@ -599,6 +600,18 @@ criteria: The condition to match"></textarea>
           <button class="admin-mini-btn" id="csCancelBtn">Cancel</button>
         </div>
         <div id="csMessage" style="margin-top:10px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-site_settings" style="display:none;">
+      <h1>Site Settings</h1>
+      <p class="sub">Site-wide settings — changes here update every page automatically.</p>
+      <div class="admin-panel" style="max-width:560px;">
+        <label>Website Name</label>
+        <p style="font-size:12px; color:var(--ink-soft); margin:2px 0 8px;">Shown in the topbar on every page. Changing this updates the whole site at once.</p>
+        <input type="text" id="siteNameInput" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="Learn With Rinkesh">
+        <button class="btn btn-primary" id="siteNameSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
+        <div id="siteNameMsg" style="margin-top:12px; font-size:13px;"></div>
       </div>
     </div>
 
@@ -2993,6 +3006,35 @@ criteria: The condition to match"></textarea>
     msg.style.color = 'var(--excel-green-deep)';
   });
 
+  // ---------- Site Settings ----------
+  async function loadSiteName() {
+    try {
+      const { data } = await supabaseClient.from('page_content').select('content').eq('id', 'site-name').maybeSingle();
+      document.getElementById('siteNameInput').value = (data && data.content) ? data.content : 'Learn With Rinkesh';
+    } catch (e) { document.getElementById('siteNameInput').value = 'Learn With Rinkesh'; }
+  }
+  loadSiteName();
+
+  document.getElementById('siteNameSaveBtn').addEventListener('click', async () => {
+    const newName = document.getElementById('siteNameInput').value.trim();
+    const msg = document.getElementById('siteNameMsg');
+    if (!newName) { msg.innerHTML = '<span style="color:var(--coral);">Enter a name first.</span>'; return; }
+    msg.textContent = 'Saving...';
+    const { error } = await supabaseClient.from('page_content').upsert({
+      id: 'site-name', page: 'global', label: 'Website name (shown in topbar site-wide)', content: newName
+    });
+    if (error) {
+      msg.innerHTML = `<span style="color:var(--coral);">Failed to save: ${error.message}</span>`;
+      return;
+    }
+    msg.innerHTML = `
+      <div style="background:#F4F8F5; border:1px solid var(--excel-green); border-radius:8px; padding:12px 14px; margin-top:4px;">
+        <strong>✓ Site name updated everywhere.</strong><br>
+        New name: <strong>${newName}</strong><br>
+        Admin dashboard link: <a href="${window.location.origin}${window.location.pathname}" target="_blank">${window.location.origin}${window.location.pathname}</a>
+      </div>`;
+  });
+
   // ---------- Case Studies ----------
   let allCaseStudiesAdmin = [];
 
@@ -3343,6 +3385,8 @@ criteria: The condition to match"></textarea>
     }
   })();
 </script>
+
+<script src="site-name.js"></script>
 
 </body>
 </html>

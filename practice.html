@@ -73,7 +73,13 @@
       <div class="practice-active" style="width:100%;">
         <div id="sheetInstructionBanner" style="display:none; width:100%; box-sizing:border-box; margin:0 0 10px; font-size:14px; font-weight:600; background:#FFF6C9; border:1px solid var(--amber); border-radius:8px; padding:9px 16px; text-align:center;"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:1px;">
-          <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; line-height:1.2; position:relative;"></h2>
+          <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+            <a href="interview-prep.html" id="backToInterviewBtn" class="back-to-interview-btn" style="display:none;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19l-7-7 7-7"/><path d="M4 12h16"/></svg>
+              <span class="back-to-interview-tip">Click here to choose next question</span>
+            </a>
+            <h2 id="activeTitle" style="margin:0; flex-shrink:1; min-width:0; line-height:1.2; position:relative;"></h2>
+          </div>
           <div id="questionNavGroup" style="display:none; flex-shrink:0; gap:6px; align-items:center;">
             <button class="admin-mini-btn" id="prevQuestionBtn" title="Previous question" style="padding:6px 9px; font-size:12px;">◀</button>
             <button class="btn btn-primary" id="checkBtn" style="padding:7px 14px; font-size:12px; white-space:nowrap;">Check My Answer</button>
@@ -121,6 +127,19 @@ const CELEBRATIONS = [
 // ---------- Question banks: 10 per formula, easy -> advanced ----------
 // QUESTION_SETS removed — all questions now come exclusively from Supabase (formula_questions table), no hardcoded fallback.
 
+// A real page refresh (not just navigating here from another page) clears
+// the "already practiced" highlight tracking — an actual browser/app
+// reload is the signal for that, internal site navigation is not.
+(function() {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    const isReload = nav ? nav.type === 'reload' : false;
+    if (isReload) {
+      Object.keys(sessionStorage).forEach(k => { if (k.startsWith('practicedQuestion_')) sessionStorage.removeItem(k); });
+    }
+  } catch (e) { /* leave sessionStorage as-is on failure */ }
+})();
+
 const FORMULAS = FORMULA_META.map(m => ({ ...m, questions: [] }));
 
 let currentFormula = null;
@@ -129,6 +148,11 @@ let currentFormula = null;
 // and go back to Interview Prep for another, not browse through this
 // formula's other questions via the prev/next arrows.
 let isIsolatedInterviewQuestion = false;
+// Tracks whichever formula's sheet is ACTUALLY built and on screen right
+// now — only set at the moment a sheet is really created, unlike
+// currentFormula which gets set the instant a formula is picked from the
+// sidebar, before any sheet exists for it yet.
+let activeSheetFormula = null;
 let currentQuestionIndex = 0;
 let sheetReady = false;
 
@@ -316,7 +340,7 @@ function openModal(formula) {
     // modal was reopened from the active title above an already-loaded
     // sheet), there's nothing to reload — recreating it from scratch here
     // was the redundant reload.
-    if (formula === currentFormula && sheetReady) return;
+    if (formula === activeSheetFormula && sheetReady) return;
     if (hasPractice) {
       await ensureQuestionsLoaded(formula); // only fetch now — the point the user actually asked to practice
       startPractice(formula, 0);
@@ -535,18 +559,22 @@ document.getElementById('activeTitle').addEventListener('click', () => {
 
 function startBlankSheet() {
   currentFormula = null;
+  activeSheetFormula = null;
   setFormulaTitle('Free Practice');
   document.getElementById('activeTask').textContent = 'This is a real, working spreadsheet — try any formula you like. Or pick one from the list for a specific task.';
   document.getElementById('questionNavGroup').style.display = 'none';
+  document.getElementById('backToInterviewBtn').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet('Free Practice', []);
 }
 
 function startFreePractice(formula) {
   currentFormula = formula;
+  activeSheetFormula = formula;
   setFormulaTitle(formula.name);
   document.getElementById('activeTask').innerHTML = `Try <strong>${formula.name}</strong> freely below — real Excel engine, no pre-set answer to check against yet. Syntax: <code>${formula.syntax}</code>`;
   document.getElementById('questionNavGroup').style.display = 'none';
+  document.getElementById('backToInterviewBtn').style.display = 'none';
   document.getElementById('sheetInstructionBanner').style.display = 'none';
   createSheet(formula.name, []);
   // Scroll removed here too, same reason as startPractice — Luckysheet's
@@ -555,6 +583,7 @@ function startFreePractice(formula) {
 
 function startPractice(formula, qIndex) {
   currentFormula = formula;
+  activeSheetFormula = formula;
   currentQuestionIndex = qIndex;
   renderList();
 
@@ -568,15 +597,20 @@ function startPractice(formula, qIndex) {
 
   const prevBtn = document.getElementById('prevQuestionBtn');
   const nextBtn = document.getElementById('nextQuestionBtn');
+  const backBtn = document.getElementById('backToInterviewBtn');
   if (isIsolatedInterviewQuestion) {
     // Arrived from one specific Interview Prep exercise — no browsing to
-    // this formula's other questions here; go back to Interview Prep for
-    // another one instead.
+    // this formula's other questions here; the dedicated icon on the left
+    // goes back to Interview Prep to pick a different one instead.
     prevBtn.style.display = 'none';
     nextBtn.style.display = 'none';
+    backBtn.style.display = 'flex';
   } else {
     prevBtn.style.display = '';
+    prevBtn.title = 'Previous question';
+    prevBtn.textContent = '◀';
     nextBtn.style.display = '';
+    backBtn.style.display = 'none';
     prevBtn.disabled = qIndex === 0;
     prevBtn.style.opacity = qIndex === 0 ? '0.4' : '1';
     nextBtn.disabled = qIndex === formula.questions.length - 1;
@@ -611,6 +645,15 @@ function unwrapValue(raw) {
 
 function checkAnswer(question) {
   try { if (window.luckysheet.exitEditMode) luckysheet.exitEditMode(); } catch (e) {}
+
+  // Remember (for this browser tab only) that this specific practical
+  // question was attempted, so Interview Prep can highlight it when the
+  // visitor goes back. Clears itself on an actual page refresh — see the
+  // refresh-detection check near the top of this file and in
+  // interview-prep.html.
+  if (isIsolatedInterviewQuestion && question.id) {
+    try { sessionStorage.setItem('practicedQuestion_' + question.id, '1'); } catch (e) {}
+  }
 
   if (question.answerMode === 'range' && question.expectedCells && question.expectedCells.length) {
     let anyEmpty = false, anyUnconfirmed = false, anyError = false, allMatch = true;
@@ -889,6 +932,8 @@ if (requestedFormulaId) {
 <script src="feedback-widget.js"></script>
 <script src="chat-widget.js"></script>
 <script src="auth-nav.js"></script>
+
+<script src="site-name.js"></script>
 
 </body>
 </html>

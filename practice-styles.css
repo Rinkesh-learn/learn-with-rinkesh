@@ -701,3 +701,40 @@
 #activeTitle.clickable-title:hover .active-title-tip {
   opacity: 1;
 }
+
+/* ---------- Back-to-Interview-Prep icon (isolated practical question mode) ---------- */
+
+.back-to-interview-btn {
+  position: relative;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--excel-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.back-to-interview-btn:hover {
+  background: var(--coral, #C96F4A);
+  transform: scale(1.08);
+}
+.back-to-interview-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 5;
+}
+.back-to-interview-btn:hover .back-to-interview-tip { opacity: 1; }
