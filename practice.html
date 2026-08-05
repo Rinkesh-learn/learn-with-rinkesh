@@ -291,7 +291,7 @@ function openModal(formula) {
     ? `<h4>Parameters</h4><table class="params-table"><tr><th>Parameter</th><th>Meaning</th></tr>${formula.params.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}</table>`
     : '';
   const useCaseSection = formula.useCase
-    ? `<h4>Corporate use case</h4><p>${formula.useCase}</p>`
+    ? `<h4>Real case use</h4><p>${formula.useCase}</p>`
     : '';
 
   box.innerHTML = `
@@ -311,6 +311,11 @@ function openModal(formula) {
 
   document.getElementById('readyBtn').addEventListener('click', async () => {
     overlay.classList.remove('open');
+    // If this exact formula's sheet is already the one showing (e.g. the
+    // modal was reopened from the active title above an already-loaded
+    // sheet), there's nothing to reload — recreating it from scratch here
+    // was the redundant reload.
+    if (formula === currentFormula && sheetReady) return;
     if (hasPractice) {
       await ensureQuestionsLoaded(formula); // only fetch now — the point the user actually asked to practice
       startPractice(formula, 0);

@@ -530,6 +530,24 @@ criteria: The condition to match"></textarea>
           <span></span>
           <button class="btn btn-primary" id="addCaseStudyBtn" style="padding:8px 16px; font-size:12px;">+ Add Assignment</button>
         </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+          <label style="margin:0; font-size:12px;">Show:
+            <select id="csFilterSelect" style="margin-left:6px; padding:5px 8px;">
+              <option value="all">All</option>
+              <option value="free">Free only</option>
+              <option value="paid">Paid only</option>
+            </select>
+          </label>
+          <label style="margin:0; font-size:12px;">Sort by:
+            <select id="csSortSelect" style="margin-left:6px; padding:5px 8px;">
+              <option value="order">Display order</option>
+              <option value="newest">Last added</option>
+              <option value="free_first">Free first</option>
+              <option value="paid_first">Paid first</option>
+            </select>
+          </label>
+          <span id="csFilterCount" style="font-size:12px; color:var(--ink-soft);"></span>
+        </div>
         <div style="overflow-x:auto;">
           <table class="admin-table">
             <thead><tr><th>Title</th><th>Price</th><th>File</th><th>Downloads</th><th>Status</th><th></th></tr></thead>
@@ -546,6 +564,10 @@ criteria: The condition to match"></textarea>
         <input type="text" id="csTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;">
 
         <label>Description</label>
+        <div style="margin-bottom:4px;">
+          <button type="button" id="csBoldBtn" style="font-weight:700; padding:3px 10px; font-size:12px; border:1px solid var(--grid-line); border-radius:4px; background:#fff; cursor:pointer;">B</button>
+          <span style="font-size:11px; color:var(--ink-soft); margin-left:6px;">Select text, then click B to bold it</span>
+        </div>
         <textarea id="csDescription" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;"></textarea>
 
         <label>Price (₹ — 0 for free)</label>
@@ -2962,6 +2984,20 @@ criteria: The condition to match"></textarea>
   // ---------- Case Studies ----------
   let allCaseStudiesAdmin = [];
 
+  document.getElementById('csFilterSelect').addEventListener('change', renderCaseStudiesAdminTable);
+  document.getElementById('csSortSelect').addEventListener('change', renderCaseStudiesAdminTable);
+
+  document.getElementById('csBoldBtn').addEventListener('click', () => {
+    const ta = document.getElementById('csDescription');
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    if (start === end) return; // nothing selected
+    const selected = ta.value.slice(start, end);
+    ta.value = ta.value.slice(0, start) + '**' + selected + '**' + ta.value.slice(end);
+    ta.focus();
+    ta.selectionStart = start;
+    ta.selectionEnd = end + 4;
+  });
+
   async function loadCaseStudiesAdmin() {
     const { data, error } = await supabaseClient.from('case_studies').select('*').order('order_index');
     if (error) {
@@ -2975,10 +3011,35 @@ criteria: The condition to match"></textarea>
   function renderCaseStudiesAdminTable() {
     const body = document.getElementById('caseStudiesTableBody');
     if (allCaseStudiesAdmin.length === 0) {
+      document.getElementById('csFilterCount').textContent = '';
       body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No assignments yet — click "+ Add Assignment" to create one.</td></tr>';
       return;
     }
-    body.innerHTML = allCaseStudiesAdmin.map(c => `
+    const filterVal = document.getElementById('csFilterSelect').value;
+    const sortVal = document.getElementById('csSortSelect').value;
+
+    let list = allCaseStudiesAdmin.slice();
+    if (filterVal === 'free') list = list.filter(c => !c.price || c.price <= 0);
+    if (filterVal === 'paid') list = list.filter(c => c.price > 0);
+
+    if (sortVal === 'newest') {
+      list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } else if (sortVal === 'free_first') {
+      list.sort((a, b) => (a.price > 0) - (b.price > 0));
+    } else if (sortVal === 'paid_first') {
+      list.sort((a, b) => (b.price > 0) - (a.price > 0));
+    } else {
+      list.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    }
+
+    document.getElementById('csFilterCount').textContent =
+      `Showing ${list.length} of ${allCaseStudiesAdmin.length}`;
+
+    if (list.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft); padding:20px;">No assignments match this filter.</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(c => `
       <tr>
         <td><strong>${c.title}</strong></td>
         <td>${c.price > 0 ? '₹' + Number(c.price).toFixed(2) : 'Free'}</td>
