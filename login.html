@@ -216,7 +216,8 @@
 
     msg.textContent = 'Logged in! Redirecting...';
     msg.className = 'success';
-    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+    setTimeout(() => { window.location.href = (redirectTo && !redirectTo.includes('://')) ? redirectTo : 'index.html'; }, 1000);
   });
 </script>
 
