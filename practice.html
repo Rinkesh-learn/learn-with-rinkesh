@@ -585,7 +585,7 @@ function startPractice(formula, qIndex) {
   currentFormula = formula;
   activeSheetFormula = formula;
   currentQuestionIndex = qIndex;
-  renderList();
+  if (!isIsolatedInterviewQuestion) renderList(); // sidebar doesn't exist in isolated mode — nothing to update
 
   const question = formula.questions[qIndex];
 
@@ -744,7 +744,20 @@ document.getElementById('swapBtn').addEventListener('click', () => {
   setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
 });
 
-renderList();
+// Read the URL early — if this is a direct link to one specific Interview
+// Prep question, the sidebar (list rendering, formula database lookups,
+// Popular/difficulty/video data) is never needed at all, so skip building
+// it entirely instead of rendering it and hiding it afterward.
+const initParams = new URLSearchParams(window.location.search);
+const requestedFormulaId = initParams.get('formula');
+const requestedQuestionId = initParams.get('question'); // set by Interview Prep's "Practice This" links
+const isIsolatedQuestionLink = !!(requestedFormulaId && requestedQuestionId);
+
+if (isIsolatedQuestionLink) {
+  document.getElementById('practiceLayout').classList.add('isolated-question');
+} else {
+  renderList();
+}
 
 // Pull in admin-set difficulty levels from Master Control (falls back
 // to the built-in heuristic sets above for any formula without one set).
@@ -885,41 +898,41 @@ async function loadSidebarDataInBackground() {
   renderList();
 }
 
-const sidebarDataPromise = loadSidebarDataInBackground();
+const sidebarDataPromise = isIsolatedQuestionLink ? null : loadSidebarDataInBackground();
 
-const initParams = new URLSearchParams(window.location.search);
-const requestedFormulaId = initParams.get('formula');
-const requestedQuestionId = initParams.get('question'); // set by Interview Prep's "Practice This" links
-
-if (requestedFormulaId) {
-  // Arrived via a direct link to one specific formula (from Interview Prep,
-  // a case-study chat message, etc.) — this less-common path still waits
-  // for the sidebar data first, so it doesn't briefly show the wrong
-  // formula or a "no questions yet" flash before catching up.
+if (isIsolatedQuestionLink) {
+  // Skip the sidebar entirely — go straight to the one formula and one
+  // question this link points to. If it's a DB-only combo formula not in
+  // the static list, that's the only case that pays for a lookup at all.
+  (async () => {
+    let match = FORMULAS.find(f => f.id === requestedFormulaId);
+    if (!match) {
+      await loadMissingFormulasFromDB();
+      match = FORMULAS.find(f => f.id === requestedFormulaId);
+    }
+    if (!match) { startBlankSheet(); return; }
+    formulaHasQuestionsSet.add(match.id); // already known true — this link wouldn't exist otherwise
+    await ensureQuestionsLoaded(match);
+    const qIndex = match.questions.findIndex(q => String(q.id) === String(requestedQuestionId));
+    currentFormula = match;
+    isIsolatedInterviewQuestion = true;
+    startPractice(match, qIndex > -1 ? qIndex : 0);
+  })();
+} else if (requestedFormulaId) {
+  // Arrived via a direct link to one specific formula (from a case-study
+  // chat message, etc.) without a specific question — this less-common
+  // path still waits for the sidebar data first, so it doesn't briefly
+  // show the wrong formula or a "no questions yet" flash before catching up.
   sidebarDataPromise.then(async () => {
     const match = FORMULAS.find(f => f.id === requestedFormulaId);
     if (!match) { startBlankSheet(); return; }
-
-    if (requestedQuestionId) {
-      // A specific Interview Prep exercise — go straight into that exact
-      // question, skip the "how it works" popup, and don't let the visitor
-      // browse this formula's other questions from here; they go back to
-      // Interview Prep for another one instead.
-      await ensureQuestionsLoaded(match);
-      const qIndex = match.questions.findIndex(q => String(q.id) === String(requestedQuestionId));
-      currentFormula = match;
-      isIsolatedInterviewQuestion = true;
-      renderList();
-      startPractice(match, qIndex > -1 ? qIndex : 0);
-    } else {
-      currentFormula = match;
-      renderList();
-      openModal(match); // instant here too — Ready-click now handles the fetch
-      setTimeout(() => {
-        const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
-        if (targetLi) targetLi.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }, 100);
-    }
+    currentFormula = match;
+    renderList();
+    openModal(match); // instant here too — Ready-click now handles the fetch
+    setTimeout(() => {
+      const targetLi = document.querySelector(`.formula-list-item[data-formula-id="${match.id}"]`);
+      if (targetLi) targetLi.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 100);
   });
 } else {
   // The common case — just opening the Practice page with nothing specific

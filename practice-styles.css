@@ -738,3 +738,11 @@
   z-index: 5;
 }
 .back-to-interview-btn:hover .back-to-interview-tip { opacity: 1; }
+
+/* ---------- Isolated interview-question mode: no sidebar needed ---------- */
+/* When arriving via a specific Interview Prep question link, the formula
+   list sidebar is skipped entirely (not loaded, not rendered) — this hides
+   its space and lets the spreadsheet use the full width, so it reads like
+   a dedicated page even though it's the same practice.html underneath. */
+.practice-layout.isolated-question .formula-list-panel { display: none; }
+.practice-layout.isolated-question .swap-btn { display: none; }

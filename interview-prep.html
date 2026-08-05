@@ -177,6 +177,7 @@ document.querySelectorAll('#ipTabs .ip-level-tab').forEach(tab => {
     document.querySelectorAll('#ipTabs .ip-level-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentLevel = tab.dataset.level;
+    try { sessionStorage.setItem('ipTheoryLevel', currentLevel); } catch (e) {}
     renderQA();
   });
 });
@@ -261,6 +262,7 @@ document.querySelectorAll('#ipPracticalTabs .ip-level-tab').forEach(tab => {
     document.querySelectorAll('#ipPracticalTabs .ip-level-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     currentPracticalLevel = tab.dataset.plevel;
+    try { sessionStorage.setItem('ipPracticalLevel', currentPracticalLevel); } catch (e) {}
     renderPracticalCards();
   });
 });
@@ -279,12 +281,39 @@ document.querySelectorAll('#ipModeTabs .ip-level-tab').forEach(tab => {
     tab.style.borderColor = 'var(--excel-green)';
 
     const mode = tab.dataset.mode;
+    try { sessionStorage.setItem('ipMode', mode); } catch (e) {}
     document.getElementById('theoreticalView').style.display = mode === 'theoretical' ? 'block' : 'none';
     document.getElementById('practicalView').style.display = mode === 'practical' ? 'block' : 'none';
     document.getElementById('ipTabs').style.display = mode === 'theoretical' ? 'flex' : 'none';
     document.getElementById('ipPracticalTabs').style.display = mode === 'practical' ? 'flex' : 'none';
   });
 });
+
+// Restore whichever tab/filter the visitor had selected before navigating
+// away (e.g. to solve a practical question and come back) — but not after
+// a genuine page refresh, which should return to the natural defaults,
+// matching how the "already practiced" highlight resets on refresh too.
+(function restoreInterviewPrepState() {
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav && nav.type === 'reload') return;
+    const savedMode = sessionStorage.getItem('ipMode');
+    const savedTheoryLevel = sessionStorage.getItem('ipTheoryLevel');
+    const savedPracticalLevel = sessionStorage.getItem('ipPracticalLevel');
+    if (savedMode) {
+      const modeTab = document.querySelector(`#ipModeTabs .ip-level-tab[data-mode="${savedMode}"]`);
+      if (modeTab) modeTab.click();
+    }
+    if (savedTheoryLevel) {
+      const levelTab = document.querySelector(`#ipTabs .ip-level-tab[data-level="${savedTheoryLevel}"]`);
+      if (levelTab) levelTab.click();
+    }
+    if (savedPracticalLevel) {
+      const plevelTab = document.querySelector(`#ipPracticalTabs .ip-level-tab[data-plevel="${savedPracticalLevel}"]`);
+      if (plevelTab) plevelTab.click();
+    }
+  } catch (e) { /* keep defaults on failure */ }
+})();
 
 // Reveal tip cards on scroll
 const tipObserver = new IntersectionObserver((entries) => {
