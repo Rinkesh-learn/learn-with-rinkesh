@@ -2211,6 +2211,20 @@ criteria: The condition to match"></textarea>
         { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text', default: 'https://www.instagram.com/learnwithrinkesh/' }
       ]
     },
+    booking: {
+      label: '1-on-1 Booking',
+      file: 'booking.html',
+      icon: '🎯',
+      group: 'site',
+      blocks: [
+        { id: 'pc-booking-hero-title', label: 'Hero title', type: 'text', default: 'Book a 1-on-1 Career Guidance Session' },
+        { id: 'pc-booking-hero-subtitle', label: 'Hero subtitle', default: 'Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who\'s actually done the job — real advice, not generic tips.' },
+        { id: 'pc-booking-bullets', label: '"What this session is good for" — one per line', default: 'You\'re stuck at the same designation and don\'t know what skill to build next\nYou have an Excel/BA interview coming up and want to walk through likely questions\nYou\'re switching industries (like into data/reporting) and need a realistic roadmap\nYou want honest feedback on your resume, projects, or case-study work' },
+        { id: 'pc-booking-about-bio', label: 'About Me bio (shown on the booking page — photo is pulled from the About page automatically)', default: 'I\'m Rinkesh — a Business Analyst with 5+ years across US Logistics, Healthcare RCM, and Legal & Business Process Automation. I built this entire platform myself, and I\'ve been exactly where you are: stuck, unsure what to learn next, wondering if the next step is even the right one. In this session, I\'ll give you the same honest, specific advice I\'d want someone to give me.' },
+        { id: 'pc-booking-price-30', label: 'Price — 30-minute session (₹)', type: 'text', default: '799' },
+        { id: 'pc-booking-price-60', label: 'Price — 60-minute session (₹)', type: 'text', default: '1499' }
+      ]
+    },
     excel_basics: {
       label: 'Excel Basics',
       file: 'excel-basics.html',

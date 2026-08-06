@@ -9,12 +9,12 @@
 <link rel="stylesheet" href="feedback-widget.css">
 <link rel="stylesheet" href="chat-widget.css">
 <style>
-  .bk-shell { max-width: 760px; margin: 0 auto 60px; padding: 0 24px; }
+  .bk-shell { max-width: 880px; margin: 0 auto 60px; padding: 0 24px; }
 
-  .bk-hero { text-align: center; padding: 40px 24px 8px; }
+  .bk-hero { text-align: center; padding: 36px 24px 8px; }
   .bk-hero .icon { font-size: 34px; margin-bottom: 8px; }
   .bk-hero h1 { font-size: 26px; margin: 0 0 10px; }
-  .bk-hero p { color: var(--ink-soft); font-size: 14px; max-width: 560px; margin: 0 auto 18px; line-height: 1.6; }
+  .bk-hero p { color: var(--ink-soft); font-size: 14px; max-width: 600px; margin: 0 auto 16px; line-height: 1.6; }
 
   .bk-price-badge {
     display: inline-flex; align-items: center; gap: 6px;
@@ -25,14 +25,24 @@
 
   .bk-inspire {
     background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius);
-    padding: 18px 20px; margin: 24px 0; text-align: left;
+    padding: 16px 20px; margin: 20px 0; text-align: left;
   }
   .bk-inspire ul { margin: 8px 0 0; padding-left: 20px; }
-  .bk-inspire li { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; line-height: 1.5; }
+  .bk-inspire li { font-size: 13px; color: var(--ink-soft); margin-bottom: 5px; line-height: 1.5; }
 
-  .bk-panel { background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); padding: 24px; margin-top: 20px; }
+  /* About Me — side by side to cut down on vertical scroll */
+  .bk-about-me {
+    background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius);
+    padding: 20px; margin: 20px 0; display: flex; gap: 18px; align-items: flex-start;
+  }
+  .bk-about-me img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid var(--grid-line); }
+  .bk-about-me h3 { margin: 0 0 6px; font-size: 14px; }
+  .bk-about-me p { margin: 0; font-size: 13px; color: var(--ink-soft); line-height: 1.55; }
+  @media (max-width: 560px) { .bk-about-me { flex-direction: column; align-items: center; text-align: center; } }
+
+  .bk-panel { background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); padding: 22px; margin-top: 16px; }
   .bk-panel h3 { margin: 0 0 4px; font-size: 15px; }
-  .bk-panel .bk-sub { font-size: 12px; color: var(--ink-soft); margin: 0 0 16px; }
+  .bk-panel .bk-sub { font-size: 12px; color: var(--ink-soft); margin: 0 0 14px; }
 
   .bk-field { margin-bottom: 14px; }
   .bk-field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; }
@@ -42,14 +52,28 @@
     border: 1px solid var(--grid-line); border-radius: 8px;
     font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
   }
-  .bk-field textarea { resize: vertical; min-height: 70px; }
+  .bk-field textarea { resize: vertical; min-height: 90px; }
   .bk-row { display: flex; gap: 12px; }
   .bk-row .bk-field { flex: 1; }
+  .bk-known-value {
+    padding: 9px 10px; background: #F7F5EE; border: 1px solid var(--grid-line);
+    border-radius: 8px; font-size: 13px; color: var(--ink);
+  }
 
   .bk-login-gate {
     text-align: center; padding: 30px 20px; background: #fff;
     border: 1px solid var(--grid-line); border-radius: var(--radius); margin-top: 20px;
   }
+
+  .bk-duration-row { display: flex; gap: 10px; margin-bottom: 6px; }
+  .bk-duration-btn {
+    flex: 1; padding: 12px; border: 1px solid var(--grid-line); border-radius: 10px;
+    background: #fff; cursor: pointer; text-align: center; transition: all 0.15s ease;
+  }
+  .bk-duration-btn .dur-len { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 14px; }
+  .bk-duration-btn .dur-price { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .bk-duration-btn.selected { border-color: var(--excel-green); background: #F4F8F5; }
+  .bk-duration-btn.selected .dur-price { color: var(--excel-green-deep); font-weight: 700; }
 
   .bk-slots-date-group { margin-bottom: 14px; }
   .bk-slots-date-label { font-size: 12px; font-weight: 700; color: var(--excel-green-deep); margin-bottom: 8px; }
@@ -95,19 +119,22 @@
 
   <div class="bk-hero">
     <div class="icon">🎯</div>
-    <h1>Book a 1-on-1 Career Guidance Session</h1>
-    <p>Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend 30 focused minutes with someone who's actually done the job — real advice, not generic tips.</p>
-    <span class="bk-price-badge">₹799 <span style="font-weight:400; opacity:0.8;">/ 30-minute session</span></span>
+    <h1 id="pc-booking-hero-title">Book a 1-on-1 Career Guidance Session</h1>
+    <p id="pc-booking-hero-subtitle">Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who's actually done the job — real advice, not generic tips.</p>
+    <span class="bk-price-badge" id="bkHeroPriceBadge">Starting at ₹799</span>
   </div>
 
   <div class="bk-inspire">
     <strong style="font-size:13px;">What this session is good for:</strong>
-    <ul>
-      <li>You're stuck at the same designation and don't know what skill to build next</li>
-      <li>You have an Excel/BA interview coming up and want to walk through likely questions</li>
-      <li>You're switching industries (like into data/reporting) and need a realistic roadmap</li>
-      <li>You want honest feedback on your resume, projects, or case-study work</li>
-    </ul>
+    <ul id="pc-booking-bullets-list"></ul>
+  </div>
+
+  <div class="bk-about-me">
+    <img id="bkAboutPhoto" src="rinkesh-photo.jpg" alt="Rinkesh Shah">
+    <div>
+      <h3>About Me</h3>
+      <p id="pc-booking-about-bio"></p>
+    </div>
   </div>
 
   <div id="bkLoginGate" class="bk-login-gate" style="display:none;">
@@ -138,14 +165,16 @@
           <option value="Other">Other</option>
         </select>
       </div>
-      <div class="bk-field">
-        <label>Age <span class="bk-optional">(optional)</span></label>
-        <input type="number" id="bkAge" min="14" max="100">
+      <div class="bk-field" id="bkAgeField">
+        <label>Age</label>
+        <input type="number" id="bkAge" min="14" max="100" required>
       </div>
     </div>
+    <div class="bk-field" id="bkOccupationField">
+      <label>Occupation</label>
+      <input type="text" id="bkOccupation" placeholder="e.g. Data Analyst, Student, Ops Executive" required>
+    </div>
 
-    <h3 style="margin-top:22px;">What's This About?</h3>
-    <p class="bk-sub">Helps me prepare so we don't waste your 30 minutes.</p>
     <div class="bk-field">
       <label>Purpose</label>
       <select id="bkPurpose" required>
@@ -159,12 +188,20 @@
       </select>
     </div>
     <div class="bk-field">
-      <label>In one line, what's going on?</label>
-      <input type="text" id="bkShortDesc" placeholder="e.g. Stuck as an analyst for 3 years, not sure what's next" required>
+      <label>Tell me what's going on</label>
+      <textarea id="bkDescription" placeholder="What you're stuck on, what you've tried, what you're hoping to figure out in this session — the more context you give, the more useful the session will be." required></textarea>
     </div>
-    <div class="bk-field">
-      <label>Anything else I should know? <span class="bk-optional">(optional)</span></label>
-      <textarea id="bkFullDesc" placeholder="More context — your background, what you've tried, specific questions..."></textarea>
+
+    <h3 style="margin-top:22px;">Choose a Duration</h3>
+    <div class="bk-duration-row" id="bkDurationRow">
+      <div class="bk-duration-btn" data-duration="30">
+        <div class="dur-len">30 minutes</div>
+        <div class="dur-price" id="bkPrice30Label">₹799</div>
+      </div>
+      <div class="bk-duration-btn" data-duration="60">
+        <div class="dur-len">60 minutes</div>
+        <div class="dur-price" id="bkPrice60Label">₹1499</div>
+      </div>
     </div>
 
     <h3 style="margin-top:22px;">Pick a Date &amp; Time</h3>
@@ -173,7 +210,7 @@
 
     <div class="bk-summary-row">
       <span style="font-size:13px; color:var(--ink-soft);">Session fee</span>
-      <span class="price">₹799</span>
+      <span class="price" id="bkFeeDisplay">₹799</span>
     </div>
     <div id="bkFormError" class="bk-error"></div>
     <button type="submit" class="btn btn-primary bk-confirm-btn" id="bkSubmitBtn">Confirm Booking</button>
@@ -192,8 +229,55 @@
 
 <script>
 let bkSelectedSlot = null;
+let bkSelectedDuration = 30;
+let bkPrice30 = 799;
+let bkPrice60 = 1499;
+let bkKnownAge = null;
+let bkKnownOccupation = null;
+
+async function loadBookingPageContent() {
+  const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'booking');
+  const content = {};
+  (data || []).forEach(row => { content[row.id] = row.content; });
+
+  if (content['pc-booking-hero-title']) document.getElementById('pc-booking-hero-title').textContent = content['pc-booking-hero-title'];
+  if (content['pc-booking-hero-subtitle']) document.getElementById('pc-booking-hero-subtitle').textContent = content['pc-booking-hero-subtitle'];
+  if (content['pc-booking-about-bio']) document.getElementById('pc-booking-about-bio').textContent = content['pc-booking-about-bio'];
+
+  const bulletsText = content['pc-booking-bullets'] || "You're stuck at the same designation and don't know what skill to build next\nYou have an Excel/BA interview coming up and want to walk through likely questions\nYou're switching industries (like into data/reporting) and need a realistic roadmap\nYou want honest feedback on your resume, projects, or case-study work";
+  document.getElementById('pc-booking-bullets-list').innerHTML = bulletsText.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('');
+
+  bkPrice30 = Number(content['pc-booking-price-30']) || 799;
+  bkPrice60 = Number(content['pc-booking-price-60']) || 1499;
+  document.getElementById('bkPrice30Label').textContent = '₹' + bkPrice30;
+  document.getElementById('bkPrice60Label').textContent = '₹' + bkPrice60;
+  document.getElementById('bkHeroPriceBadge').textContent = 'Starting at ₹' + Math.min(bkPrice30, bkPrice60);
+  updateFeeDisplay();
+
+  // Photo is intentionally pulled from the About page's own setting, not a
+  // separate copy — so updating it there updates it here automatically.
+  const { data: aboutPhoto } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-about-photo').maybeSingle();
+  if (aboutPhoto && aboutPhoto.content) document.getElementById('bkAboutPhoto').src = aboutPhoto.content;
+}
+
+function updateFeeDisplay() {
+  const fee = bkSelectedDuration === 60 ? bkPrice60 : bkPrice30;
+  document.getElementById('bkFeeDisplay').textContent = '₹' + fee;
+}
+
+document.querySelectorAll('.bk-duration-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.bk-duration-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    bkSelectedDuration = Number(btn.dataset.duration);
+    updateFeeDisplay();
+  });
+});
+document.querySelector('.bk-duration-btn[data-duration="30"]').classList.add('selected');
 
 async function initBookingPage() {
+  await loadBookingPageContent();
+
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {
@@ -203,14 +287,26 @@ async function initBookingPage() {
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('name')
+    .select('name, age, occupation')
     .eq('id', session.user.id)
     .maybeSingle();
 
   document.getElementById('bkName').value = (profile && profile.name) || '';
   document.getElementById('bkEmail').value = session.user.email || '';
-  document.getElementById('bkForm').style.display = 'block';
 
+  // Age/Occupation: if already known from the profile, show them as a
+  // fixed value instead of asking again. Otherwise, ask here and save it
+  // back to the profile so it's known next time.
+  if (profile && profile.age) {
+    bkKnownAge = profile.age;
+    document.getElementById('bkAgeField').innerHTML = `<label>Age</label><div class="bk-known-value">${profile.age}</div>`;
+  }
+  if (profile && profile.occupation) {
+    bkKnownOccupation = profile.occupation;
+    document.getElementById('bkOccupationField').innerHTML = `<label>Occupation</label><div class="bk-known-value">${profile.occupation}</div>`;
+  }
+
+  document.getElementById('bkForm').style.display = 'block';
   await loadAvailableSlots();
 }
 
@@ -278,11 +374,19 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
     return;
   }
 
+  const ageVal = bkKnownAge || Number(document.getElementById('bkAge').value);
+  const occupationVal = bkKnownOccupation || document.getElementById('bkOccupation').value.trim();
+  if (!ageVal || !occupationVal) {
+    errorEl.textContent = 'Please fill in Age and Occupation.';
+    return;
+  }
+
   const submitBtn = document.getElementById('bkSubmitBtn');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Booking...';
 
   const { data: { session } } = await supabaseClient.auth.getSession();
+  const fee = bkSelectedDuration === 60 ? bkPrice60 : bkPrice30;
 
   try {
     // Claim the slot first — if this fails (someone else just took it),
@@ -301,16 +405,24 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
       name: document.getElementById('bkName').value.trim(),
       email: document.getElementById('bkEmail').value.trim(),
       gender: document.getElementById('bkGender').value || null,
-      age: document.getElementById('bkAge').value ? Number(document.getElementById('bkAge').value) : null,
+      age: ageVal,
+      occupation: occupationVal,
       purpose: document.getElementById('bkPurpose').value,
-      short_description: document.getElementById('bkShortDesc').value.trim(),
-      full_description: document.getElementById('bkFullDesc').value.trim() || null,
-      amount: 799,
+      full_description: document.getElementById('bkDescription').value.trim(),
+      duration_minutes: bkSelectedDuration,
+      amount: fee,
       payment_status: 'pending',
       status: 'confirmed'
     });
 
     if (bookingError) throw bookingError;
+
+    // Save Age/Occupation back to the profile if this was the first time
+    // asking, so future bookings (or anywhere else on the site) already
+    // know it.
+    if (!bkKnownAge || !bkKnownOccupation) {
+      await supabaseClient.from('profiles').update({ age: ageVal, occupation: occupationVal }).eq('id', session.user.id);
+    }
 
     const dateLabel = new Date(bkSelectedSlot.slot_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     document.getElementById('bkConfirmSlot').textContent = `${dateLabel} at ${formatTime(bkSelectedSlot.start_time)}`;
