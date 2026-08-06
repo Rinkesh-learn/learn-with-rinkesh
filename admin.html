@@ -660,6 +660,13 @@ criteria: The condition to match"></textarea>
         <label>About Rinkesh — short bio shown on the booking page</label>
         <textarea id="bkAdminBio" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;"></textarea>
 
+        <label>"Current Status" dropdown — one option per line</label>
+        <textarea id="bkAdminStatusOptions" rows="3" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:4px;"></textarea>
+        <p class="sub" style="margin-top:0; margin-bottom:12px;">If "Working Professional" is one of these (exact spelling), selecting it reveals the Occupation dropdown below it.</p>
+
+        <label>"Occupation" dropdown — one option per line (only shown when status = Working Professional)</label>
+        <textarea id="bkAdminOccupationOptions" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;"></textarea>
+
         <div style="display:flex; gap:14px; margin-bottom:14px;">
           <div style="flex:1;">
             <label>Price — 30-minute session (₹)</label>
@@ -3269,6 +3276,8 @@ criteria: The condition to match"></textarea>
     'pc-booking-hero-subtitle': "Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who's actually done the job — real advice, not generic tips.",
     'pc-booking-bullets': "You're stuck at the same designation and don't know what skill to build next\nYou have an Excel/BA interview coming up and want to walk through likely questions\nYou're switching industries (like into data/reporting) and need a realistic roadmap\nYou want honest feedback on your resume, projects, or case-study work",
     'pc-booking-about-bio': "Rinkesh is a Business Analyst with 5+ years of experience across US Logistics, Healthcare Revenue Cycle Management, and Legal & Business Process Automation. He built this entire platform from scratch, and has personally worked through the exact career questions this session is for — what to learn next, how to stand out, and how to actually move forward. Sessions are honest and specific, not generic advice.",
+    'pc-booking-status-options': 'Student\nJob Seeker\nWorking Professional\nFreelancer\nOther',
+    'pc-booking-occupation-options': 'Data Analyst\nBusiness Analyst\nExcel / Reporting Executive\nAccountant / Finance\nOperations / Admin\nSoftware Developer\nOther',
     'pc-booking-price-30': '799',
     'pc-booking-price-60': '1499'
   };
@@ -3281,6 +3290,8 @@ criteria: The condition to match"></textarea>
     document.getElementById('bkAdminHeroSubtitle').value = existing['pc-booking-hero-subtitle'] || BK_CONTENT_DEFAULTS['pc-booking-hero-subtitle'];
     document.getElementById('bkAdminBullets').value = existing['pc-booking-bullets'] || BK_CONTENT_DEFAULTS['pc-booking-bullets'];
     document.getElementById('bkAdminBio').value = existing['pc-booking-about-bio'] || BK_CONTENT_DEFAULTS['pc-booking-about-bio'];
+    document.getElementById('bkAdminStatusOptions').value = existing['pc-booking-status-options'] || BK_CONTENT_DEFAULTS['pc-booking-status-options'];
+    document.getElementById('bkAdminOccupationOptions').value = existing['pc-booking-occupation-options'] || BK_CONTENT_DEFAULTS['pc-booking-occupation-options'];
     document.getElementById('bkAdminPrice30').value = existing['pc-booking-price-30'] || BK_CONTENT_DEFAULTS['pc-booking-price-30'];
     document.getElementById('bkAdminPrice60').value = existing['pc-booking-price-60'] || BK_CONTENT_DEFAULTS['pc-booking-price-60'];
   }
@@ -3294,6 +3305,8 @@ criteria: The condition to match"></textarea>
       { id: 'pc-booking-hero-subtitle', page: 'booking', label: 'Hero subtitle', content: document.getElementById('bkAdminHeroSubtitle').value.trim() },
       { id: 'pc-booking-bullets', page: 'booking', label: 'Session-good-for bullets', content: document.getElementById('bkAdminBullets').value.trim() },
       { id: 'pc-booking-about-bio', page: 'booking', label: 'About Rinkesh bio', content: document.getElementById('bkAdminBio').value.trim() },
+      { id: 'pc-booking-status-options', page: 'booking', label: 'Current Status dropdown options', content: document.getElementById('bkAdminStatusOptions').value.trim() },
+      { id: 'pc-booking-occupation-options', page: 'booking', label: 'Occupation dropdown options', content: document.getElementById('bkAdminOccupationOptions').value.trim() },
       { id: 'pc-booking-price-30', page: 'booking', label: 'Price — 30 min', content: document.getElementById('bkAdminPrice30').value.trim() },
       { id: 'pc-booking-price-60', page: 'booking', label: 'Price — 60 min', content: document.getElementById('bkAdminPrice60').value.trim() }
     ];

@@ -158,19 +158,16 @@
         <input type="number" id="bkAge" min="14" max="100" required>
       </div>
     </div>
-    <div class="bk-field" id="bkOccupationField">
-      <label>Occupation</label>
-      <select id="bkOccupation" required>
+    <div class="bk-field">
+      <label>Current Status</label>
+      <select id="bkCurrentStatus" required>
         <option value="">Select one...</option>
-        <option value="Student">Student</option>
-        <option value="Fresher / Recent Graduate">Fresher / Recent Graduate</option>
-        <option value="Data Analyst">Data Analyst</option>
-        <option value="Business Analyst">Business Analyst</option>
-        <option value="Excel / Reporting Executive">Excel / Reporting Executive</option>
-        <option value="Accountant / Finance">Accountant / Finance</option>
-        <option value="Operations / Admin">Operations / Admin</option>
-        <option value="Software Developer">Software Developer</option>
-        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="bk-field" id="bkOccupationField" style="display:none;">
+      <label>Occupation</label>
+      <select id="bkOccupation">
+        <option value="">Select one...</option>
       </select>
     </div>
 
@@ -250,6 +247,16 @@ async function loadBookingPageContent() {
   document.getElementById('bkPrice60Label').textContent = '₹' + bkPrice60;
   updateFeeDisplay();
 
+  // Both dropdowns' options are admin-editable — populate them here
+  // rather than hardcoding the list in the page.
+  const statusOptions = (content['pc-booking-status-options'] || 'Student\nJob Seeker\nWorking Professional\nFreelancer\nOther').split('\n').filter(l => l.trim());
+  const statusSelect = document.getElementById('bkCurrentStatus');
+  statusOptions.forEach(opt => statusSelect.appendChild(new Option(opt.trim(), opt.trim())));
+
+  const occupationOptions = (content['pc-booking-occupation-options'] || 'Data Analyst\nBusiness Analyst\nExcel / Reporting Executive\nAccountant / Finance\nOperations / Admin\nSoftware Developer\nOther').split('\n').filter(l => l.trim());
+  const occupationSelect = document.getElementById('bkOccupation');
+  occupationOptions.forEach(opt => occupationSelect.appendChild(new Option(opt.trim(), opt.trim())));
+
   // Photo is intentionally pulled from the About page's own setting, not a
   // separate copy — so updating it there updates it here automatically.
   const { data: aboutPhoto } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-about-photo').maybeSingle();
@@ -271,6 +278,16 @@ document.querySelectorAll('.bk-duration-btn').forEach(btn => {
 });
 document.querySelector('.bk-duration-btn[data-duration="30"]').classList.add('selected');
 
+function toggleOccupationField() {
+  const isWorking = document.getElementById('bkCurrentStatus').value === 'Working Professional';
+  const field = document.getElementById('bkOccupationField');
+  const select = document.getElementById('bkOccupation');
+  field.style.display = isWorking ? 'block' : 'none';
+  select.required = isWorking;
+  if (!isWorking) select.value = '';
+}
+document.getElementById('bkCurrentStatus').addEventListener('change', toggleOccupationField);
+
 async function initBookingPage() {
   await loadBookingPageContent();
 
@@ -290,11 +307,14 @@ async function initBookingPage() {
   document.getElementById('bkName').value = (profile && profile.name) || '';
   document.getElementById('bkEmail').value = session.user.email || '';
 
-  // Age/Occupation: if already known from the profile, pre-fill them
-  // (still fully editable, in case they've changed) rather than locking
-  // them as read-only.
+  // Age/Occupation/Status: if already known from the profile, pre-fill
+  // them (still fully editable) rather than locking them as read-only.
   if (profile && profile.age) {
     document.getElementById('bkAge').value = profile.age;
+  }
+  if (profile && profile.current_status) {
+    document.getElementById('bkCurrentStatus').value = profile.current_status;
+    toggleOccupationField();
   }
   if (profile && profile.occupation) {
     document.getElementById('bkOccupation').value = profile.occupation;
@@ -369,9 +389,14 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
   }
 
   const ageVal = Number(document.getElementById('bkAge').value);
+  const statusVal = document.getElementById('bkCurrentStatus').value;
   const occupationVal = document.getElementById('bkOccupation').value;
-  if (!ageVal || !occupationVal) {
-    errorEl.textContent = 'Please fill in Age and Occupation.';
+  if (!ageVal || !statusVal) {
+    errorEl.textContent = 'Please fill in Age and Current Status.';
+    return;
+  }
+  if (statusVal === 'Working Professional' && !occupationVal) {
+    errorEl.textContent = 'Please select an Occupation.';
     return;
   }
 
@@ -400,7 +425,8 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
       email: document.getElementById('bkEmail').value.trim(),
       gender: document.getElementById('bkGender').value || null,
       age: ageVal,
-      occupation: occupationVal,
+      current_status: statusVal,
+      occupation: statusVal === 'Working Professional' ? occupationVal : null,
       purpose: document.getElementById('bkPurpose').value,
       full_description: document.getElementById('bkDescription').value.trim(),
       duration_minutes: bkSelectedDuration,
@@ -411,9 +437,13 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
 
     if (bookingError) throw bookingError;
 
-    // Keep the profile's Age/Occupation in sync with whatever was
+    // Keep the profile's Age/Status/Occupation in sync with whatever was
     // submitted here, whether it was pre-filled or just changed.
-    await supabaseClient.from('profiles').update({ age: ageVal, occupation: occupationVal }).eq('id', session.user.id);
+    await supabaseClient.from('profiles').update({
+      age: ageVal,
+      current_status: statusVal,
+      occupation: statusVal === 'Working Professional' ? occupationVal : null
+    }).eq('id', session.user.id);
 
     const dateLabel = new Date(bkSelectedSlot.slot_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     document.getElementById('bkConfirmSlot').textContent = `${dateLabel} at ${formatTime(bkSelectedSlot.start_time)}`;
