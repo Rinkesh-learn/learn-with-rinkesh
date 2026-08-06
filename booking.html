@@ -48,10 +48,6 @@
   .bk-field textarea { resize: vertical; min-height: 90px; }
   .bk-row { display: flex; gap: 12px; }
   .bk-row .bk-field { flex: 1; }
-  .bk-known-value {
-    padding: 9px 10px; background: #F7F5EE; border: 1px solid var(--grid-line);
-    border-radius: 8px; font-size: 13px; color: var(--ink);
-  }
 
   .bk-login-gate {
     text-align: center; padding: 30px 20px; background: #fff;
@@ -164,7 +160,18 @@
     </div>
     <div class="bk-field" id="bkOccupationField">
       <label>Occupation</label>
-      <input type="text" id="bkOccupation" placeholder="e.g. Data Analyst, Student, Ops Executive" required>
+      <select id="bkOccupation" required>
+        <option value="">Select one...</option>
+        <option value="Student">Student</option>
+        <option value="Fresher / Recent Graduate">Fresher / Recent Graduate</option>
+        <option value="Data Analyst">Data Analyst</option>
+        <option value="Business Analyst">Business Analyst</option>
+        <option value="Excel / Reporting Executive">Excel / Reporting Executive</option>
+        <option value="Accountant / Finance">Accountant / Finance</option>
+        <option value="Operations / Admin">Operations / Admin</option>
+        <option value="Software Developer">Software Developer</option>
+        <option value="Other">Other</option>
+      </select>
     </div>
 
     <div class="bk-field">
@@ -224,8 +231,6 @@ let bkSelectedSlot = null;
 let bkSelectedDuration = 30;
 let bkPrice30 = 799;
 let bkPrice60 = 1499;
-let bkKnownAge = null;
-let bkKnownOccupation = null;
 
 async function loadBookingPageContent() {
   const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'booking');
@@ -285,16 +290,14 @@ async function initBookingPage() {
   document.getElementById('bkName').value = (profile && profile.name) || '';
   document.getElementById('bkEmail').value = session.user.email || '';
 
-  // Age/Occupation: if already known from the profile, show them as a
-  // fixed value instead of asking again. Otherwise, ask here and save it
-  // back to the profile so it's known next time.
+  // Age/Occupation: if already known from the profile, pre-fill them
+  // (still fully editable, in case they've changed) rather than locking
+  // them as read-only.
   if (profile && profile.age) {
-    bkKnownAge = profile.age;
-    document.getElementById('bkAgeField').innerHTML = `<label>Age</label><div class="bk-known-value">${profile.age}</div>`;
+    document.getElementById('bkAge').value = profile.age;
   }
   if (profile && profile.occupation) {
-    bkKnownOccupation = profile.occupation;
-    document.getElementById('bkOccupationField').innerHTML = `<label>Occupation</label><div class="bk-known-value">${profile.occupation}</div>`;
+    document.getElementById('bkOccupation').value = profile.occupation;
   }
 
   document.getElementById('bkForm').style.display = 'block';
@@ -365,8 +368,8 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
     return;
   }
 
-  const ageVal = bkKnownAge || Number(document.getElementById('bkAge').value);
-  const occupationVal = bkKnownOccupation || document.getElementById('bkOccupation').value.trim();
+  const ageVal = Number(document.getElementById('bkAge').value);
+  const occupationVal = document.getElementById('bkOccupation').value;
   if (!ageVal || !occupationVal) {
     errorEl.textContent = 'Please fill in Age and Occupation.';
     return;
@@ -408,12 +411,9 @@ document.getElementById('bkForm').addEventListener('submit', async (e) => {
 
     if (bookingError) throw bookingError;
 
-    // Save Age/Occupation back to the profile if this was the first time
-    // asking, so future bookings (or anywhere else on the site) already
-    // know it.
-    if (!bkKnownAge || !bkKnownOccupation) {
-      await supabaseClient.from('profiles').update({ age: ageVal, occupation: occupationVal }).eq('id', session.user.id);
-    }
+    // Keep the profile's Age/Occupation in sync with whatever was
+    // submitted here, whether it was pre-filled or just changed.
+    await supabaseClient.from('profiles').update({ age: ageVal, occupation: occupationVal }).eq('id', session.user.id);
 
     const dateLabel = new Date(bkSelectedSlot.slot_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     document.getElementById('bkConfirmSlot').textContent = `${dateLabel} at ${formatTime(bkSelectedSlot.start_time)}`;
