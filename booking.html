@@ -16,13 +16,6 @@
   .bk-hero h1 { font-size: 26px; margin: 0 0 10px; }
   .bk-hero p { color: var(--ink-soft); font-size: 14px; max-width: 600px; margin: 0 auto 16px; line-height: 1.6; }
 
-  .bk-price-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #FFF6C9; border: 1px solid var(--amber);
-    color: var(--ink); font-family: 'IBM Plex Mono', monospace;
-    font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 20px;
-  }
-
   .bk-inspire {
     background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius);
     padding: 16px 20px; margin: 20px 0; text-align: left;
@@ -119,9 +112,8 @@
 
   <div class="bk-hero">
     <div class="icon">🎯</div>
-    <h1 id="pc-booking-hero-title">Book a 1-on-1 Career Guidance Session</h1>
+    <h1 id="pc-booking-hero-title">Book 1 on 1 Session</h1>
     <p id="pc-booking-hero-subtitle">Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who's actually done the job — real advice, not generic tips.</p>
-    <span class="bk-price-badge" id="bkHeroPriceBadge">Starting at ₹799</span>
   </div>
 
   <div class="bk-inspire">
@@ -132,8 +124,8 @@
   <div class="bk-about-me">
     <img id="bkAboutPhoto" src="rinkesh-photo.jpg" alt="Rinkesh Shah">
     <div>
-      <h3>About Me</h3>
-      <p id="pc-booking-about-bio"></p>
+      <h3>About Rinkesh</h3>
+      <p id="pc-booking-about-bio">Rinkesh is a Business Analyst with 5+ years of experience across US Logistics, Healthcare Revenue Cycle Management, and Legal &amp; Business Process Automation. He built this entire platform from scratch, and has personally worked through the exact career questions this session is for — what to learn next, how to stand out, and how to actually move forward. Sessions are honest and specific, not generic advice.</p>
     </div>
   </div>
 
@@ -188,7 +180,7 @@
       </select>
     </div>
     <div class="bk-field">
-      <label>Tell me what's going on</label>
+      <label>Describe in detail</label>
       <textarea id="bkDescription" placeholder="What you're stuck on, what you've tried, what you're hoping to figure out in this session — the more context you give, the more useful the session will be." required></textarea>
     </div>
 
@@ -219,7 +211,7 @@
   <div id="bkConfirmation" class="bk-confirmation" style="display:none;">
     <div class="icon">✅</div>
     <h2>Booking Received!</h2>
-    <p>Thanks — your session request for <strong id="bkConfirmSlot"></strong> is saved. Payment for sessions isn't live on the site yet, so I'll personally reach out to you at your email to confirm the slot and share payment details.</p>
+    <p>Thanks — your session request for <strong id="bkConfirmSlot"></strong> is saved. Payment for sessions isn't live on the site yet, so we'll reach out to you at your email to confirm the slot and share payment details.</p>
   </div>
 
 </div>
@@ -251,7 +243,6 @@ async function loadBookingPageContent() {
   bkPrice60 = Number(content['pc-booking-price-60']) || 1499;
   document.getElementById('bkPrice30Label').textContent = '₹' + bkPrice30;
   document.getElementById('bkPrice60Label').textContent = '₹' + bkPrice60;
-  document.getElementById('bkHeroPriceBadge').textContent = 'Starting at ₹' + Math.min(bkPrice30, bkPrice60);
   updateFeeDisplay();
 
   // Photo is intentionally pulled from the About page's own setting, not a

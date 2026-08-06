@@ -642,9 +642,40 @@ criteria: The condition to match"></textarea>
 
     <div id="view-bookings" style="display:none;">
       <h1>1-on-1 Bookings</h1>
-      <p class="sub">Mark when you're available. There's no public booking page yet — that's a separate build — so this just sets up your calendar and where bookings will show once it exists.</p>
+      <p class="sub">Everything for the public booking page — its text, pricing, your availability, and the bookings that come in — lives here in one place.</p>
 
       <div class="admin-panel">
+        <h3 style="margin-top:0;">Booking page content</h3>
+        <p class="sub" style="margin-top:-6px;">Controls what shows on the public booking page. Changes apply as soon as you save.</p>
+
+        <label>Hero title</label>
+        <input type="text" id="bkAdminHeroTitle" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;">
+
+        <label>Hero subtitle</label>
+        <textarea id="bkAdminHeroSubtitle" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;"></textarea>
+
+        <label>"What this session is good for" — one per line</label>
+        <textarea id="bkAdminBullets" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;"></textarea>
+
+        <label>About Rinkesh — short bio shown on the booking page</label>
+        <textarea id="bkAdminBio" rows="4" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:12px;"></textarea>
+
+        <div style="display:flex; gap:14px; margin-bottom:14px;">
+          <div style="flex:1;">
+            <label>Price — 30-minute session (₹)</label>
+            <input type="text" id="bkAdminPrice30" style="width:100%; box-sizing:border-box; padding:8px;">
+          </div>
+          <div style="flex:1;">
+            <label>Price — 60-minute session (₹)</label>
+            <input type="text" id="bkAdminPrice60" style="width:100%; box-sizing:border-box; padding:8px;">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="bkAdminSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
+        <span id="bkAdminSaveMsg" style="font-size:12px; color:var(--ink-soft); margin-left:10px;"></span>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
         <h3 style="margin-top:0;">Add availability</h3>
         <label>Date</label>
         <input type="date" id="availDate" style="width:100%; max-width:220px; padding:8px; margin-bottom:10px;">
@@ -670,7 +701,7 @@ criteria: The condition to match"></textarea>
 
       <div class="admin-panel" style="margin-top:20px;">
         <h3 style="margin-top:0;">Bookings</h3>
-        <p class="sub" style="margin-top:-6px;">Read-only — will populate once the public booking page is built and users can actually book a slot.</p>
+        <p class="sub" style="margin-top:-6px;">Everyone who has booked a session through the public page.</p>
         <table class="admin-table">
           <thead><tr><th>Name</th><th>Email</th><th>Slot</th><th>Status</th></tr></thead>
           <tbody id="bookingsTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
@@ -2211,20 +2242,6 @@ criteria: The condition to match"></textarea>
         { id: 'pc-about-instagram-link', label: 'Instagram link', type: 'text', default: 'https://www.instagram.com/learnwithrinkesh/' }
       ]
     },
-    booking: {
-      label: '1-on-1 Booking',
-      file: 'booking.html',
-      icon: '🎯',
-      group: 'site',
-      blocks: [
-        { id: 'pc-booking-hero-title', label: 'Hero title', type: 'text', default: 'Book a 1-on-1 Career Guidance Session' },
-        { id: 'pc-booking-hero-subtitle', label: 'Hero subtitle', default: 'Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who\'s actually done the job — real advice, not generic tips.' },
-        { id: 'pc-booking-bullets', label: '"What this session is good for" — one per line', default: 'You\'re stuck at the same designation and don\'t know what skill to build next\nYou have an Excel/BA interview coming up and want to walk through likely questions\nYou\'re switching industries (like into data/reporting) and need a realistic roadmap\nYou want honest feedback on your resume, projects, or case-study work' },
-        { id: 'pc-booking-about-bio', label: 'About Me bio (shown on the booking page — photo is pulled from the About page automatically)', default: 'I\'m Rinkesh — a Business Analyst with 5+ years across US Logistics, Healthcare RCM, and Legal & Business Process Automation. I built this entire platform myself, and I\'ve been exactly where you are: stuck, unsure what to learn next, wondering if the next step is even the right one. In this session, I\'ll give you the same honest, specific advice I\'d want someone to give me.' },
-        { id: 'pc-booking-price-30', label: 'Price — 30-minute session (₹)', type: 'text', default: '799' },
-        { id: 'pc-booking-price-60', label: 'Price — 60-minute session (₹)', type: 'text', default: '1499' }
-      ]
-    },
     excel_basics: {
       label: 'Excel Basics',
       file: 'excel-basics.html',
@@ -3247,6 +3264,43 @@ criteria: The condition to match"></textarea>
   });
 
   // ---------- 1-on-1 Bookings ----------
+  const BK_CONTENT_DEFAULTS = {
+    'pc-booking-hero-title': 'Book 1 on 1 Session',
+    'pc-booking-hero-subtitle': "Feeling stuck in the same role, unsure what to learn next, or prepping for an interview? Spend focused time with someone who's actually done the job — real advice, not generic tips.",
+    'pc-booking-bullets': "You're stuck at the same designation and don't know what skill to build next\nYou have an Excel/BA interview coming up and want to walk through likely questions\nYou're switching industries (like into data/reporting) and need a realistic roadmap\nYou want honest feedback on your resume, projects, or case-study work",
+    'pc-booking-about-bio': "Rinkesh is a Business Analyst with 5+ years of experience across US Logistics, Healthcare Revenue Cycle Management, and Legal & Business Process Automation. He built this entire platform from scratch, and has personally worked through the exact career questions this session is for — what to learn next, how to stand out, and how to actually move forward. Sessions are honest and specific, not generic advice.",
+    'pc-booking-price-30': '799',
+    'pc-booking-price-60': '1499'
+  };
+
+  async function loadBookingContentAdmin() {
+    const { data } = await supabaseClient.from('page_content').select('id, content').eq('page', 'booking');
+    const existing = {};
+    (data || []).forEach(row => { existing[row.id] = row.content; });
+    document.getElementById('bkAdminHeroTitle').value = existing['pc-booking-hero-title'] || BK_CONTENT_DEFAULTS['pc-booking-hero-title'];
+    document.getElementById('bkAdminHeroSubtitle').value = existing['pc-booking-hero-subtitle'] || BK_CONTENT_DEFAULTS['pc-booking-hero-subtitle'];
+    document.getElementById('bkAdminBullets').value = existing['pc-booking-bullets'] || BK_CONTENT_DEFAULTS['pc-booking-bullets'];
+    document.getElementById('bkAdminBio').value = existing['pc-booking-about-bio'] || BK_CONTENT_DEFAULTS['pc-booking-about-bio'];
+    document.getElementById('bkAdminPrice30').value = existing['pc-booking-price-30'] || BK_CONTENT_DEFAULTS['pc-booking-price-30'];
+    document.getElementById('bkAdminPrice60').value = existing['pc-booking-price-60'] || BK_CONTENT_DEFAULTS['pc-booking-price-60'];
+  }
+  loadBookingContentAdmin();
+
+  document.getElementById('bkAdminSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('bkAdminSaveMsg');
+    msg.textContent = 'Saving...';
+    const rows = [
+      { id: 'pc-booking-hero-title', page: 'booking', label: 'Hero title', content: document.getElementById('bkAdminHeroTitle').value.trim() },
+      { id: 'pc-booking-hero-subtitle', page: 'booking', label: 'Hero subtitle', content: document.getElementById('bkAdminHeroSubtitle').value.trim() },
+      { id: 'pc-booking-bullets', page: 'booking', label: 'Session-good-for bullets', content: document.getElementById('bkAdminBullets').value.trim() },
+      { id: 'pc-booking-about-bio', page: 'booking', label: 'About Rinkesh bio', content: document.getElementById('bkAdminBio').value.trim() },
+      { id: 'pc-booking-price-30', page: 'booking', label: 'Price — 30 min', content: document.getElementById('bkAdminPrice30').value.trim() },
+      { id: 'pc-booking-price-60', page: 'booking', label: 'Price — 60 min', content: document.getElementById('bkAdminPrice60').value.trim() }
+    ];
+    const { error } = await supabaseClient.from('page_content').upsert(rows);
+    msg.textContent = error ? 'Failed to save: ' + error.message : 'Saved — live on the booking page now.';
+  });
+
   async function loadAvailability() {
     const body = document.getElementById('availTableBody');
     const { data, error } = await supabaseClient
