@@ -291,6 +291,13 @@ document.getElementById('bkCurrentStatus').addEventListener('change', toggleOccu
 async function initBookingPage() {
   await loadBookingPageContent();
 
+  const { data: acceptRow } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-booking-accepting').maybeSingle();
+  if (acceptRow && acceptRow.content === 'off') {
+    document.getElementById('bkLoginGate').innerHTML = '<p style="margin:0; font-size:14px;">Not currently accepting sessions — check back soon.</p>';
+    document.getElementById('bkLoginGate').style.display = 'block';
+    return;
+  }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
 
   if (!session) {

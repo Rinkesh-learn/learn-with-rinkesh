@@ -678,12 +678,51 @@ criteria: The condition to match"></textarea>
           </div>
         </div>
 
+        <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-bottom:14px;">
+          <input type="checkbox" id="bkAdminAcceptingBookings" style="width:auto;">
+          Accepting bookings right now (uncheck when you're on leave — the public page will show "not currently accepting sessions" instead of the form)
+        </label>
+
         <button class="btn btn-primary" id="bkAdminSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
         <span id="bkAdminSaveMsg" style="font-size:12px; color:var(--ink-soft); margin-left:10px;"></span>
       </div>
 
       <div class="admin-panel" style="margin-top:20px;">
-        <h3 style="margin-top:0;">Add availability</h3>
+        <h3 style="margin-top:0;">Weekly recurring availability</h3>
+        <p class="sub" style="margin-top:-6px;">"I'm generally free on [day] between [time] and [time]" — set once, applies every week. These get turned into real bookable slots (30-min steps) for the next 21 days automatically whenever you open this page.</p>
+        <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:10px; flex-wrap:wrap;">
+          <div>
+            <label>Day</label>
+            <select id="weeklyDay" style="padding:8px;">
+              <option value="1">Monday</option>
+              <option value="2">Tuesday</option>
+              <option value="3">Wednesday</option>
+              <option value="4">Thursday</option>
+              <option value="5">Friday</option>
+              <option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </div>
+          <div>
+            <label>Start time</label>
+            <input type="time" id="weeklyStart" style="padding:8px;">
+          </div>
+          <div>
+            <label>End time</label>
+            <input type="time" id="weeklyEnd" style="padding:8px;">
+          </div>
+          <button class="btn btn-primary" id="addWeeklyBtn" style="padding:8px 16px; font-size:12px;">+ Add Weekly Rule</button>
+        </div>
+        <div id="weeklyMessage" style="font-size:13px; margin-bottom:14px;"></div>
+        <table class="admin-table">
+          <thead><tr><th>Day</th><th>Start</th><th>End</th><th></th></tr></thead>
+          <tbody id="weeklyTableBody"><tr><td colspan="4">Loading...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Add one-off availability</h3>
+        <p class="sub" style="margin-top:-6px;">For a specific extra date outside your weekly pattern.</p>
         <label>Date</label>
         <input type="date" id="availDate" style="width:100%; max-width:220px; padding:8px; margin-bottom:10px;">
         <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:10px;">
@@ -3294,6 +3333,7 @@ criteria: The condition to match"></textarea>
     document.getElementById('bkAdminOccupationOptions').value = existing['pc-booking-occupation-options'] || BK_CONTENT_DEFAULTS['pc-booking-occupation-options'];
     document.getElementById('bkAdminPrice30').value = existing['pc-booking-price-30'] || BK_CONTENT_DEFAULTS['pc-booking-price-30'];
     document.getElementById('bkAdminPrice60').value = existing['pc-booking-price-60'] || BK_CONTENT_DEFAULTS['pc-booking-price-60'];
+    document.getElementById('bkAdminAcceptingBookings').checked = (existing['pc-booking-accepting'] !== 'off');
   }
   loadBookingContentAdmin();
 
@@ -3308,11 +3348,94 @@ criteria: The condition to match"></textarea>
       { id: 'pc-booking-status-options', page: 'booking', label: 'Current Status dropdown options', content: document.getElementById('bkAdminStatusOptions').value.trim() },
       { id: 'pc-booking-occupation-options', page: 'booking', label: 'Occupation dropdown options', content: document.getElementById('bkAdminOccupationOptions').value.trim() },
       { id: 'pc-booking-price-30', page: 'booking', label: 'Price — 30 min', content: document.getElementById('bkAdminPrice30').value.trim() },
-      { id: 'pc-booking-price-60', page: 'booking', label: 'Price — 60 min', content: document.getElementById('bkAdminPrice60').value.trim() }
+      { id: 'pc-booking-price-60', page: 'booking', label: 'Price — 60 min', content: document.getElementById('bkAdminPrice60').value.trim() },
+      { id: 'pc-booking-accepting', page: 'booking', label: 'Accepting bookings', content: document.getElementById('bkAdminAcceptingBookings').checked ? 'on' : 'off' }
     ];
     const { error } = await supabaseClient.from('page_content').upsert(rows);
     msg.textContent = error ? 'Failed to save: ' + error.message : 'Saved — live on the booking page now.';
   });
+
+  const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  async function loadWeeklyAvailability() {
+    const body = document.getElementById('weeklyTableBody');
+    const { data, error } = await supabaseClient.from('weekly_availability').select('*').order('day_of_week').order('start_time');
+    if (error) { body.innerHTML = `<tr><td colspan="4">Couldn't load: ${error.message}</td></tr>`; return; }
+    if (!data || data.length === 0) { body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--ink-soft);">No weekly rules yet.</td></tr>'; return; }
+    body.innerHTML = data.map(r => `
+      <tr>
+        <td>${DAY_NAMES[r.day_of_week]}</td>
+        <td>${r.start_time}</td>
+        <td>${r.end_time}</td>
+        <td><button class="admin-mini-btn" data-delete-weekly="${r.id}">Delete</button></td>
+      </tr>`).join('');
+    body.querySelectorAll('[data-delete-weekly]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('weekly_availability').delete().eq('id', btn.dataset.deleteWeekly);
+        loadWeeklyAvailability();
+      });
+    });
+  }
+  loadWeeklyAvailability();
+
+  document.getElementById('addWeeklyBtn').addEventListener('click', async () => {
+    const day_of_week = Number(document.getElementById('weeklyDay').value);
+    const start_time = document.getElementById('weeklyStart').value;
+    const end_time = document.getElementById('weeklyEnd').value;
+    const msg = document.getElementById('weeklyMessage');
+    if (!start_time || !end_time) { msg.textContent = 'Pick a start and end time.'; msg.style.color = '#B3261E'; return; }
+    const { error } = await supabaseClient.from('weekly_availability').insert({ day_of_week, start_time, end_time });
+    if (error) { msg.textContent = error.message; msg.style.color = '#B3261E'; return; }
+    msg.textContent = 'Rule added.';
+    msg.style.color = 'var(--excel-green-deep)';
+    loadWeeklyAvailability();
+    materializeWeeklySlots();
+  });
+
+  // Turns the weekly rules into real, bookable rows in availability_slots
+  // for the next 21 days — runs automatically whenever this admin page
+  // loads, so the pool of real slots stays topped up without needing a
+  // background job. 30-minute steps within each rule's time window.
+  async function materializeWeeklySlots() {
+    const { data: rules } = await supabaseClient.from('weekly_availability').select('*').eq('enabled', true);
+    if (!rules || rules.length === 0) return;
+
+    const today = new Date();
+    const toGenerate = [];
+    for (let offset = 0; offset < 21; offset++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      const dow = d.getDay();
+      const dateStr = d.toISOString().split('T')[0];
+      rules.filter(r => r.day_of_week === dow).forEach(rule => {
+        const [sh, sm] = rule.start_time.split(':').map(Number);
+        const [eh, em] = rule.end_time.split(':').map(Number);
+        let cur = sh * 60 + sm;
+        const end = eh * 60 + em;
+        while (cur + 30 <= end) {
+          const hh = String(Math.floor(cur / 60)).padStart(2, '0');
+          const mm = String(cur % 60).padStart(2, '0');
+          const nextCur = cur + 30;
+          const nhh = String(Math.floor(nextCur / 60)).padStart(2, '0');
+          const nmm = String(nextCur % 60).padStart(2, '0');
+          toGenerate.push({ slot_date: dateStr, start_time: `${hh}:${mm}`, end_time: `${nhh}:${nmm}` });
+          cur = nextCur;
+        }
+      });
+    }
+    if (toGenerate.length === 0) return;
+
+    const { data: existing } = await supabaseClient
+      .from('availability_slots')
+      .select('slot_date, start_time')
+      .gte('slot_date', today.toISOString().split('T')[0]);
+    const existingKeys = new Set((existing || []).map(s => `${s.slot_date}_${s.start_time}`));
+    const missing = toGenerate.filter(s => !existingKeys.has(`${s.slot_date}_${s.start_time}`));
+    if (missing.length > 0) {
+      await supabaseClient.from('availability_slots').insert(missing);
+    }
+  }
+  materializeWeeklySlots();
 
   async function loadAvailability() {
     const body = document.getElementById('availTableBody');
