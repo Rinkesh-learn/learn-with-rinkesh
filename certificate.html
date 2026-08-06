@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Certificate — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
+<style>
+  .cert-shell { max-width: 780px; margin: 0 auto 60px; padding: 0 24px; text-align: center; }
+  .cert-actions { margin: 20px 0; }
+  .cert-actions button, .cert-actions a { margin: 0 6px; }
+
+  .cert-card {
+    background: #FFFDF8; border: 10px solid #1C4732; border-radius: 4px;
+    padding: 50px 40px; position: relative; font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .cert-card::before {
+    content: ''; position: absolute; inset: 12px; border: 1px solid var(--amber);
+  }
+  .cert-inner { position: relative; }
+  .cert-brand { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); font-size: 13px; letter-spacing: 1px; margin-bottom: 6px; }
+  .cert-title { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; margin: 6px 0 20px; color: var(--ink); }
+  .cert-presented { font-size: 13px; color: var(--ink-soft); }
+  .cert-name { font-size: 30px; font-weight: 700; margin: 10px 0 18px; color: var(--excel-green-deep); font-family: 'IBM Plex Mono', monospace; }
+  .cert-body { font-size: 14px; color: var(--ink); max-width: 540px; margin: 0 auto 22px; line-height: 1.6; }
+  .cert-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-size: 11px; color: var(--ink-soft); }
+  .cert-code { font-family: 'IBM Plex Mono', monospace; }
+  .cert-disclaimer { font-size: 10px; color: var(--ink-soft); margin-top: 24px; opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="cert-shell">
+  <h1 style="margin-top:24px;">Your Certificate</h1>
+  <p id="certLoadingMsg" style="color:var(--ink-soft); font-size:13px;">Loading...</p>
+
+  <div id="certCardWrap" style="display:none;">
+    <div class="cert-card" id="certCard">
+      <div class="cert-inner">
+        <div class="cert-brand">📊 LEARN WITH RINKESH</div>
+        <div class="cert-title">Certificate of Completion</div>
+        <div class="cert-presented">This certifies that</div>
+        <div class="cert-name" id="certName"></div>
+        <div class="cert-body">has successfully completed the Learn With Rinkesh Excel Certification Exam, demonstrating practical proficiency across core and advanced Excel formulas, with a score of <strong id="certScoreInline"></strong>.</div>
+        <div class="cert-footer">
+          <span>Issued <span id="certDate"></span></span>
+          <span class="cert-code">Certificate ID: <span id="certCode"></span></span>
+        </div>
+      </div>
+    </div>
+    <div class="cert-disclaimer">This is a Learn With Rinkesh Certificate of Completion, based on our own platform exam. It is not an official Microsoft certification. Anyone can verify this certificate's authenticity at <span id="certVerifyUrlText"></span>.</div>
+
+    <div class="cert-actions">
+      <button class="btn btn-primary" id="certDownloadBtn">Download as Image</button>
+      <a id="certVerifyLink" class="btn" style="text-decoration:none; border:1px solid var(--grid-line); padding:9px 18px; border-radius:6px; display:inline-block;">View Verification Page</a>
+    </div>
+  </div>
+
+  <div id="certNotFound" style="display:none;">
+    <p style="color:var(--ink-soft);">No certificate found for this link.</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+async function loadCertificate() {
+  const code = new URLSearchParams(window.location.search).get('code');
+  const msg = document.getElementById('certLoadingMsg');
+  if (!code) { msg.style.display = 'none'; document.getElementById('certNotFound').style.display = 'block'; return; }
+
+  const { data, error } = await supabaseClient.from('certificates').select('*').eq('certificate_code', code).maybeSingle();
+  msg.style.display = 'none';
+
+  if (error || !data) {
+    document.getElementById('certNotFound').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('certName').textContent = data.name;
+  document.getElementById('certScoreInline').textContent = `${data.score}/${data.total_questions}`;
+  document.getElementById('certDate').textContent = new Date(data.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('certCode').textContent = data.certificate_code;
+  const verifyUrl = window.location.origin + '/verify-certificate.html?code=' + data.certificate_code;
+  document.getElementById('certVerifyUrlText').textContent = verifyUrl;
+  document.getElementById('certVerifyLink').href = 'verify-certificate.html?code=' + data.certificate_code;
+  document.getElementById('certCardWrap').style.display = 'block';
+}
+
+document.getElementById('certDownloadBtn').addEventListener('click', () => {
+  const btn = document.getElementById('certDownloadBtn');
+  btn.disabled = true;
+  btn.textContent = 'Preparing...';
+  html2canvas(document.getElementById('certCard'), { scale: 2, backgroundColor: '#FFFDF8' }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'Excel-Certificate-' + document.getElementById('certCode').textContent + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    btn.textContent = 'Download as Image';
+  });
+});
+
+loadCertificate();
+</script>
+
+<script src="chat-widget.js"></script>
+<script src="auth-nav.js"></script>
+
+<script src="site-name.js"></script>
+
+</body>
+</html>

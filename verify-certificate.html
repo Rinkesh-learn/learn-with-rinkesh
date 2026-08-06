@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify a Certificate — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
+<style>
+  .vc-shell { max-width: 560px; margin: 0 auto 60px; padding: 0 24px; }
+  .vc-panel { background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); padding: 26px; margin-top: 24px; }
+  .vc-panel input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--grid-line); border-radius: 8px; font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
+  .vc-result { margin-top: 18px; padding: 16px; border-radius: 8px; font-size: 14px; }
+  .vc-valid { background: #F4F8F5; border: 1px solid var(--excel-green); }
+  .vc-invalid { background: #FBEDE8; border: 1px solid var(--coral, #C96F4A); }
+  .vc-valid h3 { margin: 0 0 8px; color: var(--excel-green-deep); }
+  .vc-detail { font-size: 13px; color: var(--ink-soft); margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="vc-shell">
+  <h1 style="margin-top:24px;">Verify a Certificate</h1>
+  <p style="color:var(--ink-soft); font-size:13px;">Enter the Certificate ID printed on any Learn With Rinkesh Excel Certificate to confirm it's genuine.</p>
+
+  <div class="vc-panel">
+    <input type="text" id="vcCodeInput" placeholder="e.g. LWR-M1A2B3-XY9Z">
+    <button class="btn btn-primary" id="vcCheckBtn" style="width:100%; padding:10px;">Verify</button>
+    <div id="vcResult"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+
+<script>
+async function verifyCode(code) {
+  const resultEl = document.getElementById('vcResult');
+  if (!code) { resultEl.innerHTML = ''; return; }
+  resultEl.innerHTML = '<p style="color:var(--ink-soft); font-size:13px; margin-top:14px;">Checking...</p>';
+
+  const { data } = await supabaseClient.from('certificates').select('*').eq('certificate_code', code.trim()).maybeSingle();
+
+  if (!data) {
+    resultEl.innerHTML = `
+      <div class="vc-result vc-invalid">
+        <strong>Not a valid certificate.</strong><br>
+        <span style="font-size:13px;">This code doesn't match any certificate on record. Double-check for typos.</span>
+      </div>`;
+    return;
+  }
+
+  const dateStr = new Date(data.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  resultEl.innerHTML = `
+    <div class="vc-result vc-valid">
+      <h3>✓ Valid Certificate</h3>
+      <div class="vc-detail"><strong>Name:</strong> ${data.name}</div>
+      <div class="vc-detail"><strong>Score:</strong> ${data.score}/${data.total_questions}</div>
+      <div class="vc-detail"><strong>Issued:</strong> ${dateStr}</div>
+      <div class="vc-detail"><strong>Certificate ID:</strong> ${data.certificate_code}</div>
+    </div>`;
+}
+
+document.getElementById('vcCheckBtn').addEventListener('click', () => verifyCode(document.getElementById('vcCodeInput').value));
+document.getElementById('vcCodeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyCode(e.target.value); });
+
+const prefillCode = new URLSearchParams(window.location.search).get('code');
+if (prefillCode) {
+  document.getElementById('vcCodeInput').value = prefillCode;
+  verifyCode(prefillCode);
+}
+</script>
+
+<script src="chat-widget.js"></script>
+<script src="auth-nav.js"></script>
+
+<script src="site-name.js"></script>
+
+</body>
+</html>
