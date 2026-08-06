@@ -460,7 +460,7 @@
           <h4>${a.title.split(':')[0].split(',')[0].slice(0, 44)}</h4>
           <p>${a.shortDesc}</p>
         </div>
-        <span class="hub-article-video" title="${a.videoUrl ? 'Watch tutorial' : 'Video coming soon'}">
+        <span class="hub-article-video" title="${a.videoUrl ? 'Watch tutorial' : 'Video coming soon'}" ${a.videoUrl ? `onclick="event.stopPropagation(); openVideoPopup('${a.videoUrl}', '${a.title.replace(/'/g,"\\'")}');"` : ''}>
           <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="11" fill="${a.videoUrl ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>
         </span>
       </div>
@@ -1030,6 +1030,7 @@ render();
   })();
 </script>
 
+<script src="video-popup.js"></script>
 <script src="site-name.js"></script>
 
 </body>

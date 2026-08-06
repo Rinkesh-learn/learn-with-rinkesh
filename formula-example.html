@@ -133,7 +133,7 @@
     const hasVideo = !!f.videoUrl;
     const playIcon = `<svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="11" fill="${hasVideo ? '#FF0000' : '#9AA39D'}"/><path d="M9.5 8L16.5 12L9.5 16Z" fill="white"/></svg>`;
     return hasVideo
-      ? `<span class="formula-video-icon" title="Watch tutorial" onclick="event.preventDefault(); event.stopPropagation(); window.open('${f.videoUrl}', '_blank', 'noopener');">${playIcon}</span>`
+      ? `<span class="formula-video-icon" title="Watch tutorial" onclick="event.preventDefault(); event.stopPropagation(); openVideoPopup('${f.videoUrl}', '${f.name.replace(/'/g,"\\'")}');">${playIcon}</span>`
       : `<span class="formula-video-icon faded" title="Video coming soon">${playIcon}</span>`;
   }
 
@@ -260,6 +260,7 @@
   })();
 </script>
 
+<script src="video-popup.js"></script>
 <script src="site-name.js"></script>
 
 </body>
