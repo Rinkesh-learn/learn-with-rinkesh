@@ -511,11 +511,39 @@ function revealAnswerSheet(question) {
   createSheet((currentFormula ? currentFormula.name : 'Answer') + ' — Answer', cells, mergeConfig);
 }
 
+// Works out a sensible width for each column based on what's actually in
+// it — a column with real data (especially a long header like "2nd Highest
+// Result") gets wide enough to show it without clipping, while genuinely
+// empty columns are left at the same default width as before, not touched.
+function computeColumnWidths(celldata) {
+  const DEFAULTS = { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 };
+  const maxLenByCol = {};
+  celldata.forEach(cell => {
+    const val = cell.v && cell.v.v;
+    if (val === null || val === undefined || val === '') return;
+    const len = String(val).length;
+    if (!maxLenByCol[cell.c] || len > maxLenByCol[cell.c]) maxLenByCol[cell.c] = len;
+  });
+
+  const columnlen = {};
+  const allCols = new Set([...Object.keys(DEFAULTS).map(Number), ...Object.keys(maxLenByCol).map(Number)]);
+  allCols.forEach(c => {
+    const fallback = DEFAULTS[c] || 90;
+    if (maxLenByCol[c] === undefined) {
+      columnlen[c] = fallback; // no data in this column at all — leave it as-is
+    } else {
+      const fitted = Math.min(280, Math.max(70, maxLenByCol[c] * 7.5 + 26));
+      columnlen[c] = Math.max(Math.round(fitted), fallback);
+    }
+  });
+  return columnlen;
+}
+
 function createSheet(name, celldata, mergeConfig) {
   if (sheetReady && window.luckysheet && window.luckysheet.destroy) {
     try { luckysheet.destroy(); } catch (e) {}
   }
-  const config = { columnlen: { 0: 120, 1: 110, 2: 90, 3: 90, 4: 90, 5: 90, 6: 90, 7: 90, 8: 90 } };
+  const config = { columnlen: computeColumnWidths(celldata) };
   if (mergeConfig && Object.keys(mergeConfig).length) config.merge = mergeConfig;
   luckysheet.create({
     container: 'luckysheetContainer',

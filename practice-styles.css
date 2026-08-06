@@ -723,19 +723,20 @@
 }
 .back-to-interview-tip {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   left: 0;
-  background: var(--ink);
-  color: #fff;
+  background: #1C1C1C;
+  color: #FFFFFF;
   font-size: 11px;
   font-family: 'IBM Plex Mono', monospace;
-  padding: 5px 10px;
+  padding: 6px 11px;
   border-radius: 6px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
-  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  z-index: 999;
 }
 .back-to-interview-btn:hover .back-to-interview-tip { opacity: 1; }
 
