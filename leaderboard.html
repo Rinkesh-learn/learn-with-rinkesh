@@ -25,8 +25,47 @@
   .lb-my-stats .label { font-size: 10px; opacity: 0.75; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; }
   .lb-my-stats .value { font-size: 15px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
   .lb-my-stats-right { display: flex; gap: 22px; text-align: right; }
+  .lb-my-stats-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .lb-my-stats-btn {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    padding: 6px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .lb-my-stats-btn:hover { background: rgba(255,255,255,0.25); }
 
-  .lb-legend-spotlight {
+  .lb-rankup-banner {
+    background: linear-gradient(135deg, #1C4732, #2D6A4F); color: #fff; border-radius: var(--radius);
+    padding: 18px 24px; text-align: center; margin: 20px 0;
+    opacity: 0; transform: scale(0.9); animation: lbSpotIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+  .lb-rankup-banner .title { font-size: 12px; font-family: 'IBM Plex Mono', monospace; opacity: 0.85; letter-spacing: 1px; }
+  .lb-rankup-nums { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 8px 0; }
+  .lb-rankup-old { font-size: 20px; opacity: 0.6; text-decoration: line-through; font-family: 'IBM Plex Mono', monospace; }
+  .lb-rankup-arrow { font-size: 20px; animation: rankArrowBounce 0.8s ease infinite; }
+  @keyframes rankArrowBounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .lb-rankup-new { font-size: 28px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .lb-rankup-tier { font-size: 13px; margin-top: 4px; opacity: 0.9; }
+
+  .lb-detail-modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(28,35,33,0.6); z-index: 9999;
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .lb-detail-modal-overlay.open { display: flex; }
+  .lb-detail-modal {
+    background: #fff; border-radius: 12px; max-width: 480px; width: 100%; max-height: 85vh;
+    overflow-y: auto; padding: 26px; position: relative;
+  }
+  .lb-detail-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 20px; cursor: pointer; }
+  .lb-detail-row { margin-bottom: 12px; }
+  .lb-detail-row .label { font-size: 11px; font-weight: 700; color: var(--ink-soft); display: block; margin-bottom: 2px; }
+  .lb-detail-row .value { font-size: 14px; }
+  .lb-insight-item {
+    background: #F4F8F5; border-left: 3px solid var(--excel-green); border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.5;
+  }
+
+  .lb-empty { text-align: center; color: var(--ink-soft); padding: 40px; }
+</style>
     background: linear-gradient(135deg, #C9971E, #E8B84B);
     border-radius: var(--radius); padding: 26px; text-align: center; color: #1C1C1C;
     margin: 20px 0; position: relative; overflow: hidden;
@@ -109,6 +148,13 @@
   <div id="lbContent"></div>
 </div>
 
+<div class="lb-detail-modal-overlay" id="lbDetailModal">
+  <div class="lb-detail-modal">
+    <button class="lb-detail-close" id="lbDetailCloseBtn">&times;</button>
+    <div id="lbDetailContent"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="scoring.js"></script>
@@ -156,10 +202,36 @@ async function loadLeaderboard() {
   let html = '';
 
   // My own quick-stats card, if logged in and ranked
+  let myIndexGlobal = -1, myTierGlobal = null, scoresGlobal = scores;
   if (myId) {
     const myIndex = scores.findIndex(s => s.user_id === myId);
     if (myIndex >= 0) {
       const myTier = await getUserTier(myIndex, scores.length, scores[myIndex].total_points);
+      myIndexGlobal = myIndex;
+      myTierGlobal = myTier;
+
+      // Arrival rank-up animation — own dedicated sessionStorage keys, kept
+      // separate from scoring.js's live-notify keys so the two systems
+      // don't race each other and cancel each other's comparison out.
+      const lastSeenRank = sessionStorage.getItem('lwr_lb_last_rank');
+      const lastSeenTier = sessionStorage.getItem('lwr_lb_last_tier');
+      const currentRank = myIndex + 1;
+      if (lastSeenRank && Number(lastSeenRank) > currentRank) {
+        html += `
+          <div class="lb-rankup-banner">
+            <div class="title">🎉 YOU LEVELED UP!</div>
+            <div class="lb-rankup-nums">
+              <span class="lb-rankup-old">#${lastSeenRank}</span>
+              <span class="lb-rankup-arrow">⬆️</span>
+              <span class="lb-rankup-new">#${currentRank}</span>
+            </div>
+            ${lastSeenTier && lastSeenTier !== myTier.name ? `<div class="lb-rankup-tier">New tier: ${myTier.badge_emoji} ${myTier.name}</div>` : ''}
+          </div>
+        `;
+      }
+      sessionStorage.setItem('lwr_lb_last_rank', String(currentRank));
+      sessionStorage.setItem('lwr_lb_last_tier', myTier.name);
+
       html += `
         <div class="lb-my-stats">
           <div class="lb-my-stats-left">
@@ -169,9 +241,14 @@ async function loadLeaderboard() {
               <div class="value">${myTier.name}</div>
             </div>
           </div>
-          <div class="lb-my-stats-right">
-            <div><div class="label">RANK</div><div class="value">#${myIndex + 1}</div></div>
-            <div><div class="label">SCORE</div><div class="value">${scores[myIndex].total_points}</div></div>
+          <div>
+            <div class="lb-my-stats-right">
+              <div><div class="label">RANK</div><div class="value">#${myIndex + 1}</div></div>
+              <div><div class="label">SCORE</div><div class="value">${scores[myIndex].total_points}</div></div>
+            </div>
+            <div class="lb-my-stats-actions">
+              <button class="lb-my-stats-btn" id="lbViewDetailsBtn">📋 Full Activity</button>
+            </div>
           </div>
         </div>
       `;
@@ -189,6 +266,10 @@ async function loadLeaderboard() {
     startIndex = 1;
   }
   content.innerHTML = html;
+
+  if (myIndexGlobal >= 0) {
+    document.getElementById('lbViewDetailsBtn').addEventListener('click', () => showActivityModal(myId, myIndexGlobal, myTierGlobal, scoresGlobal));
+  }
 
   // Group everyone (from startIndex on) by tier, sorted by score within each group
   const rest = scores.slice(startIndex);
@@ -230,6 +311,84 @@ async function loadLeaderboard() {
 }
 
 loadLeaderboard();
+
+document.getElementById('lbDetailCloseBtn').addEventListener('click', () => {
+  document.getElementById('lbDetailModal').classList.remove('open');
+});
+document.getElementById('lbDetailModal').addEventListener('click', (e) => {
+  if (e.target.id === 'lbDetailModal') document.getElementById('lbDetailModal').classList.remove('open');
+});
+
+async function showActivityModal(userId, myIndex, myTier, allScores) {
+  const modal = document.getElementById('lbDetailModal');
+  const contentEl = document.getElementById('lbDetailContent');
+  contentEl.innerHTML = 'Loading...';
+  modal.classList.add('open');
+
+  const { data: events } = await supabaseClient.from('score_events').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+  const { data: tiers } = await supabaseClient.from('score_tiers').select('*').order('min_points', { ascending: true });
+
+  const questionEvents = (events || []).filter(e => e.event_type === 'question_solved');
+  const byDiff = { beginner: 0, intermediate: 0, advanced: 0 };
+  const formulaCounts = {};
+  questionEvents.forEach(e => {
+    if (byDiff[e.difficulty] !== undefined) byDiff[e.difficulty]++;
+    if (e.formula_id) formulaCounts[e.formula_id] = (formulaCounts[e.formula_id] || 0) + 1;
+  });
+  const myPoints = allScores[myIndex].total_points;
+
+  const row = (label, val) => `<div class="lb-detail-row"><span class="label">${label}</span><span class="value">${val}</span></div>`;
+
+  contentEl.innerHTML = `
+    <h3 style="margin-top:0;">Your Full Activity</h3>
+    ${row('Current Tier', `${myTier.badge_emoji} ${myTier.name}`)}
+    ${row('Rank', `#${myIndex + 1} of ${allScores.length}`)}
+    ${row('Total Points', myPoints)}
+    ${row('Questions Solved', `${questionEvents.length} total — Beginner: ${byDiff.beginner}, Intermediate: ${byDiff.intermediate}, Advanced: ${byDiff.advanced}`)}
+    ${row('Formulas Tried', `${Object.keys(formulaCounts).length} different formulas`)}
+    ${row('Recent Activity', (events && events.length) ? events.slice(0, 8).map(e => `+${e.points} — ${e.event_type.replace(/_/g,' ')}${e.formula_id ? ' (' + e.formula_id.toUpperCase() + ')' : ''}`).join('<br>') : 'None yet')}
+    <button class="btn btn-primary" id="lbInsightsBtn" style="padding:8px 16px; font-size:12px; margin-top:8px;">💡 How Can I Improve My Rank?</button>
+    <div id="lbInsightsWrap" style="margin-top:12px;"></div>
+  `;
+
+  document.getElementById('lbInsightsBtn').addEventListener('click', () => {
+    document.getElementById('lbInsightsWrap').innerHTML = buildInsights(questionEvents, formulaCounts, byDiff, myPoints, tiers || [], events);
+  });
+}
+
+// Rule-based coaching — deliberately concrete and specific, not generic
+// hype. Every insight is grounded in the person's own actual activity.
+function buildInsights(questionEvents, formulaCounts, byDiff, myPoints, tiers, allEvents) {
+  const insights = [];
+
+  if (byDiff.advanced === 0 && (byDiff.beginner + byDiff.intermediate) >= 5) {
+    insights.push("You've built a solid base in Beginner and Intermediate formulas — try an Advanced one next. You've likely got the fundamentals for it.");
+  }
+
+  const sortedFormulas = Object.entries(formulaCounts).sort((a, b) => b[1] - a[1]);
+  if (sortedFormulas.length && sortedFormulas[0][1] >= 5 && sortedFormulas.length < 5) {
+    insights.push(`You've practiced ${sortedFormulas[0][0].toUpperCase()} ${sortedFormulas[0][1]} times, but only ${sortedFormulas.length} formulas total. Points shrink the more you repeat the same one — trying a new formula earns more than another round of one you've already mastered.`);
+  }
+
+  if (allEvents && allEvents.length) {
+    const daysSince = Math.floor((Date.now() - new Date(allEvents[0].created_at)) / (1000 * 60 * 60 * 24));
+    if (daysSince >= 5) {
+      insights.push(`It's been ${daysSince} days since your last activity — picking back up is the single fastest way to start climbing again.`);
+    }
+  }
+
+  const nextTier = tiers.find(t => (t.min_points || 0) > myPoints);
+  if (nextTier) {
+    const gap = nextTier.min_points - myPoints;
+    insights.push(`You're ${gap} points from ${nextTier.badge_emoji} ${nextTier.name} — a handful more solved questions could get you there.`);
+  }
+
+  if (insights.length === 0) {
+    insights.push('Solve a few more questions across different formulas to start building your activity history and climbing the ranks.');
+  }
+
+  return insights.map(i => `<div class="lb-insight-item">${i}</div>`).join('');
+}
 </script>
 
 <script src="chat-widget.js"></script>
