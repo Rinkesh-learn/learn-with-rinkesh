@@ -227,6 +227,7 @@
     <a data-view="chat_moderation">💬 Community Chat Moderation</a>
     <a data-view="case_studies">📁 Case Studies</a>
     <a data-view="site_settings">⚙️ Site Settings</a>
+    <a data-view="scoring">🏆 Scoring</a>
     <a data-view="climb_boy">🧗 Climb Animation</a>
     <a data-view="bookings">📅 1-on-1 Bookings</a>
   </div>
@@ -612,6 +613,22 @@ criteria: The condition to match"></textarea>
         <input type="text" id="siteNameInput" style="width:100%; box-sizing:border-box; padding:8px; margin-bottom:10px;" placeholder="Learn With Rinkesh">
         <button class="btn btn-primary" id="siteNameSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
         <div id="siteNameMsg" style="margin-top:12px; font-size:13px;"></div>
+      </div>
+    </div>
+
+    <div id="view-scoring" style="display:none;">
+      <h1>Scoring</h1>
+      <p class="sub">Percentile-based tiers and badges — rank #1 is always a special "Legend" spotlight, the tiers below control everyone else.</p>
+
+      <div class="admin-panel">
+        <h3 style="margin-top:0;">Tiers</h3>
+        <p class="sub" style="margin-top:-6px;">Percentiles are "top X%" — 0 means the very best, 100 means everyone. Ranges should cover 0-100 with no gaps for every user to have a tier.</p>
+        <table class="admin-table">
+          <thead><tr><th>Order</th><th>Badge</th><th>Name</th><th>Top % from</th><th>Top % to</th><th></th></tr></thead>
+          <tbody id="scoringTiersBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+        </table>
+        <button class="btn btn-primary" id="addTierBtn" style="padding:8px 16px; font-size:12px; margin-top:10px;">+ Add Tier</button>
+        <div id="scoringTierMsg" style="font-size:13px; margin-top:10px;"></div>
       </div>
     </div>
 
@@ -3147,6 +3164,61 @@ criteria: The condition to match"></textarea>
         New name: <strong>${newName}</strong><br>
         Admin dashboard link: <a href="${window.location.origin}${window.location.pathname}" target="_blank">${window.location.origin}${window.location.pathname}</a>
       </div>`;
+  });
+
+  // ---------- Scoring ----------
+  async function loadScoringTiers() {
+    const body = document.getElementById('scoringTiersBody');
+    const { data, error } = await supabaseClient.from('score_tiers').select('*').order('order_index');
+    if (error) { body.innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`; return; }
+    if (!data || data.length === 0) { body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">No tiers yet — add one below.</td></tr>'; return; }
+    body.innerHTML = data.map(t => `
+      <tr data-tier-id="${t.id}">
+        <td><input type="number" class="tier-order" value="${t.order_index}" style="width:50px; padding:4px;"></td>
+        <td><input type="text" class="tier-badge" value="${t.badge_emoji}" style="width:40px; padding:4px; text-align:center;"></td>
+        <td><input type="text" class="tier-name" value="${t.name}" style="width:120px; padding:4px;"></td>
+        <td><input type="number" class="tier-min" value="${t.min_percentile}" step="0.1" style="width:70px; padding:4px;"></td>
+        <td><input type="number" class="tier-max" value="${t.max_percentile}" step="0.1" style="width:70px; padding:4px;"></td>
+        <td>
+          <button class="admin-mini-btn" data-save-tier="${t.id}">Save</button>
+          <button class="admin-mini-btn danger" data-delete-tier="${t.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('[data-save-tier]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const row = btn.closest('tr');
+        const msg = document.getElementById('scoringTierMsg');
+        const { error } = await supabaseClient.from('score_tiers').update({
+          order_index: Number(row.querySelector('.tier-order').value),
+          badge_emoji: row.querySelector('.tier-badge').value.trim(),
+          name: row.querySelector('.tier-name').value.trim(),
+          min_percentile: Number(row.querySelector('.tier-min').value),
+          max_percentile: Number(row.querySelector('.tier-max').value)
+        }).eq('id', btn.dataset.saveTier);
+        msg.textContent = error ? 'Failed: ' + error.message : 'Saved.';
+        msg.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
+        loadScoringTiers();
+      });
+    });
+    body.querySelectorAll('[data-delete-tier]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabaseClient.from('score_tiers').delete().eq('id', btn.dataset.deleteTier);
+        loadScoringTiers();
+      });
+    });
+  }
+  loadScoringTiers();
+
+  document.getElementById('addTierBtn').addEventListener('click', async () => {
+    const { error } = await supabaseClient.from('score_tiers').insert({
+      name: 'New Tier', badge_emoji: '⭐', min_percentile: 0, max_percentile: 10, order_index: 99
+    });
+    const msg = document.getElementById('scoringTierMsg');
+    msg.textContent = error ? 'Failed: ' + error.message : 'Tier added — edit its values below.';
+    msg.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
+    loadScoringTiers();
   });
 
   // ---------- Case Studies ----------

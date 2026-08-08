@@ -58,6 +58,15 @@
   .perf-activity-row:last-child { border-bottom: none; }
   .perf-activity-pts { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); }
 
+  .perf-tier-badge {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+    background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 16px;
+    font-size: 13px; font-weight: 700;
+    opacity: 0; animation: perfFadeUp 0.6s ease 0.45s forwards;
+  }
+  .perf-tier-badge.legend { background: linear-gradient(90deg, #C9971E, #E8B84B); animation: perfFadeUp 0.6s ease 0.45s forwards, legendGlow 1.6s ease infinite alternate 1s; }
+  @keyframes legendGlow { from { box-shadow: 0 0 0px rgba(232,184,75,0); } to { box-shadow: 0 0 18px rgba(232,184,75,0.6); } }
+
   .perf-login-gate { text-align: center; padding: 40px 24px; background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); margin-top: 24px; }
 </style>
 </head>
@@ -91,6 +100,7 @@
       <div class="perf-total-label">TOTAL SCORE</div>
       <div class="perf-total-number" id="perfTotalNumber">0</div>
       <div class="perf-rank-badge" id="perfRankBadge">Loading rank...</div>
+      <div id="perfTierBadgeWrap"></div>
     </div>
 
     <div class="perf-grid">
@@ -125,6 +135,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="scoring.js"></script>
 
 <script>
 function animateCount(el, target, duration) {
@@ -159,6 +170,12 @@ async function loadPerformance() {
   const rankIndex = (allScores || []).findIndex(r => r.user_id === session.user.id);
   const rankBadge = document.getElementById('perfRankBadge');
   rankBadge.textContent = rankIndex >= 0 ? `#${rankIndex + 1} of ${allScores.length}` : 'Not ranked yet — solve a question!';
+
+  if (rankIndex >= 0) {
+    const tier = await getUserTier(rankIndex, allScores.length);
+    const tierWrap = document.getElementById('perfTierBadgeWrap');
+    tierWrap.innerHTML = `<div class="perf-tier-badge${tier.isLegend ? ' legend' : ''}">${tier.badge_emoji} ${tier.name}</div>`;
+  }
 
   const questionEvents = (events || []).filter(e => e.event_type === 'question_solved');
   const byDiff = { beginner: 0, intermediate: 0, advanced: 0 };

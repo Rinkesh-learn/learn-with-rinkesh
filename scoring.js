@@ -69,6 +69,23 @@
     await supabaseClient.from('user_scores').upsert({ user_id: userId, total_points: newTotal, updated_at: new Date().toISOString() });
   }
 
+  // Given a user's 0-indexed rank position and the total number of
+  // ranked users, returns their tier: { name, badge_emoji, isLegend }.
+  // Rank #1 is always a special "Legend" spotlight, regardless of the
+  // admin-configured tiers — everyone else falls into a percentile band.
+  window.getUserTier = async function (rankIndex, totalUsers) {
+    if (rankIndex === 0) return { name: 'Legend', badge_emoji: '🏆', isLegend: true };
+    if (totalUsers <= 1) return { name: 'Analyst', badge_emoji: '📊', isLegend: false };
+    const percentile = (rankIndex / totalUsers) * 100;
+    try {
+      const { data: tiers } = await supabaseClient.from('score_tiers').select('*').order('order_index');
+      const match = (tiers || []).find(t => percentile >= t.min_percentile && percentile < t.max_percentile);
+      return match ? { name: match.name, badge_emoji: match.badge_emoji, isLegend: false } : { name: 'Analyst', badge_emoji: '📊', isLegend: false };
+    } catch (e) {
+      return { name: 'Analyst', badge_emoji: '📊', isLegend: false };
+    }
+  };
+
   // ---------- Toast animation ----------
   const style = document.createElement('style');
   style.textContent = `
