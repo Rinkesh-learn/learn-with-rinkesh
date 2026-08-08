@@ -62,6 +62,7 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.3); line-height: 1;
       }
       .lbw-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lbw-score { display: block; font-weight: 400; opacity: 0.8; font-size: 9px; margin-top: 1px; }
       @media (max-width: 480px) { .lbw-widget { left: 10px; top: 76px; max-width: 140px; } }
     `;
     document.head.appendChild(style);
@@ -69,7 +70,20 @@
     const widget = document.createElement('a');
     widget.href = 'leaderboard.html';
     widget.className = 'lbw-widget';
-    widget.innerHTML = `<span class="lbw-avatar-wrap">${avatarInner}<span class="lbw-badge">${badgeEmoji}</span></span><span class="lbw-text">${name} is #1</span>`;
+    widget.innerHTML = `<span class="lbw-avatar-wrap">${avatarInner}<span class="lbw-badge">${badgeEmoji}</span></span><span class="lbw-text">${name} is #1<span class="lbw-score" id="lbwScoreLine">${topScorer.total_points} pts</span></span>`;
     document.body.appendChild(widget);
+
+    // Live score — updates in place the moment anyone's score changes,
+    // not just on next page load.
+    supabaseClient
+      .channel('leaderboard_widget_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_scores' }, async () => {
+        const { data: latest } = await supabaseClient
+          .from('user_scores').select('user_id, total_points').order('total_points', { ascending: false }).limit(1).maybeSingle();
+        if (!latest) return;
+        const scoreLine = document.getElementById('lbwScoreLine');
+        if (scoreLine) scoreLine.textContent = latest.total_points + ' pts';
+      })
+      .subscribe();
   } catch (e) { /* widget failing to load should never break the page */ }
 })();
