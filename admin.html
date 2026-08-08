@@ -622,13 +622,21 @@ criteria: The condition to match"></textarea>
 
       <div class="admin-panel">
         <h3 style="margin-top:0;">Tiers</h3>
-        <p class="sub" style="margin-top:-6px;">Percentiles are "top X%" — 0 means the very best, 100 means everyone. Ranges should cover 0-100 with no gaps for every user to have a tier.</p>
+        <p class="sub" style="margin-top:-6px;">Tiers are earned by real points, not just relative rank — the "Min Points" column is what actually decides someone's tier. A user needs that many total points before they can be placed in that tier, so a brand-new user always starts at the bottom, even if they're currently the only person ranked.</p>
         <table class="admin-table">
-          <thead><tr><th>Order</th><th>Badge</th><th>Name</th><th>Top % from</th><th>Top % to</th><th></th></tr></thead>
-          <tbody id="scoringTiersBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+          <thead><tr><th>Order</th><th>Badge</th><th>Name</th><th>Min Points</th><th>Top % from</th><th>Top % to</th><th></th></tr></thead>
+          <tbody id="scoringTiersBody"><tr><td colspan="7">Loading...</td></tr></tbody>
         </table>
         <button class="btn btn-primary" id="addTierBtn" style="padding:8px 16px; font-size:12px; margin-top:10px;">+ Add Tier</button>
         <div id="scoringTierMsg" style="font-size:13px; margin-top:10px;"></div>
+      </div>
+
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Legend Threshold</h3>
+        <p class="sub" style="margin-top:-6px;">The minimum points someone needs to become "Legend" — they also still need to be rank #1. If the top-ranked user hasn't hit this yet, they show as whatever tier their points actually earn instead.</p>
+        <input type="number" id="legendMinPointsInput" style="width:160px; padding:8px; margin-right:10px;">
+        <button class="btn btn-primary" id="legendMinPointsSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
+        <span id="legendMinPointsMsg" style="font-size:12px; color:var(--ink-soft); margin-left:10px;"></span>
       </div>
       <div class="admin-panel" style="margin-top:20px;">
         <h3 style="margin-top:0;">Leaderboard widget</h3>
@@ -1076,7 +1084,7 @@ criteria: The condition to match"></textarea>
     const rankIndex = (allScores || []).findIndex(r => r.user_id === user.id);
     let tierLabel = 'Not ranked yet';
     if (rankIndex >= 0 && typeof getUserTier === 'function') {
-      const tier = await getUserTier(rankIndex, allScores.length);
+      const tier = await getUserTier(rankIndex, allScores.length, allScores[rankIndex].total_points);
       tierLabel = `${tier.badge_emoji} ${tier.name} — #${rankIndex + 1} of ${allScores.length}`;
     }
 
@@ -3269,13 +3277,14 @@ criteria: The condition to match"></textarea>
   async function loadScoringTiers() {
     const body = document.getElementById('scoringTiersBody');
     const { data, error } = await supabaseClient.from('score_tiers').select('*').order('order_index');
-    if (error) { body.innerHTML = `<tr><td colspan="6">Couldn't load: ${error.message}</td></tr>`; return; }
-    if (!data || data.length === 0) { body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--ink-soft);">No tiers yet — add one below.</td></tr>'; return; }
+    if (error) { body.innerHTML = `<tr><td colspan="7">Couldn't load: ${error.message}</td></tr>`; return; }
+    if (!data || data.length === 0) { body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--ink-soft);">No tiers yet — add one below.</td></tr>'; return; }
     body.innerHTML = data.map(t => `
       <tr data-tier-id="${t.id}">
         <td><input type="number" class="tier-order" value="${t.order_index}" style="width:50px; padding:4px;"></td>
         <td><input type="text" class="tier-badge" value="${t.badge_emoji}" style="width:40px; padding:4px; text-align:center;"></td>
         <td><input type="text" class="tier-name" value="${t.name}" style="width:120px; padding:4px;"></td>
+        <td><input type="number" class="tier-points" value="${t.min_points || 0}" style="width:80px; padding:4px;"></td>
         <td><input type="number" class="tier-min" value="${t.min_percentile}" step="0.1" style="width:70px; padding:4px;"></td>
         <td><input type="number" class="tier-max" value="${t.max_percentile}" step="0.1" style="width:70px; padding:4px;"></td>
         <td>
@@ -3293,6 +3302,7 @@ criteria: The condition to match"></textarea>
           order_index: Number(row.querySelector('.tier-order').value),
           badge_emoji: row.querySelector('.tier-badge').value.trim(),
           name: row.querySelector('.tier-name').value.trim(),
+          min_points: Number(row.querySelector('.tier-points').value),
           min_percentile: Number(row.querySelector('.tier-min').value),
           max_percentile: Number(row.querySelector('.tier-max').value)
         }).eq('id', btn.dataset.saveTier);
@@ -3310,9 +3320,25 @@ criteria: The condition to match"></textarea>
   }
   loadScoringTiers();
 
+  async function loadLegendMinPoints() {
+    const { data } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-legend-min-points').maybeSingle();
+    document.getElementById('legendMinPointsInput').value = (data && data.content) || 3000;
+  }
+  loadLegendMinPoints();
+
+  document.getElementById('legendMinPointsSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('legendMinPointsMsg');
+    const val = document.getElementById('legendMinPointsInput').value.trim();
+    const { error } = await supabaseClient.from('page_content').upsert({
+      id: 'pc-legend-min-points', page: 'global', label: 'Minimum points to become Legend (rank #1 also required)', content: val
+    });
+    msg.textContent = error ? 'Failed: ' + error.message : 'Saved.';
+    msg.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
+  });
+
   document.getElementById('addTierBtn').addEventListener('click', async () => {
     const { error } = await supabaseClient.from('score_tiers').insert({
-      name: 'New Tier', badge_emoji: '⭐', min_percentile: 0, max_percentile: 10, order_index: 99
+      name: 'New Tier', badge_emoji: '⭐', min_points: 0, min_percentile: 0, max_percentile: 10, order_index: 99
     });
     const msg = document.getElementById('scoringTierMsg');
     msg.textContent = error ? 'Failed: ' + error.message : 'Tier added — edit its values below.';

@@ -69,18 +69,28 @@
     await supabaseClient.from('user_scores').upsert({ user_id: userId, total_points: newTotal, updated_at: new Date().toISOString() });
   }
 
-  // Given a user's 0-indexed rank position and the total number of
-  // ranked users, returns their tier: { name, badge_emoji, isLegend }.
-  // Rank #1 is always a special "Legend" spotlight, regardless of the
-  // admin-configured tiers — everyone else falls into a percentile band.
-  window.getUserTier = async function (rankIndex, totalUsers) {
-    if (rankIndex === 0) return { name: 'Legend', badge_emoji: '🏆', isLegend: true };
-    if (totalUsers <= 1) return { name: 'Analyst', badge_emoji: '📊', isLegend: false };
-    const percentile = (rankIndex / totalUsers) * 100;
+  // Given a user's 0-indexed rank position, total ranked users, and their
+  // actual point total, returns their tier: { name, badge_emoji, isLegend }.
+  // Tiers are gated by real point thresholds, not just relative rank — a
+  // single early user with a handful of points shouldn't become "Legend"
+  // just by being the only one ranked. Legend additionally requires
+  // holding rank #1.
+  window.getUserTier = async function (rankIndex, totalUsers, userPoints) {
+    userPoints = userPoints || 0;
     try {
-      const { data: tiers } = await supabaseClient.from('score_tiers').select('*').order('order_index');
-      const match = (tiers || []).find(t => percentile >= t.min_percentile && percentile < t.max_percentile);
-      return match ? { name: match.name, badge_emoji: match.badge_emoji, isLegend: false } : { name: 'Analyst', badge_emoji: '📊', isLegend: false };
+      const { data: legendRow } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-legend-min-points').maybeSingle();
+      const legendMinPoints = Number(legendRow && legendRow.content) || 3000;
+      if (rankIndex === 0 && userPoints >= legendMinPoints) {
+        return { name: 'Legend', badge_emoji: '🏆', isLegend: true };
+      }
+
+      const { data: tiers } = await supabaseClient.from('score_tiers').select('*').order('min_points', { ascending: false });
+      for (const t of (tiers || [])) {
+        if (userPoints >= (t.min_points || 0)) {
+          return { name: t.name, badge_emoji: t.badge_emoji, isLegend: false };
+        }
+      }
+      return { name: 'Analyst', badge_emoji: '📊', isLegend: false };
     } catch (e) {
       return { name: 'Analyst', badge_emoji: '📊', isLegend: false };
     }
@@ -190,7 +200,7 @@
         const rankIndex = allScores.findIndex(r => r.user_id === session.user.id);
         if (rankIndex === -1) return;
 
-        const tier = await getUserTier(rankIndex, allScores.length);
+        const tier = await getUserTier(rankIndex, allScores.length, allScores[rankIndex].total_points);
         const rank = rankIndex + 1;
         const prevTier = sessionStorage.getItem('lwr_prev_tier');
         const prevRank = sessionStorage.getItem('lwr_prev_rank');

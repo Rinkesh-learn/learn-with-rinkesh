@@ -96,24 +96,33 @@ async function loadLeaderboard() {
 
   const myId = session ? session.user.id : null;
 
-  // Legend spotlight — rank #1, always
-  const legend = scores[0];
-  content.innerHTML = `
-    <div class="lb-legend-spotlight">
-      <div class="crown">👑</div>
-      <div class="name">${nameMap[legend.user_id] || 'Someone'}</div>
-      <div class="pts">${legend.total_points} points &mdash; #1 Legend</div>
-    </div>
-  `;
+  // Legend spotlight only if rank #1 has actually met the points
+  // threshold — otherwise they're just the top of whatever tier their
+  // real points earn, grouped normally like everyone else.
+  const topTier = await getUserTier(0, scores.length, scores[0].total_points);
+  let startIndex = 0;
 
-  // Group everyone else by tier, sorted by score within each group
-  const rest = scores.slice(1);
+  if (topTier.isLegend) {
+    content.innerHTML = `
+      <div class="lb-legend-spotlight">
+        <div class="crown">👑</div>
+        <div class="name">${nameMap[scores[0].user_id] || 'Someone'}</div>
+        <div class="pts">${scores[0].total_points} points &mdash; #1 Legend</div>
+      </div>
+    `;
+    startIndex = 1;
+  } else {
+    content.innerHTML = '';
+  }
+
+  // Group everyone (from startIndex on) by tier, sorted by score within each group
+  const rest = scores.slice(startIndex);
   const total = scores.length;
   const groups = {}; // tier name -> { badge, members: [] }
 
   for (let i = 0; i < rest.length; i++) {
-    const rankIndex = i + 1; // account for legend at index 0
-    const tier = await getUserTier(rankIndex, total);
+    const rankIndex = startIndex + i;
+    const tier = await getUserTier(rankIndex, total, rest[i].total_points);
     if (!groups[tier.name]) groups[tier.name] = { badge: tier.badge_emoji, members: [] };
     groups[tier.name].members.push({ ...rest[i], rank: rankIndex + 1 });
   }

@@ -173,7 +173,7 @@ async function loadPerformance() {
   rankBadge.textContent = rankIndex >= 0 ? `#${rankIndex + 1} of ${allScores.length}` : 'Not ranked yet — solve a question!';
 
   if (rankIndex >= 0) {
-    const tier = await getUserTier(rankIndex, allScores.length);
+    const tier = await getUserTier(rankIndex, allScores.length, allScores[rankIndex].total_points);
     const tierWrap = document.getElementById('perfTierBadgeWrap');
     tierWrap.innerHTML = `<div class="perf-tier-badge${tier.isLegend ? ' legend' : ''}">${tier.badge_emoji} ${tier.name}</div>`;
   }
