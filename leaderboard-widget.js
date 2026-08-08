@@ -1,6 +1,7 @@
 // Learn With Rinkesh — floating leaderboard widget. Shows the current
-// #1 ("Legend") spotlight, admin-controlled: on/off + which pages it
-// appears on. Include on any page after supabaseClient + scoring.js.
+// #1 spotlight (avatar + tier badge), admin-controlled: on/off + which
+// pages it appears on. Include on any page after supabaseClient +
+// scoring.js (for getUserTier).
 
 (async function () {
   try {
@@ -24,35 +25,51 @@
 
     if (!topScorer) return;
 
-    const { data: profile } = await supabaseClient.from('profiles').select('name, chat_display_name, chat_hide_name').eq('id', topScorer.user_id).maybeSingle();
+    const { data: profile } = await supabaseClient.from('profiles').select('name, chat_display_name, chat_hide_name, avatar_url').eq('id', topScorer.user_id).maybeSingle();
     const name = (profile && profile.chat_hide_name) ? 'Anonymous' : ((profile && (profile.chat_display_name || profile.name)) || 'Someone');
+
+    let badgeEmoji = '👑';
+    if (typeof getUserTier === 'function') {
+      const tier = await getUserTier(0, 1, topScorer.total_points);
+      badgeEmoji = tier.badge_emoji;
+    }
+
+    const avatarUrl = profile && profile.avatar_url;
+    const avatarInner = avatarUrl
+      ? `<img src="${avatarUrl}" style="width:26px; height:26px; border-radius:50%; object-fit:cover; display:block;" onerror="this.style.display='none';">`
+      : `<div style="width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px;">${name.charAt(0).toUpperCase()}</div>`;
 
     const style = document.createElement('style');
     style.textContent = `
       .lbw-widget {
-        position: fixed; bottom: 24px; left: 24px; z-index: 9000;
+        position: fixed; top: 90px; left: 16px; z-index: 9000;
         background: linear-gradient(135deg, #C9971E, #E8B84B);
-        color: #1C1C1C; border-radius: 30px; padding: 10px 18px 10px 12px;
-        display: flex; align-items: center; gap: 8px; cursor: pointer;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2); text-decoration: none;
-        font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 700;
-        opacity: 0; transform: translateY(20px); animation: lbwIn 0.5s ease 0.3s forwards, lbwGlow 2s ease infinite alternate 1s;
-        max-width: 260px;
+        color: #1C1C1C; border-radius: 24px; padding: 6px 12px 6px 6px;
+        display: flex; align-items: center; gap: 7px; cursor: pointer;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2); text-decoration: none;
+        font-family: 'IBM Plex Sans', sans-serif; font-size: 11px; font-weight: 700;
+        opacity: 0; transform: translateX(-20px); animation: lbwIn 0.5s ease 0.3s forwards, lbwGlow 2s ease infinite alternate 1s;
+        max-width: 170px;
       }
-      .lbw-widget:hover { transform: translateY(-2px); }
-      @keyframes lbwIn { to { opacity: 1; transform: translateY(0); } }
-      @keyframes lbwGlow { from { box-shadow: 0 8px 24px rgba(0,0,0,0.2); } to { box-shadow: 0 8px 30px rgba(232,184,75,0.6); } }
-      .lbw-crown { font-size: 20px; flex-shrink: 0; }
+      .lbw-widget:hover { transform: translateX(3px) scale(1.03); }
+      @keyframes lbwIn { to { opacity: 1; transform: translateX(0); } }
+      @keyframes lbwGlow { from { box-shadow: 0 6px 18px rgba(0,0,0,0.2); } to { box-shadow: 0 6px 22px rgba(232,184,75,0.6); } }
+      .lbw-avatar-wrap { position: relative; flex-shrink: 0; }
+      .lbw-badge {
+        position: absolute; bottom: -3px; right: -3px; font-size: 10px;
+        background: #fff; border-radius: 50%; width: 14px; height: 14px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.3); line-height: 1;
+      }
       .lbw-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .lbw-sub { font-weight: 400; opacity: 0.75; font-size: 10px; display: block; }
-      @media (max-width: 480px) { .lbw-widget { left: 12px; bottom: 12px; max-width: 200px; } }
+      @media (max-width: 480px) { .lbw-widget { left: 10px; top: 76px; max-width: 140px; } }
     `;
     document.head.appendChild(style);
 
     const widget = document.createElement('a');
     widget.href = 'leaderboard.html';
     widget.className = 'lbw-widget';
-    widget.innerHTML = `<span class="lbw-crown">👑</span><span class="lbw-text">${name} is #1<span class="lbw-sub">${topScorer.total_points} points — see leaderboard</span></span>`;
+    widget.innerHTML = `<span class="lbw-avatar-wrap">${avatarInner}<span class="lbw-badge">${badgeEmoji}</span></span><span class="lbw-text">${name} is #1</span>`;
     document.body.appendChild(widget);
   } catch (e) { /* widget failing to load should never break the page */ }
 })();

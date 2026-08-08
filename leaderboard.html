@@ -13,13 +13,26 @@
   .lb-hero h1 { font-size: 26px; margin: 0 0 8px; }
   .lb-hero p { color: var(--ink-soft); font-size: 14px; }
 
+  .lb-my-stats {
+    background: linear-gradient(135deg, #1C4732, #2D6A4F); color: #fff;
+    border-radius: var(--radius); padding: 16px 20px; margin: 20px 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    opacity: 0; transform: translateY(10px); animation: lbSpotIn 0.5s ease forwards;
+  }
+  .lb-my-stats-left { display: flex; align-items: center; gap: 10px; }
+  .lb-my-stats-avatar-wrap { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
+  .lb-my-stats-badge { font-size: 15px; }
+  .lb-my-stats .label { font-size: 10px; opacity: 0.75; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; }
+  .lb-my-stats .value { font-size: 15px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .lb-my-stats-right { display: flex; gap: 22px; text-align: right; }
+
   .lb-legend-spotlight {
     background: linear-gradient(135deg, #C9971E, #E8B84B);
     border-radius: var(--radius); padding: 26px; text-align: center; color: #1C1C1C;
     margin: 20px 0; position: relative; overflow: hidden;
     opacity: 0; transform: scale(0.95); animation: lbSpotIn 0.5s ease 0.1s forwards, legendGlow 1.8s ease infinite alternate 0.6s;
   }
-  @keyframes lbSpotIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes lbSpotIn { to { opacity: 1; transform: translateY(0) scale(1); } }
   @keyframes legendGlow { from { box-shadow: 0 0 0px rgba(232,184,75,0); } to { box-shadow: 0 0 30px rgba(232,184,75,0.7); } }
   .lb-legend-spotlight .crown { font-size: 34px; }
   .lb-legend-spotlight .name { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; margin: 6px 0 2px; }
@@ -34,11 +47,39 @@
   .lb-tier-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 700; font-size: 14px; }
   .lb-tier-header .badge { font-size: 20px; }
   .lb-tier-count { font-size: 11px; color: var(--ink-soft); font-weight: 400; margin-left: auto; }
-  .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--grid-line); }
+
+  .lb-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; font-size: 13px; border-bottom: 1px solid var(--grid-line);
+    border-radius: 8px; margin: 0 -10px; width: calc(100% + 20px);
+    box-sizing: border-box; transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    cursor: default; opacity: 0; animation: lbRowIn 0.35s ease forwards;
+  }
+  @keyframes lbRowIn { to { opacity: 1; } }
   .lb-row:last-child { border-bottom: none; }
-  .lb-row .pos { color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; width: 24px; display: inline-block; }
-  .lb-row .pts { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); }
-  .lb-row.me { background: #FFF6C9; margin: 0 -10px; padding: 7px 10px; border-radius: 6px; }
+  .lb-row:hover {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    background: #FAF8F1; z-index: 2; position: relative;
+  }
+  .lb-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .lb-row .pos { color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; width: 22px; flex-shrink: 0; }
+  .lb-row .lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-row .pts { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); flex-shrink: 0; margin-left: 10px; }
+  .lb-row.me { background: #E4F1E8; }
+  .lb-row.me:hover { background: #D5EBDD; }
+
+  .lb-avatar-wrap { position: relative; width: 30px; height: 30px; flex-shrink: 0; }
+  .lb-avatar {
+    width: 30px; height: 30px; border-radius: 50%; object-fit: cover;
+    border: 1px solid var(--grid-line); display: block; background: #F0EDE3;
+  }
+  .lb-avatar-badge {
+    position: absolute; bottom: -3px; right: -3px; font-size: 12px;
+    background: #fff; border-radius: 50%; width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3); line-height: 1;
+  }
 
   .lb-empty { text-align: center; color: var(--ink-soft); padding: 40px; }
 </style>
@@ -73,6 +114,15 @@
 <script src="scoring.js"></script>
 
 <script>
+function avatarHtml(profile, badgeEmoji, size) {
+  size = size || 30;
+  const url = profile && profile.avatar_url;
+  const inner = url
+    ? `<img class="lb-avatar" src="${url}" style="width:${size}px; height:${size}px;" onerror="this.style.display='none';">`
+    : `<div class="lb-avatar" style="width:${size}px; height:${size}px; display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--ink-soft);">${((profile && profile.name) || '?').charAt(0).toUpperCase()}</div>`;
+  return `<div class="lb-avatar-wrap" style="width:${size}px; height:${size}px;">${inner}<span class="lb-avatar-badge">${badgeEmoji}</span></div>`;
+}
+
 async function loadLeaderboard() {
   const content = document.getElementById('lbContent');
 
@@ -88,10 +138,12 @@ async function loadLeaderboard() {
   }
 
   const userIds = scores.map(s => s.user_id);
-  const { data: profiles } = await supabaseClient.from('profiles').select('id, name, chat_display_name, chat_hide_name').in('id', userIds);
+  const { data: profiles } = await supabaseClient.from('profiles').select('id, name, chat_display_name, chat_hide_name, avatar_url').in('id', userIds);
   const nameMap = {};
+  const profileMap = {};
   (profiles || []).forEach(p => {
     nameMap[p.id] = p.chat_hide_name ? 'Anonymous' : (p.chat_display_name || p.name || 'Someone');
+    profileMap[p.id] = p;
   });
 
   const myId = session ? session.user.id : null;
@@ -101,9 +153,33 @@ async function loadLeaderboard() {
   // real points earn, grouped normally like everyone else.
   const topTier = await getUserTier(0, scores.length, scores[0].total_points);
   let startIndex = 0;
+  let html = '';
+
+  // My own quick-stats card, if logged in and ranked
+  if (myId) {
+    const myIndex = scores.findIndex(s => s.user_id === myId);
+    if (myIndex >= 0) {
+      const myTier = await getUserTier(myIndex, scores.length, scores[myIndex].total_points);
+      html += `
+        <div class="lb-my-stats">
+          <div class="lb-my-stats-left">
+            ${avatarHtml(profileMap[myId], myTier.badge_emoji, 40)}
+            <div>
+              <div class="label">YOUR STANDING</div>
+              <div class="value">${myTier.name}</div>
+            </div>
+          </div>
+          <div class="lb-my-stats-right">
+            <div><div class="label">RANK</div><div class="value">#${myIndex + 1}</div></div>
+            <div><div class="label">SCORE</div><div class="value">${scores[myIndex].total_points}</div></div>
+          </div>
+        </div>
+      `;
+    }
+  }
 
   if (topTier.isLegend) {
-    content.innerHTML = `
+    html += `
       <div class="lb-legend-spotlight">
         <div class="crown">👑</div>
         <div class="name">${nameMap[scores[0].user_id] || 'Someone'}</div>
@@ -111,9 +187,8 @@ async function loadLeaderboard() {
       </div>
     `;
     startIndex = 1;
-  } else {
-    content.innerHTML = '';
   }
+  content.innerHTML = html;
 
   // Group everyone (from startIndex on) by tier, sorted by score within each group
   const rest = scores.slice(startIndex);
@@ -128,10 +203,10 @@ async function loadLeaderboard() {
   }
 
   const orderedTierNames = (tiers || []).map(t => t.name).filter(name => groups[name]);
-  let html = '';
+  let groupsHtml = '';
   orderedTierNames.forEach((name, idx) => {
     const group = groups[name];
-    html += `
+    groupsHtml += `
       <div class="lb-tier-group" style="animation-delay:${0.15 + idx * 0.08}s">
         <div class="lb-tier-header">
           <span class="badge">${group.badge}</span>
@@ -139,15 +214,19 @@ async function loadLeaderboard() {
           <span class="lb-tier-count">${group.members.length} ${group.members.length === 1 ? 'member' : 'members'}</span>
         </div>
         ${group.members.map((m, i) => `
-          <div class="lb-row ${m.user_id === myId ? 'me' : ''}">
-            <span><span class="pos">#${m.rank}</span> ${nameMap[m.user_id] || 'Someone'}</span>
+          <div class="lb-row ${m.user_id === myId ? 'me' : ''}" style="animation-delay:${0.2 + idx * 0.08 + i * 0.02}s">
+            <div class="lb-row-left">
+              <span class="pos">#${m.rank}</span>
+              ${avatarHtml(profileMap[m.user_id], group.badge, 30)}
+              <span class="lb-name">${nameMap[m.user_id] || 'Someone'}</span>
+            </div>
             <span class="pts">${m.total_points}</span>
           </div>
         `).join('')}
       </div>
     `;
   });
-  content.innerHTML += html;
+  content.innerHTML += groupsHtml;
 }
 
 loadLeaderboard();
