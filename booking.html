@@ -67,6 +67,29 @@
   .bk-slots-date-group { margin-bottom: 14px; }
   .bk-slots-date-label { font-size: 12px; font-weight: 700; color: var(--excel-green-deep); margin-bottom: 8px; }
   .bk-slots-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .bk-cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .bk-cal-header button { background: none; border: 1px solid var(--grid-line); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 15px; }
+  .bk-cal-header button:hover { border-color: var(--excel-green); }
+  .bk-cal-month-label { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 13px; }
+  .bk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+  .bk-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--ink-soft); padding-bottom: 4px; }
+  .bk-cal-day {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    cursor: default; position: relative;
+  }
+  .bk-cal-day.empty { visibility: hidden; }
+  .bk-cal-day.past { color: #C8C4B8; }
+  .bk-cal-day.available { background: #E4F1E8; color: var(--excel-green-deep); font-weight: 700; cursor: pointer; }
+  .bk-cal-day.available:hover { background: var(--excel-green); color: #fff; }
+  .bk-cal-day.available.selected { background: var(--excel-green); color: #fff; }
+  .bk-cal-day.unavailable { background: #FBEDE8; color: #C99; }
+  .bk-cal-legend { display: flex; gap: 16px; font-size: 11px; color: var(--ink-soft); margin-bottom: 16px; }
+  .bk-cal-legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+  .bk-cal-legend .dot.green { background: var(--excel-green); }
+  .bk-cal-legend .dot.red { background: #C96F4A; }
+  .bk-selected-date-label { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
   .bk-slot-btn {
     padding: 8px 14px; border: 1px solid var(--grid-line); border-radius: 18px;
     background: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
@@ -202,7 +225,17 @@
 
     <h3 style="margin-top:22px;">Pick a Date &amp; Time</h3>
     <p class="bk-sub" id="bkSlotsSub">Loading available slots...</p>
-    <div id="bkSlotsContainer"></div>
+    <div class="bk-cal-header">
+      <button type="button" id="bkCalPrev">&lsaquo;</button>
+      <span class="bk-cal-month-label" id="bkCalMonthLabel"></span>
+      <button type="button" id="bkCalNext">&rsaquo;</button>
+    </div>
+    <div class="bk-cal-grid" id="bkCalGrid"></div>
+    <div class="bk-cal-legend">
+      <span><span class="dot green"></span>Available</span>
+      <span><span class="dot red"></span>Not available / booked</span>
+    </div>
+    <div id="bkTimeSlotsForDate"></div>
 
     <div class="bk-summary-row">
       <span style="font-size:13px; color:var(--ink-soft);">Session fee</span>
@@ -331,9 +364,12 @@ async function initBookingPage() {
   await loadAvailableSlots();
 }
 
+let bkSlotsByDate = {};
+let bkCalYear, bkCalMonth; // 0-indexed month
+let bkCalSelectedDateStr = null;
+
 async function loadAvailableSlots() {
   const sub = document.getElementById('bkSlotsSub');
-  const container = document.getElementById('bkSlotsContainer');
   const today = new Date().toISOString().split('T')[0];
 
   const { data, error } = await supabaseClient
@@ -346,34 +382,84 @@ async function loadAvailableSlots() {
 
   if (error || !data || data.length === 0) {
     sub.textContent = 'No open slots right now — check back soon, or reach out directly.';
-    return;
+    bkSlotsByDate = {};
+  } else {
+    sub.textContent = 'Green dates have open times — pick one to see them.';
+    bkSlotsByDate = {};
+    data.forEach(slot => {
+      if (!bkSlotsByDate[slot.slot_date]) bkSlotsByDate[slot.slot_date] = [];
+      bkSlotsByDate[slot.slot_date].push(slot);
+    });
   }
 
-  sub.textContent = 'All times shown are yours to pick — click one to select it.';
+  const now = new Date();
+  bkCalYear = now.getFullYear();
+  bkCalMonth = now.getMonth();
+  renderBkCalendar();
+}
 
-  const byDate = {};
-  data.forEach(slot => {
-    if (!byDate[slot.slot_date]) byDate[slot.slot_date] = [];
-    byDate[slot.slot_date].push(slot);
+function renderBkCalendar() {
+  const grid = document.getElementById('bkCalGrid');
+  const label = document.getElementById('bkCalMonthLabel');
+  const firstOfMonth = new Date(bkCalYear, bkCalMonth, 1);
+  const daysInMonth = new Date(bkCalYear, bkCalMonth + 1, 0).getDate();
+  const startWeekday = firstOfMonth.getDay(); // 0=Sun
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  label.textContent = firstOfMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const dowLabels = ['S','M','T','W','T','F','S'];
+  let html = dowLabels.map(d => `<div class="bk-cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < startWeekday; i++) html += `<div class="bk-cal-day empty"></div>`;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${bkCalYear}-${String(bkCalMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isPast = dateStr < todayStr;
+    const hasSlots = bkSlotsByDate[dateStr] && bkSlotsByDate[dateStr].length > 0;
+    let cls = 'bk-cal-day';
+    if (isPast) cls += ' past';
+    else if (hasSlots) cls += ' available';
+    else cls += ' unavailable';
+    if (dateStr === bkCalSelectedDateStr) cls += ' selected';
+    html += `<div class="${cls}" data-date="${dateStr}">${day}</div>`;
+  }
+  grid.innerHTML = html;
+
+  grid.querySelectorAll('.bk-cal-day.available').forEach(cell => {
+    cell.addEventListener('click', () => {
+      bkCalSelectedDateStr = cell.dataset.date;
+      renderBkCalendar();
+      showTimeSlotsForDate(bkCalSelectedDateStr);
+    });
   });
+}
 
-  container.innerHTML = Object.entries(byDate).map(([date, slots]) => {
-    const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    return `
-      <div class="bk-slots-date-group">
-        <div class="bk-slots-date-label">${dateLabel}</div>
-        <div class="bk-slots-row">
-          ${slots.map(s => `<button type="button" class="bk-slot-btn" data-slot-id="${s.id}">${formatTime(s.start_time)}</button>`).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
+document.getElementById('bkCalPrev').addEventListener('click', () => {
+  bkCalMonth--;
+  if (bkCalMonth < 0) { bkCalMonth = 11; bkCalYear--; }
+  renderBkCalendar();
+});
+document.getElementById('bkCalNext').addEventListener('click', () => {
+  bkCalMonth++;
+  if (bkCalMonth > 11) { bkCalMonth = 0; bkCalYear++; }
+  renderBkCalendar();
+});
 
-  container.querySelectorAll('.bk-slot-btn').forEach(btn => {
+function showTimeSlotsForDate(dateStr) {
+  const wrap = document.getElementById('bkTimeSlotsForDate');
+  const slots = bkSlotsByDate[dateStr] || [];
+  const dateLabel = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  wrap.innerHTML = `
+    <div class="bk-selected-date-label">${dateLabel}</div>
+    <div class="bk-slots-row">
+      ${slots.map(s => `<button type="button" class="bk-slot-btn" data-slot-id="${s.id}">${formatTime(s.start_time)}</button>`).join('')}
+    </div>
+  `;
+  wrap.querySelectorAll('.bk-slot-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      container.querySelectorAll('.bk-slot-btn').forEach(b => b.classList.remove('selected'));
+      wrap.querySelectorAll('.bk-slot-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      bkSelectedSlot = data.find(s => String(s.id) === btn.dataset.slotId);
+      bkSelectedSlot = slots.find(s => String(s.id) === btn.dataset.slotId);
     });
   });
 }
