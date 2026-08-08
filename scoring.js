@@ -1,7 +1,8 @@
 // Learn With Rinkesh — shared scoring engine. Include on any page that
 // should award points. Requires supabaseClient to already exist.
 //
-// Point rules:
+// Point rules — all admin-editable (Master Control → Scoring → Edit
+// Point Values), these are just the shipped defaults:
 //   Base points by difficulty: beginner=5, intermediate=10, advanced=20
 //   Diminishing returns on repeated solves of the SAME formula:
 //     1st-3rd solve of a formula: full points
@@ -9,10 +10,25 @@
 //     11th+ solve: quarter points
 //   First-ever solve of a formula gets a flat +15 "coverage bonus" on
 //   top, to reward breadth (trying new formulas) over grinding one.
+//   A WRONG answer still earns a small nominal point (default 1) for
+//   genuinely attempting — no toast shown for this one (only real solves
+//   get the celebratory toast), but it still counts toward the live
+//   score and can still trigger a tier-up notification.
 
 (function () {
-  const BASE_POINTS = { beginner: 5, intermediate: 10, advanced: 20 };
-  const COVERAGE_BONUS = 15;
+  const DEFAULT_CONFIG = { beginner: 5, intermediate: 10, advanced: 20, coverage_bonus: 15, attempt_points: 1 };
+  let configCache = null;
+
+  async function getScoringConfig() {
+    if (configCache) return configCache;
+    try {
+      const { data } = await supabaseClient.from('page_content').select('content').eq('id', 'pc-scoring-config').maybeSingle();
+      configCache = (data && data.content) ? { ...DEFAULT_CONFIG, ...JSON.parse(data.content) } : { ...DEFAULT_CONFIG };
+    } catch (e) {
+      configCache = { ...DEFAULT_CONFIG };
+    }
+    return configCache;
+  }
 
   function tierMultiplier(priorCount) {
     if (priorCount < 3) return 1;
@@ -26,9 +42,10 @@
     try {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) return;
+      const config = await getScoringConfig();
 
       const diff = ['beginner','intermediate','advanced'].includes(difficulty) ? difficulty : 'intermediate';
-      const base = BASE_POINTS[diff];
+      const base = config[diff];
 
       const { count: priorCount } = await supabaseClient
         .from('score_events')
@@ -38,7 +55,7 @@
         .eq('event_type', 'question_solved');
 
       const tierPoints = Math.round(base * tierMultiplier(priorCount || 0));
-      const bonus = (priorCount || 0) === 0 ? COVERAGE_BONUS : 0;
+      const bonus = (priorCount || 0) === 0 ? config.coverage_bonus : 0;
       const totalPoints = tierPoints + bonus;
 
       await supabaseClient.from('score_events').insert({
@@ -49,6 +66,37 @@
       await bumpUserTotal(session.user.id, totalPoints);
       showScoreToast(totalPoints, bonus > 0 ? 'First time solving this formula!' : null);
     } catch (e) { /* scoring failure should never block the actual feature working */ }
+  };
+
+  // Call this when an answer was WRONG, but the visitor genuinely
+  // attempted it (formula/interview question, doesn't matter which —
+  // both flow through the same practice engine). Small nominal points,
+  // no toast, no "First time" messaging — just quiet credit for
+  // engaging, and it still counts toward tier-up detection. Only awards
+  // once per question per page visit, so repeatedly resubmitting a wrong
+  // answer to the same question doesn't farm points.
+  const attemptedThisSession = new Set();
+  window.awardAttemptPoints = async function (formulaId, questionKey) {
+    try {
+      const key = questionKey || formulaId;
+      if (attemptedThisSession.has(key)) return;
+      attemptedThisSession.add(key);
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
+      const config = await getScoringConfig();
+      const points = config.attempt_points;
+      if (!points) return;
+
+      await supabaseClient.from('score_events').insert({
+        user_id: session.user.id, event_type: 'attempt', formula_id: formulaId, points
+      });
+      await bumpUserTotal(session.user.id, points);
+      // Deliberately no showScoreToast() here — nominal points stay quiet.
+      // The live score display still updates via the user_scores change,
+      // and a genuine tier-up will still fire through the normal live
+      // notification check below.
+    } catch (e) { /* non-blocking */ }
   };
 
   // For non-question activities (article read, case study completed,

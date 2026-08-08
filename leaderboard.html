@@ -263,12 +263,6 @@ async function loadLeaderboard() {
     `;
     startIndex = 1;
   }
-  content.innerHTML = html;
-
-  if (myIndexGlobal >= 0) {
-    document.getElementById('lbViewDetailsBtn').addEventListener('click', () => showActivityModal(myId, myIndexGlobal, myTierGlobal, scoresGlobal));
-  }
-
   // Group everyone (from startIndex on) by tier, sorted by score within each group
   const rest = scores.slice(startIndex);
   const total = scores.length;
@@ -305,7 +299,19 @@ async function loadLeaderboard() {
       </div>
     `;
   });
-  content.innerHTML += groupsHtml;
+
+  // Set the ENTIRE content in one single assignment — a second innerHTML
+  // write (even "+=") destroys and rebuilds every existing child node,
+  // including the Full Activity button, which silently detaches any
+  // event listener already attached to it. That was the actual bug:
+  // the button rendered fine but clicking it did nothing, because the
+  // listener was being attached to a DOM node that got thrown away and
+  // replaced a moment later.
+  content.innerHTML = html + groupsHtml;
+
+  if (myIndexGlobal >= 0) {
+    document.getElementById('lbViewDetailsBtn').addEventListener('click', () => showActivityModal(myId, myIndexGlobal, myTierGlobal, scoresGlobal));
+  }
 }
 
 loadLeaderboard();

@@ -1,7 +1,8 @@
-// Learn With Rinkesh — floating leaderboard widget. Shows the current
-// #1 spotlight (avatar + tier badge), admin-controlled: on/off + which
-// pages it appears on. Include on any page after supabaseClient +
-// scoring.js (for getUserTier).
+// Learn With Rinkesh — floating leaderboard widget. If logged in, shows
+// THIS visitor's own rank/tier/score (personalized). If not logged in,
+// falls back to showing the global #1 as a teaser. Admin-controlled:
+// on/off + which pages it appears on. Include on any page after
+// supabaseClient + scoring.js (for getUserTier).
 
 (async function () {
   try {
@@ -16,21 +17,35 @@
     const allowedPages = (pagesRow && pagesRow.content) ? pagesRow.content.split('\n').map(p => p.trim()).filter(Boolean) : [];
     if (!allowedPages.includes(pageFile)) return;
 
-    const { data: topScorer } = await supabaseClient
-      .from('user_scores')
-      .select('user_id, total_points')
-      .order('total_points', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (!topScorer) return;
+    let targetUserId, label;
+    const { data: allScores } = await supabaseClient.from('user_scores').select('user_id, total_points').order('total_points', { ascending: false });
+    if (!allScores || allScores.length === 0) return;
 
-    const { data: profile } = await supabaseClient.from('profiles').select('name, chat_display_name, chat_hide_name, avatar_url').eq('id', topScorer.user_id).maybeSingle();
+    let myRow, myRankIndex;
+    if (session) {
+      myRankIndex = allScores.findIndex(s => s.user_id === session.user.id);
+    }
+
+    if (session && myRankIndex >= 0) {
+      targetUserId = session.user.id;
+      myRow = allScores[myRankIndex];
+      label = `You're #${myRankIndex + 1}`;
+    } else {
+      targetUserId = allScores[0].user_id;
+      myRow = allScores[0];
+      myRankIndex = 0;
+      label = null; // filled in below once we know the name
+    }
+
+    const { data: profile } = await supabaseClient.from('profiles').select('name, chat_display_name, chat_hide_name, avatar_url').eq('id', targetUserId).maybeSingle();
     const name = (profile && profile.chat_hide_name) ? 'Anonymous' : ((profile && (profile.chat_display_name || profile.name)) || 'Someone');
+    if (!label) label = `${name} is #1`;
 
     let badgeEmoji = '👑';
     if (typeof getUserTier === 'function') {
-      const tier = await getUserTier(0, 1, topScorer.total_points);
+      const tier = await getUserTier(myRankIndex, allScores.length, myRow.total_points);
       badgeEmoji = tier.badge_emoji;
     }
 
@@ -70,19 +85,18 @@
     const widget = document.createElement('a');
     widget.href = 'leaderboard.html';
     widget.className = 'lbw-widget';
-    widget.innerHTML = `<span class="lbw-avatar-wrap">${avatarInner}<span class="lbw-badge">${badgeEmoji}</span></span><span class="lbw-text">${name} is #1<span class="lbw-score" id="lbwScoreLine">${topScorer.total_points} pts</span></span>`;
+    widget.innerHTML = `<span class="lbw-avatar-wrap">${avatarInner}<span class="lbw-badge">${badgeEmoji}</span></span><span class="lbw-text">${label}<span class="lbw-score" id="lbwScoreLine">${myRow.total_points} pts</span></span>`;
     document.body.appendChild(widget);
 
-    // Live score — updates in place the moment anyone's score changes,
-    // not just on next page load.
+    // Live score — updates in place the moment THIS person's score
+    // changes, not just on next page load. (For the anonymous/global-#1
+    // fallback case, this tracks that specific top scorer's score, which
+    // is enough to keep the number live without needing a full re-render.)
     supabaseClient
-      .channel('leaderboard_widget_live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_scores' }, async () => {
-        const { data: latest } = await supabaseClient
-          .from('user_scores').select('user_id, total_points').order('total_points', { ascending: false }).limit(1).maybeSingle();
-        if (!latest) return;
+      .channel('leaderboard_widget_live_' + targetUserId)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_scores', filter: 'user_id=eq.' + targetUserId }, (payload) => {
         const scoreLine = document.getElementById('lbwScoreLine');
-        if (scoreLine) scoreLine.textContent = latest.total_points + ' pts';
+        if (scoreLine && payload.new) scoreLine.textContent = payload.new.total_points + ' pts';
       })
       .subscribe();
   } catch (e) { /* widget failing to load should never break the page */ }

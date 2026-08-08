@@ -727,6 +727,7 @@ function checkAnswer(question) {
       const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
       showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Every cell matches!` });
     } else {
+      if (currentFormula) awardAttemptPoints(currentFormula.id, currentFormula.id + '_' + currentQuestionIndex);
       showResultModal({ correct: false, html: 'Your answer is wrong. Try again!', question });
     }
     return;
@@ -752,6 +753,7 @@ function checkAnswer(question) {
   }
 
   if (typeof value === 'string' && value.startsWith('#')) {
+    if (currentFormula) awardAttemptPoints(currentFormula.id, currentFormula.id + '_' + currentQuestionIndex);
     showResultModal({ correct: false, html: `Result: <strong>${value}</strong><br><span style="font-size:13px; color:var(--ink-soft);">Check your formula's cell references and arguments.</span>`, question });
     return;
   }
@@ -769,6 +771,7 @@ function checkAnswer(question) {
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
   } else {
+    if (currentFormula) awardAttemptPoints(currentFormula.id, currentFormula.id + '_' + currentQuestionIndex);
     showResultModal({ correct: false, html: 'Your answer is wrong. Try again!', question });
   }
 }
