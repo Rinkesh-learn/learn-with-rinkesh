@@ -386,6 +386,32 @@ async function initBookingPage() {
 
   document.getElementById('bkForm').style.display = 'block';
   await loadAvailableSlots();
+  subscribeToSlotChanges();
+}
+
+// Live sync — if someone else books a slot (or admin adds/removes one)
+// while this page is open, the calendar and time list update immediately
+// instead of only refreshing on next page load.
+function subscribeToSlotChanges() {
+  supabaseClient
+    .channel('availability_slots_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'availability_slots' }, () => {
+      loadAvailableSlots().then(() => {
+        // If the visitor already has a date open, re-show it with fresh data
+        // (a slot they were looking at may have just been taken by someone else).
+        if (bkCalSelectedDateStr) showTimeSlotsForDate(bkCalSelectedDateStr);
+        // If their actually-selected slot just got taken, clear the selection
+        // so they can't submit a booking for a slot that's no longer open.
+        if (bkSelectedSlot) {
+          const stillOpen = (bkSlotsByDate[bkSelectedSlot.slot_date] || []).some(s => s.id === bkSelectedSlot.id);
+          if (!stillOpen) {
+            bkSelectedSlot = null;
+            document.getElementById('bkFormError').textContent = 'That time was just booked by someone else — please pick another.';
+          }
+        }
+      });
+    })
+    .subscribe();
 }
 
 let bkSlotsByDate = {};

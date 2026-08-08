@@ -3474,9 +3474,9 @@ criteria: The condition to match"></textarea>
   }
   materializeWeeklySlots();
 
-  async function loadAvailability() {
-    let adminCalYear, adminCalMonth, adminCalSlotsByDate = {}, adminCalSelectedDate = null;
+  let adminCalYear, adminCalMonth, adminCalSlotsByDate = {}, adminCalSelectedDate = null;
 
+  async function loadAvailability() {
     const { data, error } = await supabaseClient
       .from('availability_slots')
       .select('*')
@@ -3495,9 +3495,14 @@ criteria: The condition to match"></textarea>
       adminCalSlotsByDate[s.slot_date].push(s);
     });
 
-    const now = new Date();
-    adminCalYear = now.getFullYear();
-    adminCalMonth = now.getMonth();
+    // Only jump to the current month the very first time this loads —
+    // after that, stay wherever the admin was browsing so a delete (or a
+    // live update from someone booking) doesn't reset their place.
+    if (adminCalYear === undefined) {
+      const now = new Date();
+      adminCalYear = now.getFullYear();
+      adminCalMonth = now.getMonth();
+    }
 
     function renderAdminCal() {
       const grid = document.getElementById('adminCalGrid');
@@ -3554,8 +3559,25 @@ criteria: The condition to match"></textarea>
     }
 
     renderAdminCal();
+    if (adminCalSelectedDate) renderAdminCalDayDetail(adminCalSelectedDate);
     document.getElementById('adminCalPrev').onclick = () => { adminCalMonth--; if (adminCalMonth < 0) { adminCalMonth = 11; adminCalYear--; } renderAdminCal(); };
     document.getElementById('adminCalNext').onclick = () => { adminCalMonth++; if (adminCalMonth > 11) { adminCalMonth = 0; adminCalYear++; } renderAdminCal(); };
+  }
+
+  // Live sync — if a user books (or someone else on admin removes) a
+  // slot while this page is open, the calendar reflects it immediately
+  // instead of only on next refresh.
+  let adminSlotSubscribed = false;
+  function subscribeAdminToSlotChanges() {
+    if (adminSlotSubscribed) return;
+    adminSlotSubscribed = true;
+    supabaseClient
+      .channel('admin_availability_slots_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'availability_slots' }, () => {
+        loadAvailability();
+        loadBookings();
+      })
+      .subscribe();
   }
 
   document.getElementById('addAvailBtn').addEventListener('click', async () => {
@@ -3704,6 +3726,7 @@ criteria: The condition to match"></textarea>
     loadCaseStudiesAdmin();
     loadAvailability();
     loadBookings();
+    subscribeAdminToSlotChanges();
     loadClimbBoySettings();
     populatePageSelect();
 
