@@ -68,11 +68,27 @@
   .bk-slots-date-label { font-size: 12px; font-weight: 700; color: var(--excel-green-deep); margin-bottom: 8px; }
   .bk-slots-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
+  .bk-date-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; box-sizing: border-box; padding: 10px 14px;
+    border: 1px solid var(--grid-line); border-radius: 8px; background: #fff;
+    cursor: pointer; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+  }
+  .bk-date-trigger:hover { border-color: var(--excel-green); }
+  .bk-date-trigger .placeholder { color: var(--ink-soft); }
+
+  .bk-cal-popup-wrap { position: relative; }
+  .bk-cal-popup {
+    display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+    background: #fff; border: 1px solid var(--grid-line); border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 14px; width: 280px;
+  }
+  .bk-cal-popup.open { display: block; }
   .bk-cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .bk-cal-header button { background: none; border: 1px solid var(--grid-line); border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 15px; }
+  .bk-cal-header button { background: none; border: 1px solid var(--grid-line); border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 14px; }
   .bk-cal-header button:hover { border-color: var(--excel-green); }
-  .bk-cal-month-label { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 13px; }
-  .bk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 10px; }
+  .bk-cal-month-label { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 12px; }
+  .bk-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 8px; }
   .bk-cal-dow { text-align: center; font-size: 10px; font-weight: 700; color: var(--ink-soft); padding-bottom: 4px; }
   .bk-cal-day {
     aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
@@ -225,15 +241,23 @@
 
     <h3 style="margin-top:22px;">Pick a Date &amp; Time</h3>
     <p class="bk-sub" id="bkSlotsSub">Loading available slots...</p>
-    <div class="bk-cal-header">
-      <button type="button" id="bkCalPrev">&lsaquo;</button>
-      <span class="bk-cal-month-label" id="bkCalMonthLabel"></span>
-      <button type="button" id="bkCalNext">&rsaquo;</button>
-    </div>
-    <div class="bk-cal-grid" id="bkCalGrid"></div>
-    <div class="bk-cal-legend">
-      <span><span class="dot green"></span>Available</span>
-      <span><span class="dot red"></span>Not available / booked</span>
+    <div class="bk-cal-popup-wrap">
+      <div class="bk-date-trigger" id="bkDateTrigger">
+        <span id="bkDateTriggerLabel" class="placeholder">Select your slot</span>
+        <span>📅</span>
+      </div>
+      <div class="bk-cal-popup" id="bkCalPopup">
+        <div class="bk-cal-header">
+          <button type="button" id="bkCalPrev">&lsaquo;</button>
+          <span class="bk-cal-month-label" id="bkCalMonthLabel"></span>
+          <button type="button" id="bkCalNext">&rsaquo;</button>
+        </div>
+        <div class="bk-cal-grid" id="bkCalGrid"></div>
+        <div class="bk-cal-legend">
+          <span><span class="dot green"></span>Available</span>
+          <span><span class="dot red"></span>Not available / booked</span>
+        </div>
+      </div>
     </div>
     <div id="bkTimeSlotsForDate"></div>
 
@@ -429,10 +453,23 @@ function renderBkCalendar() {
     cell.addEventListener('click', () => {
       bkCalSelectedDateStr = cell.dataset.date;
       renderBkCalendar();
+      const dateLabel = new Date(bkCalSelectedDateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+      const triggerLabel = document.getElementById('bkDateTriggerLabel');
+      triggerLabel.textContent = dateLabel;
+      triggerLabel.classList.remove('placeholder');
+      document.getElementById('bkCalPopup').classList.remove('open');
       showTimeSlotsForDate(bkCalSelectedDateStr);
     });
   });
 }
+
+document.getElementById('bkDateTrigger').addEventListener('click', () => {
+  document.getElementById('bkCalPopup').classList.toggle('open');
+});
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.bk-cal-popup-wrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('bkCalPopup').classList.remove('open');
+});
 
 document.getElementById('bkCalPrev').addEventListener('click', () => {
   bkCalMonth--;
