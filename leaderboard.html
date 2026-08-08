@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaderboard — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
+<style>
+  .lb-shell { max-width: 780px; margin: 0 auto 60px; padding: 0 24px; }
+  .lb-hero { text-align: center; padding: 36px 24px 8px; }
+  .lb-hero h1 { font-size: 26px; margin: 0 0 8px; }
+  .lb-hero p { color: var(--ink-soft); font-size: 14px; }
+
+  .lb-legend-spotlight {
+    background: linear-gradient(135deg, #C9971E, #E8B84B);
+    border-radius: var(--radius); padding: 26px; text-align: center; color: #1C1C1C;
+    margin: 20px 0; position: relative; overflow: hidden;
+    opacity: 0; transform: scale(0.95); animation: lbSpotIn 0.5s ease 0.1s forwards, legendGlow 1.8s ease infinite alternate 0.6s;
+  }
+  @keyframes lbSpotIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes legendGlow { from { box-shadow: 0 0 0px rgba(232,184,75,0); } to { box-shadow: 0 0 30px rgba(232,184,75,0.7); } }
+  .lb-legend-spotlight .crown { font-size: 34px; }
+  .lb-legend-spotlight .name { font-size: 22px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; margin: 6px 0 2px; }
+  .lb-legend-spotlight .pts { font-size: 13px; font-weight: 700; opacity: 0.85; }
+
+  .lb-tier-group {
+    background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius);
+    padding: 18px 20px; margin-bottom: 14px;
+    opacity: 0; transform: translateY(12px); animation: lbGroupIn 0.4s ease forwards;
+  }
+  @keyframes lbGroupIn { to { opacity: 1; transform: translateY(0); } }
+  .lb-tier-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 700; font-size: 14px; }
+  .lb-tier-header .badge { font-size: 20px; }
+  .lb-tier-count { font-size: 11px; color: var(--ink-soft); font-weight: 400; margin-left: auto; }
+  .lb-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--grid-line); }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row .pos { color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; width: 24px; display: inline-block; }
+  .lb-row .pts { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); }
+  .lb-row.me { background: #FFF6C9; margin: 0 -10px; padding: 7px 10px; border-radius: 6px; }
+
+  .lb-empty { text-align: center; color: var(--ink-soft); padding: 40px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="lb-shell">
+  <div class="lb-hero">
+    <h1>🏆 Leaderboard</h1>
+    <p>Ranked by tier — top scorer in each group shown first.</p>
+  </div>
+  <div id="lbContent"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="scoring.js"></script>
+
+<script>
+async function loadLeaderboard() {
+  const content = document.getElementById('lbContent');
+
+  const [{ data: scores }, { data: tiers }, { data: { session } }] = await Promise.all([
+    supabaseClient.from('user_scores').select('user_id, total_points').order('total_points', { ascending: false }),
+    supabaseClient.from('score_tiers').select('*').order('order_index'),
+    supabaseClient.auth.getSession()
+  ]);
+
+  if (!scores || scores.length === 0) {
+    content.innerHTML = '<div class="lb-empty">No one has scored yet — be the first!</div>';
+    return;
+  }
+
+  const userIds = scores.map(s => s.user_id);
+  const { data: profiles } = await supabaseClient.from('profiles').select('id, name, chat_display_name, chat_hide_name').in('id', userIds);
+  const nameMap = {};
+  (profiles || []).forEach(p => {
+    nameMap[p.id] = p.chat_hide_name ? 'Anonymous' : (p.chat_display_name || p.name || 'Someone');
+  });
+
+  const myId = session ? session.user.id : null;
+
+  // Legend spotlight — rank #1, always
+  const legend = scores[0];
+  content.innerHTML = `
+    <div class="lb-legend-spotlight">
+      <div class="crown">👑</div>
+      <div class="name">${nameMap[legend.user_id] || 'Someone'}</div>
+      <div class="pts">${legend.total_points} points &mdash; #1 Legend</div>
+    </div>
+  `;
+
+  // Group everyone else by tier, sorted by score within each group
+  const rest = scores.slice(1);
+  const total = scores.length;
+  const groups = {}; // tier name -> { badge, members: [] }
+
+  for (let i = 0; i < rest.length; i++) {
+    const rankIndex = i + 1; // account for legend at index 0
+    const tier = await getUserTier(rankIndex, total);
+    if (!groups[tier.name]) groups[tier.name] = { badge: tier.badge_emoji, members: [] };
+    groups[tier.name].members.push({ ...rest[i], rank: rankIndex + 1 });
+  }
+
+  const orderedTierNames = (tiers || []).map(t => t.name).filter(name => groups[name]);
+  let html = '';
+  orderedTierNames.forEach((name, idx) => {
+    const group = groups[name];
+    html += `
+      <div class="lb-tier-group" style="animation-delay:${0.15 + idx * 0.08}s">
+        <div class="lb-tier-header">
+          <span class="badge">${group.badge}</span>
+          <span>${name}</span>
+          <span class="lb-tier-count">${group.members.length} ${group.members.length === 1 ? 'member' : 'members'}</span>
+        </div>
+        ${group.members.map((m, i) => `
+          <div class="lb-row ${m.user_id === myId ? 'me' : ''}">
+            <span><span class="pos">#${m.rank}</span> ${nameMap[m.user_id] || 'Someone'}</span>
+            <span class="pts">${m.total_points}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+  content.innerHTML += html;
+}
+
+loadLeaderboard();
+</script>
+
+<script src="chat-widget.js"></script>
+<script src="auth-nav.js"></script>
+
+<script src="leaderboard-widget.js"></script>
+<script src="site-name.js"></script>
+
+</body>
+</html>

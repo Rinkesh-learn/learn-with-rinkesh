@@ -630,6 +630,18 @@ criteria: The condition to match"></textarea>
         <button class="btn btn-primary" id="addTierBtn" style="padding:8px 16px; font-size:12px; margin-top:10px;">+ Add Tier</button>
         <div id="scoringTierMsg" style="font-size:13px; margin-top:10px;"></div>
       </div>
+      <div class="admin-panel" style="margin-top:20px;">
+        <h3 style="margin-top:0;">Leaderboard widget</h3>
+        <p class="sub" style="margin-top:-6px;">The small floating "👑 Top scorer" badge shown in the corner of the site.</p>
+        <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-bottom:12px;">
+          <input type="checkbox" id="lbWidgetEnabled" style="width:auto;">
+          Show the leaderboard widget
+        </label>
+        <label>Show on these pages (check all that apply)</label>
+        <div id="lbWidgetPages" style="display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 12px;"></div>
+        <button class="btn btn-primary" id="lbWidgetSaveBtn" style="padding:8px 16px; font-size:12px;">Save</button>
+        <span id="lbWidgetMsg" style="font-size:12px; color:var(--ink-soft); margin-left:10px;"></span>
+      </div>
     </div>
 
     <div id="view-climb_boy" style="display:none;">
@@ -3219,6 +3231,42 @@ criteria: The condition to match"></textarea>
     msg.textContent = error ? 'Failed: ' + error.message : 'Tier added — edit its values below.';
     msg.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
     loadScoringTiers();
+  });
+
+  const LB_WIDGET_PAGES = [
+    ['index.html', 'Home'], ['practice.html', 'Practice'], ['excel-guide.html', 'About Excel'],
+    ['shortcuts.html', 'Shortcuts'], ['formula-example.html', 'All Formulas'],
+    ['interview-prep.html', 'Interview Prep'], ['case-studies.html', 'Case Studies'],
+    ['booking.html', '1-on-1 Booking'], ['performance.html', 'Performance']
+  ];
+  document.getElementById('lbWidgetPages').innerHTML = LB_WIDGET_PAGES.map(([file, label]) => `
+    <label style="display:flex; align-items:center; gap:5px; font-weight:400; font-size:12px;">
+      <input type="checkbox" class="lb-page-check" value="${file}" style="width:auto;"> ${label}
+    </label>
+  `).join('');
+
+  async function loadLbWidgetSettings() {
+    const [{ data: enabledRow }, { data: pagesRow }] = await Promise.all([
+      supabaseClient.from('page_content').select('content').eq('id', 'pc-leaderboard-enabled').maybeSingle(),
+      supabaseClient.from('page_content').select('content').eq('id', 'pc-leaderboard-pages').maybeSingle()
+    ]);
+    document.getElementById('lbWidgetEnabled').checked = enabledRow && enabledRow.content === 'on';
+    const selectedPages = (pagesRow && pagesRow.content) ? pagesRow.content.split('\n').map(p => p.trim()) : [];
+    document.querySelectorAll('.lb-page-check').forEach(cb => { cb.checked = selectedPages.includes(cb.value); });
+  }
+  loadLbWidgetSettings();
+
+  document.getElementById('lbWidgetSaveBtn').addEventListener('click', async () => {
+    const msg = document.getElementById('lbWidgetMsg');
+    msg.textContent = 'Saving...';
+    const enabled = document.getElementById('lbWidgetEnabled').checked;
+    const pages = Array.from(document.querySelectorAll('.lb-page-check:checked')).map(cb => cb.value).join('\n');
+    const { error } = await supabaseClient.from('page_content').upsert([
+      { id: 'pc-leaderboard-enabled', page: 'global', label: 'Leaderboard widget on/off', content: enabled ? 'on' : 'off' },
+      { id: 'pc-leaderboard-pages', page: 'global', label: 'Leaderboard widget pages', content: pages }
+    ]);
+    msg.textContent = error ? 'Failed: ' + error.message : 'Saved.';
+    msg.style.color = error ? '#B3261E' : 'var(--excel-green-deep)';
   });
 
   // ---------- Case Studies ----------
