@@ -56,6 +56,7 @@ async function renderNavAuth() {
           </div>
         </div>
         <a href="account.html">⚙️ Account Settings</a>
+        <a href="performance.html">🏆 Performance</a>
         <a href="purchases.html">🧾 Purchases</a>
         <a href="#" id="navChangePasswordBtn">🔒 Change Password</a>
         <a href="#" id="navLogoutBtn" class="nav-account-menu-logout">↪ Log Out</a>

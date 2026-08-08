@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Performance — Learn With Rinkesh</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="feedback-widget.css">
+<link rel="stylesheet" href="chat-widget.css">
+<style>
+  .perf-shell { max-width: 880px; margin: 0 auto 60px; padding: 0 24px; }
+
+  .perf-hero {
+    text-align: center; padding: 40px 24px; margin-top: 20px;
+    background: linear-gradient(135deg, #1C4732, #2D6A4F);
+    border-radius: var(--radius); color: #fff; position: relative; overflow: hidden;
+  }
+  .perf-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.08), transparent 50%);
+  }
+  .perf-total-label { font-size: 12px; font-family: 'IBM Plex Mono', monospace; opacity: 0.8; letter-spacing: 1px; }
+  .perf-total-number {
+    font-size: 56px; font-weight: 700; font-family: 'IBM Plex Mono', monospace;
+    margin: 6px 0; opacity: 0; animation: perfFadeUp 0.6s ease 0.1s forwards;
+  }
+  .perf-rank-badge {
+    display: inline-block; background: rgba(255,255,255,0.15); padding: 6px 16px;
+    border-radius: 16px; font-size: 13px; font-weight: 700; margin-top: 6px;
+    opacity: 0; animation: perfFadeUp 0.6s ease 0.3s forwards;
+  }
+  @keyframes perfFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .perf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+  .perf-card {
+    background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius);
+    padding: 18px; text-align: center;
+    opacity: 0; transform: translateY(14px); animation: perfCardIn 0.45s ease forwards;
+  }
+  .perf-card:nth-child(1) { animation-delay: 0.1s; }
+  .perf-card:nth-child(2) { animation-delay: 0.2s; }
+  .perf-card:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes perfCardIn { to { opacity: 1; transform: translateY(0); } }
+  .perf-card .num { font-size: 26px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+  .perf-card.beginner .num { color: #3B7A57; }
+  .perf-card.intermediate .num { color: #C9971E; }
+  .perf-card.advanced .num { color: #C96F4A; }
+  .perf-card .lbl { font-size: 12px; color: var(--ink-soft); margin-top: 4px; }
+
+  .perf-panel { background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); padding: 22px; margin-top: 18px; }
+  .perf-panel h3 { margin: 0 0 4px; font-size: 15px; }
+  .perf-panel .sub { font-size: 12px; color: var(--ink-soft); margin: 0 0 14px; }
+
+  .perf-coverage-bar { height: 10px; background: #F0EDE3; border-radius: 5px; overflow: hidden; margin-top: 6px; }
+  .perf-coverage-fill { height: 100%; background: linear-gradient(90deg, #3B7A57, #2D6A4F); border-radius: 5px; width: 0; transition: width 1s ease 0.4s; }
+
+  .perf-activity-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--grid-line); font-size: 13px; }
+  .perf-activity-row:last-child { border-bottom: none; }
+  .perf-activity-pts { font-family: 'IBM Plex Mono', monospace; font-weight: 700; color: var(--excel-green-deep); }
+
+  .perf-login-gate { text-align: center; padding: 40px 24px; background: #fff; border: 1px solid var(--grid-line); border-radius: var(--radius); margin-top: 24px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a href="index.html" class="brand">
+      <span class="namebox">A1</span>
+      Learn With Rinkesh
+    </a>
+    <nav class="mainnav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <span id="navAuthArea"></span>
+    </nav>
+  </div>
+</div>
+
+<div class="perf-shell">
+
+  <div id="perfLoginGate" class="perf-login-gate" style="display:none;">
+    <div style="font-size:34px; margin-bottom:10px;">🏆</div>
+    <h2 style="margin:0 0 10px;">Track Your Progress</h2>
+    <p style="color:var(--ink-soft); font-size:14px; max-width:420px; margin:0 auto 18px;">Log in to start earning points for every formula you solve, see how you rank against everyone else, and track exactly which skills you've covered.</p>
+    <a href="login.html?redirect=performance.html" class="btn btn-primary" style="text-decoration:none; display:inline-block; padding:10px 22px;">Log In to See Your Score</a>
+  </div>
+
+  <div id="perfContent" style="display:none;">
+    <div class="perf-hero">
+      <div class="perf-total-label">TOTAL SCORE</div>
+      <div class="perf-total-number" id="perfTotalNumber">0</div>
+      <div class="perf-rank-badge" id="perfRankBadge">Loading rank...</div>
+    </div>
+
+    <div class="perf-grid">
+      <div class="perf-card beginner">
+        <div class="num" id="perfBeginnerCount">0</div>
+        <div class="lbl">Beginner solved</div>
+      </div>
+      <div class="perf-card intermediate">
+        <div class="num" id="perfIntermediateCount">0</div>
+        <div class="lbl">Intermediate solved</div>
+      </div>
+      <div class="perf-card advanced">
+        <div class="num" id="perfAdvancedCount">0</div>
+        <div class="lbl">Advanced solved</div>
+      </div>
+    </div>
+
+    <div class="perf-panel">
+      <h3>Formula Coverage</h3>
+      <p class="sub" id="perfCoverageText">Loading...</p>
+      <div class="perf-coverage-bar"><div class="perf-coverage-fill" id="perfCoverageFill"></div></div>
+    </div>
+
+    <div class="perf-panel">
+      <h3>Recent Activity</h3>
+      <p class="sub">Your last 10 point-earning actions.</p>
+      <div id="perfActivityList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+
+<script>
+function animateCount(el, target, duration) {
+  const start = 0;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(start + (target - start) * eased);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+async function loadPerformance() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    document.getElementById('perfLoginGate').style.display = 'block';
+    return;
+  }
+  document.getElementById('perfContent').style.display = 'block';
+
+  const [{ data: scoreRow }, { data: events }, { data: allScores }] = await Promise.all([
+    supabaseClient.from('user_scores').select('total_points').eq('user_id', session.user.id).maybeSingle(),
+    supabaseClient.from('score_events').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
+    supabaseClient.from('user_scores').select('user_id, total_points').order('total_points', { ascending: false })
+  ]);
+
+  const total = (scoreRow && scoreRow.total_points) || 0;
+  animateCount(document.getElementById('perfTotalNumber'), total, 1200);
+
+  const rankIndex = (allScores || []).findIndex(r => r.user_id === session.user.id);
+  const rankBadge = document.getElementById('perfRankBadge');
+  rankBadge.textContent = rankIndex >= 0 ? `#${rankIndex + 1} of ${allScores.length}` : 'Not ranked yet — solve a question!';
+
+  const questionEvents = (events || []).filter(e => e.event_type === 'question_solved');
+  const byDiff = { beginner: 0, intermediate: 0, advanced: 0 };
+  const formulasSeen = new Set();
+  questionEvents.forEach(e => {
+    if (byDiff[e.difficulty] !== undefined) byDiff[e.difficulty]++;
+    if (e.formula_id) formulasSeen.add(e.formula_id);
+  });
+  animateCount(document.getElementById('perfBeginnerCount'), byDiff.beginner, 900);
+  animateCount(document.getElementById('perfIntermediateCount'), byDiff.intermediate, 900);
+  animateCount(document.getElementById('perfAdvancedCount'), byDiff.advanced, 900);
+
+  const TOTAL_FORMULAS = 501;
+  const coveragePct = Math.round((formulasSeen.size / TOTAL_FORMULAS) * 100);
+  document.getElementById('perfCoverageText').textContent = `${formulasSeen.size} of ${TOTAL_FORMULAS} formulas tried (${coveragePct}%)`;
+  setTimeout(() => { document.getElementById('perfCoverageFill').style.width = coveragePct + '%'; }, 100);
+
+  const EVENT_LABELS = {
+    question_solved: e => `Solved ${e.formula_id ? e.formula_id.toUpperCase() : 'a question'} (${e.difficulty || ''})`,
+    article_read: () => 'Read an article',
+    case_study_completed: () => 'Completed a case study',
+    cert_passed: () => 'Passed the certification exam'
+  };
+  const list = document.getElementById('perfActivityList');
+  if (!events || events.length === 0) {
+    list.innerHTML = '<p class="sub">No activity yet — go solve a question!</p>';
+  } else {
+    list.innerHTML = events.slice(0, 10).map(e => `
+      <div class="perf-activity-row">
+        <span>${(EVENT_LABELS[e.event_type] || (() => e.event_type))(e)}</span>
+        <span class="perf-activity-pts">+${e.points}</span>
+      </div>
+    `).join('');
+  }
+}
+
+loadPerformance();
+</script>
+
+<script src="chat-widget.js"></script>
+<script src="auth-nav.js"></script>
+
+<script src="site-name.js"></script>
+
+</body>
+</html>

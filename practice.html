@@ -718,7 +718,11 @@ function checkAnswer(question) {
     }
 
     if (allMatch) {
-      if (currentFormula) { practicedFormulas.add(currentFormula.id); renderList(); }
+      if (currentFormula) {
+        practicedFormulas.add(currentFormula.id);
+        renderList();
+        awardQuestionPoints(currentFormula.id, formulaDifficulty(currentFormula.id));
+      }
       const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
       showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Every cell matches!` });
     } else {
@@ -759,6 +763,7 @@ function checkAnswer(question) {
     if (currentFormula) {
       practicedFormulas.add(currentFormula.id);
       renderList();
+      awardQuestionPoints(currentFormula.id, formulaDifficulty(currentFormula.id));
     }
     const msg = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)];
     showResultModal({ correct: true, html: `<span class="celebrate" style="font-size:20px;">${msg}</span><br>Result: <strong>${value}</strong>` });
@@ -975,6 +980,7 @@ if (isIsolatedQuestionLink) {
 <script src="auth-nav.js"></script>
 
 <script src="video-popup.js"></script>
+<script src="scoring.js"></script>
 <script src="site-name.js"></script>
 
 </body>
